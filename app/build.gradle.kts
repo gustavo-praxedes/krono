@@ -12,17 +12,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
-// ── versionCode dinâmico ─────────────────────────────────────
-// Formato: yyMMddHHmm
-// Exemplo: 25 04 03 14 30 → 2504031430
-// Sempre cresce com o tempo — nunca precisa ser incrementado manualmente.
-// Cabe dentro do limite de Int da Play Store (máx: 2.100.000.000).
-// O maior valor possível em 2099 seria: 9912312359 → excede Int!
-// Por isso usamos apenas ano com 2 dígitos (yy), garantindo
-// que o valor máximo seja 9912312359... mas espera:
-// 99_12_31_23_59 = 9912312359 > 2.147.483.647 (Int.MAX_VALUE)
-// Solução: removemos os minutos e usamos yyMMddHH (8 dígitos)
-// Exemplo: 25 04 03 14 → 25040314 — sempre dentro do limite.
 fun generateVersionCode(): Int {
     val formatter = DateTimeFormatter.ofPattern("yyMMddHH")
     return LocalDateTime.now().format(formatter).toInt()
@@ -95,9 +84,6 @@ android {
     }
 }
 
-// ── Substitui kotlinOptions { jvmTarget } deprecado ──────────
-// kotlinOptions foi deprecado no Kotlin 2.0.
-// A forma correta agora é kotlin { compilerOptions { } }.
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
