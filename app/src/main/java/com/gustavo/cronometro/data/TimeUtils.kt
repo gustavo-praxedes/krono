@@ -37,11 +37,6 @@ fun Long.toFormattedTime(
     }
 }
 
-fun hasReachedLimit(elapsedMs: Long, limitHours: Int): Boolean {
-    if (limitHours <= 0) return false
-    return elapsedMs >= limitHours * 3_600_000L
-}
-
 // Converte string "HHHH:MM:SS" para segundos totais.
 // Retorna null se o formato for inválido.
 fun parseTimeLimitInput(input: String): Long? {

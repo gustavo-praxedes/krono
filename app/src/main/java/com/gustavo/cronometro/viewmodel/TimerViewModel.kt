@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.gustavo.cronometro.data.TimerPreferences
 import com.gustavo.cronometro.data.TimerState
-import com.gustavo.cronometro.data.hasReachedLimit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
