@@ -25,6 +25,3 @@ Este projeto utiliza as tecnologias mais modernas do ecossistema Android:
 
 ## 🤝 Contribuições
 Sinta-se à vontade para abrir uma *Issue* ou enviar um *Pull Request* com melhorias, correções de bugs ou sugestões de novas funcionalidades.
-
----
-Desenvolvido por **Gustavo Praxedes** 🚀
