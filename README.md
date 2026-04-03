@@ -18,7 +18,7 @@ Este projeto utiliza as tecnologias mais modernas do ecossistema Android:
 * **SharedPreferences:** Para salvar suas preferências de cores e tamanho.
 
 ## 📦 Como Instalar
-1. Acesse a aba [Releases](https://github.com/Gustavo-Praxedes/cronometro-flutuante/releases) deste repositório.
+1. Acesse a aba [Releases](https://github.com/gustavo-praxedes/cronometro-flutuante/releases) deste repositório.
 2. Baixe o arquivo `.apk` da versão mais recente.
 3. No seu Android, habilite a instalação de fontes desconhecidas se solicitado.
 4. Ao abrir, conceda a permissão de **"Sobrepor a outros apps"** para que o cronômetro possa flutuar.

@@ -91,6 +91,8 @@ class OverlayDataStore(private val context: Context) {
             prefs[TIME_LIMIT_SECONDS] = safeConfig.timeLimitSeconds
             prefs[BEEP_ENABLED]      = safeConfig.isBeepEnabled
             prefs[VIBRATION_ENABLED] = safeConfig.isVibrationEnabled
+            prefs[LAST_X]             = safeConfig.lastX
+            prefs[LAST_Y]             = safeConfig.lastY
         }
     }
 
