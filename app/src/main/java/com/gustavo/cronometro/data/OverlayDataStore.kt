@@ -44,11 +44,10 @@ class OverlayDataStore(private val context: Context) {
             OverlayConfig(
                 backgroundColor    = prefs[BACKGROUND_COLOR]  ?: AndroidColor.WHITE,
                 textColor          = prefs[TEXT_COLOR]        ?: AndroidColor.BLACK,
-                // Forçamos .toFloat() para evitar erro caso o valor antigo fosse Int
-                bgOpacity          = (prefs[BG_OPACITY] as? Number)?.toFloat() ?: 1.0f,
-                textOpacity        = (prefs[TEXT_OPACITY] as? Number)?.toFloat() ?: 1.0f,
-                scale              = (prefs[SCALE] as? Number)?.toFloat() ?: 1.0f,
-                cornerRadius       = (prefs[CORNER_RADIUS] as? Number)?.toFloat() ?: 16f,
+                bgOpacity          = prefs[BG_OPACITY]     ?: 1.0f,
+                textOpacity        = prefs[TEXT_OPACITY]   ?: 1.0f,
+                scale              = prefs[SCALE]          ?: 1.0f,
+                cornerRadius       = prefs[CORNER_RADIUS]  ?: 16f,
                 showHours          = prefs[SHOW_HOURS]        ?: true,
                 showSeconds        = prefs[SHOW_SECONDS]      ?: true,
                 showButtons        = prefs[SHOW_BUTTONS]      ?: true,
