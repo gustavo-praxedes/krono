@@ -6,6 +6,7 @@ import android.content.Intent
 import com.gustavo.cronometro.ACTION_PAUSE
 import com.gustavo.cronometro.ACTION_PLAY
 import com.gustavo.cronometro.ACTION_RESET
+import com.gustavo.cronometro.ACTION_SHOW_OVERLAY
 import com.gustavo.cronometro.ACTION_STOP_SERVICE
 import com.gustavo.cronometro.service.MainService
 
@@ -21,6 +22,9 @@ class NotificationActionReceiver : BroadcastReceiver() {
             ACTION_PAUSE,
             ACTION_RESET,
             ACTION_STOP_SERVICE -> {
+                context.startForegroundService(serviceIntent)
+            }
+            ACTION_SHOW_OVERLAY -> {
                 context.startForegroundService(serviceIntent)
             }
         }

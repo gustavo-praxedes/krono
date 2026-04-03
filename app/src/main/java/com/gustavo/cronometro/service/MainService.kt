@@ -36,7 +36,9 @@ import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.gustavo.cronometro.ACTION_PAUSE
 import com.gustavo.cronometro.ACTION_PLAY
 import com.gustavo.cronometro.ACTION_RESET
+import com.gustavo.cronometro.ACTION_SHOW_OVERLAY
 import com.gustavo.cronometro.ACTION_STOP_SERVICE
+import com.gustavo.cronometro.EXTRA_SHOW_DONATION
 import com.gustavo.cronometro.NOTIFICATION_CHANNEL_ID
 import com.gustavo.cronometro.NOTIFICATION_ID
 import com.gustavo.cronometro.R
@@ -101,6 +103,8 @@ class MainService : Service(),
         private const val EDGE_SNAP_THRESHOLD = 50
     }
 
+    private var overlayVisible: Boolean = false
+
     // ========================================================
     // CICLO DE VIDA
     // ========================================================
@@ -158,11 +162,12 @@ class MainService : Service(),
                 viewModel.pause()
                 triggerFeedback(currentConfig)
             }
-            ACTION_RESET        -> viewModel.reset()
+            ACTION_RESET -> handleReset()
             ACTION_STOP_SERVICE -> {
                 closeAndStop()
                 return START_NOT_STICKY
             }
+            ACTION_SHOW_OVERLAY -> showOverlayIfHidden()
             else -> {
                 serviceScope.launch {
                     // OBRIGA o sistema a ler o X e Y corretos ANTES de criar a janela
@@ -210,7 +215,44 @@ class MainService : Service(),
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
+    // Chamado exclusivamente no Reset — nunca durante a contagem.
+    // 1. Captura o tempo da sessão atual ANTES de zerar
+    // 2. Acumula no DataStore
+    // 3. Verifica o gatilho de 12h
+    // 4. Reseta o ViewModel
+    private fun handleReset() {
+        val sessionMs = viewModel.currentSessionMs
 
+        serviceScope.launch {
+            // Acumula o tempo da sessão nos dois contadores
+            dataStore.accumulateTime(sessionMs)
+
+            // Lê o estado atualizado para verificar o gatilho
+            val config = dataStore.configFlow.first()
+
+            val limitMs = 12 * 3600 * 1000L // 12 horas em ms
+
+            //val limitMs = 5000 // 12 horas em ms
+
+            if (config.currentCycleMs >= limitMs) {
+                // Zera o ciclo atual
+                dataStore.resetCycle()
+
+                // Oculta o overlay temporariamente
+                hideOverlay()
+
+                // Abre a MainActivity com flag de doação
+                val intent = Intent(this@MainService, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra(EXTRA_SHOW_DONATION, true)
+                }
+                startActivity(intent)
+            }
+
+            // Reseta o cronômetro independente do gatilho
+            viewModel.reset()
+        }
+    }
     // ========================================================
     // FOREGROUND SERVICE E NOTIFICAÇÃO
     // ========================================================
@@ -307,8 +349,8 @@ class MainService : Service(),
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSLUCENT
-        ).apply {
+            PixelFormat.TRANSLUCENT,
+                    ).apply {
             gravity = Gravity.TOP or Gravity.START
             x       = savedX
             y       = savedY
@@ -345,6 +387,7 @@ class MainService : Service(),
 
         composeView = view
         windowManager.addView(view, overlayParams)
+        overlayVisible = true
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
@@ -354,7 +397,25 @@ class MainService : Service(),
             composeView = null
         }
     }
+    // Oculta o overlay sem destruí-lo — usado durante o diálogo de doação.
+    // O overlay é mantido em memória e reexibido via showOverlayIfHidden().
+    private fun hideOverlay() {
+        composeView?.let {
+            try { windowManager.removeView(it) } catch (_: Exception) { }
+        }
+        overlayVisible = false
+    }
 
+    // Reexibe o overlay após o fechamento do diálogo de doação.
+    // Chamado pelo ACTION_SHOW_OVERLAY vindo da MainActivity.
+    private fun showOverlayIfHidden() {
+        if (!overlayVisible && composeView != null) {
+            try {
+                windowManager.addView(composeView, overlayParams)
+                overlayVisible = true
+            } catch (_: Exception) { }
+        }
+    }
     private fun handleDrag(dx: Float, dy: Float) {
         val params       = overlayParams ?: return
         val view         = composeView   ?: return

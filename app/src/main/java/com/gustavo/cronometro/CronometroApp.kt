@@ -23,7 +23,8 @@ const val ACTION_PLAY         = "com.gustavo.cronometro.ACTION_PLAY"
 const val ACTION_PAUSE        = "com.gustavo.cronometro.ACTION_PAUSE"
 const val ACTION_RESET        = "com.gustavo.cronometro.ACTION_RESET"
 const val ACTION_STOP_SERVICE = "com.gustavo.cronometro.ACTION_STOP_SERVICE"
-
+const val ACTION_SHOW_OVERLAY  = "com.gustavo.cronometro.ACTION_SHOW_OVERLAY"
+const val EXTRA_SHOW_DONATION  = "extra_show_donation"
 class CronometroApp : Application() {
 
     override fun onCreate() {
@@ -31,7 +32,7 @@ class CronometroApp : Application() {
         createNotificationChannel()
     }
 
-    // ── Canal de Notificação ─────────────────────────────────
+        // ── Canal de Notificação ─────────────────────────────────
     // Canais são obrigatórios a partir do Android 8.0 (API 26).
     // Devem ser criados antes de qualquer notificação ser exibida.
     // Recriar um canal existente não tem efeito — é seguro chamar

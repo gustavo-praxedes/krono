@@ -40,6 +40,8 @@ import com.gustavo.cronometro.service.MainService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontFamily
+import com.gustavo.cronometro.ACTION_SHOW_OVERLAY
+import com.gustavo.cronometro.EXTRA_SHOW_DONATION
 import com.gustavo.cronometro.data.formatTimeLimitSeconds
 import com.gustavo.cronometro.data.parseTimeLimitInput
 
@@ -59,13 +61,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
 
+        val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
+
         setContent {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color    = MaterialTheme.colorScheme.background
                 ) {
-                    SettingsScreen()
+                    SettingsScreen(showDonationDialog = showDonation)
                 }
             }
         }
@@ -76,7 +80,7 @@ class MainActivity : ComponentActivity() {
     // ========================================================
 
     @Composable
-    private fun SettingsScreen() {
+    private fun SettingsScreen(showDonationDialog: Boolean = false) {
 
         val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
         val scope  = rememberCoroutineScope()
@@ -101,6 +105,8 @@ class MainActivity : ComponentActivity() {
         var limitText by remember {
             mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
         }
+
+        var showDonation by remember { mutableStateOf((showDonationDialog)) }
 
         LaunchedEffect(config.autoLaunch) {
             if (config.autoLaunch && !serviceRunning) {
@@ -380,6 +386,16 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+
+        if (showDonation) {
+            DonationDialog(
+                onDismiss = {
+                    showDonation = false
+                    returnToOverlay()
+                }
+            )
+        }
+
         if (showTextPicker) {
             ColorPickerDialog(
                 title          = "Cor do Texto",
@@ -545,5 +561,14 @@ class MainActivity : ComponentActivity() {
         }
         startForegroundService(Intent(this, MainService::class.java))
         onStarted()
+    }
+    // Notifica o MainService para reexibir o overlay
+    // e encerra a MainActivity completamente.
+    private fun returnToOverlay() {
+        val intent = Intent(this, MainService::class.java).apply {
+            action = ACTION_SHOW_OVERLAY
+        }
+        startForegroundService(intent)
+        finish()
     }
 }

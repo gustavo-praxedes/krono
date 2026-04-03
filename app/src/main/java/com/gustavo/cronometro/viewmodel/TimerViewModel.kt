@@ -31,6 +31,20 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
 
     val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
 
+    // Retorna o tempo decorrido desde o último start até agora.
+    // Usado pelo MainService no momento do Reset para acumular
+    // o tempo no DataStore antes de zerar o cronômetro.
+    val currentSessionMs: Long
+        get() {
+            val current = _timerState.value
+            return when {
+                current.isRunning && current.startTime != -1L ->
+                    current.pauseOffset + (System.currentTimeMillis() - current.startTime)
+                else ->
+                    current.pauseOffset
+            }
+        }
+
     private var timerJob: Job? = null
     private var timeLimitSeconds: Long = 0L
 

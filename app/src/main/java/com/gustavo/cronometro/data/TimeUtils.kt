@@ -58,3 +58,16 @@ fun formatTimeLimitSeconds(totalSeconds: Long): String {
 // Use String.format com Locale.ROOT para evitar problemas de idioma
     return String.format(Locale.ROOT, "%04d:%02d:%02d", h, m, s)
 }
+
+// Formata milissegundos em "HHh MMm SSs" para exibição no diálogo de doação.
+// Exemplos:
+//   43_200_000L → "12h 00m 00s"
+//   90_061_000L → "25h 01m 01s"
+fun formatLifetimeDetailed(totalMs: Long): String {
+    if (totalMs <= 0L) return "0h 00m 00s"
+    val totalSeconds = totalMs / 1000L
+    val h = totalSeconds / 3600L
+    val m = (totalSeconds % 3600L) / 60L
+    val s = totalSeconds % 60L
+    return String.format(Locale.ROOT, "%dh %02dm %02ds", h, m, s)
+}

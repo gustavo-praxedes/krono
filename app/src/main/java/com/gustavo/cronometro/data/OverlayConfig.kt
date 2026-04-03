@@ -16,5 +16,7 @@ data class OverlayConfig(
     val isBeepEnabled     : Boolean = false,
     val isVibrationEnabled: Boolean = false,
     val lastX             : Int     = -1,
-    val lastY             : Int     = -1
+    val lastY             : Int     = -1,
+    val totalLifetimeMs  : Long = 0L,
+    val currentCycleMs   : Long = 0L
 )
