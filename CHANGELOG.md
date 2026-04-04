@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Cronômetro Flutuante.
 
+## [1.1.1](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v1.1.0...v1.1.1) (2026-04-04)
+
+
+### 🐛 Correções
+
+* Janela de doação corrigida. ([ae19e38](https://github.com/gustavo-praxedes/cronometro-flutuante/commit/ae19e38f22aa14fcd5f7512f5e543cea98ba51a3))
+
 ## [1.1.0](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v1.0.5...v1.1.0) (2026-04-03)
 
 
