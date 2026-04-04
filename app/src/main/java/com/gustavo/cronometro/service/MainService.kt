@@ -220,6 +220,11 @@ class MainService : Service(),
     // 2. Acumula no DataStore
     // 3. Verifica o gatilho de 12h
     // 4. Reseta o ViewModel
+    // Chamado exclusivamente no Reset — nunca durante a contagem.
+    // 1. Captura o tempo da sessão atual ANTES de zerar
+    // 2. Acumula no DataStore
+    // 3. Verifica o gatilho de 12h
+    // 4. Reseta o ViewModel
     private fun handleReset() {
         val sessionMs = viewModel.currentSessionMs
 
@@ -230,9 +235,7 @@ class MainService : Service(),
             // Lê o estado atualizado para verificar o gatilho
             val config = dataStore.configFlow.first()
 
-            val limitMs = 12 * 3600 * 1000L // 12 horas em ms
-
-            //val limitMs = 5000 // 12 horas em ms
+            val limitMs = 12 * 3600 * 1000L // Trocar para teste. 12 horas em ms = 12 * 3600 * 1000L
 
             if (config.currentCycleMs >= limitMs) {
                 // Zera o ciclo atual
@@ -253,6 +256,7 @@ class MainService : Service(),
             viewModel.reset()
         }
     }
+
     // ========================================================
     // FOREGROUND SERVICE E NOTIFICAÇÃO
     // ========================================================
@@ -372,7 +376,7 @@ class MainService : Service(),
                         viewModel.pause()
                         triggerFeedback(currentConfig)
                     },
-                    onReset    = { viewModel.reset() },
+                    onReset    = { handleReset() },
                     onDrag     = { dx, dy -> handleDrag(dx, dy) },
                     onDragEnd  = { saveOverlayPosition() },
                     onClose    = { closeAndStop() },

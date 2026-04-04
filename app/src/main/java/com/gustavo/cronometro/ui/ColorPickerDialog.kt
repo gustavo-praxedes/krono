@@ -116,7 +116,7 @@ fun ColorPickerDialog(
         properties       = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier       = Modifier.fillMaxWidth(0.96f).wrapContentHeight(),
+            modifier       = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
             shape          = RoundedCornerShape(20.dp),
             color          = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp

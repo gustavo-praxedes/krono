@@ -23,6 +23,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.gustavo.cronometro.data.OverlayDataStore
 import com.gustavo.cronometro.data.formatLifetimeDetailed
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
 
 // ============================================================
 // DonationDialog.kt
@@ -37,8 +40,8 @@ import com.gustavo.cronometro.data.formatLifetimeDetailed
 
 // ── Configurações de doação ───────────────────────────────────
 // Substitua pelos valores reais antes de publicar
-private const val PIX_KEY  = "SUA_CHAVE_PIX_AQUI"
-private const val KOFI_URL = "https://ko-fi.com/SEU_USUARIO_AQUI"
+private const val PIX_KEY  = "0c7c1f1c-7bff-43f5-833c-c9688e43f024"
+private const val KOFI_URL = "https://ko-fi.com/gustavopraxedes"
 
 @Composable
 fun DonationDialog(
@@ -94,21 +97,22 @@ fun DonationDialog(
 
                 // ── Mensagem com tempo formatado ──────────────
                 Text(
-                    text = "Incrível! Você já utilizou o cronômetro por " +
-                            "$formattedTime. Este projeto é independente e " +
-                            "seu apoio ajuda a mantê-lo gratuito e sem anúncios.",
+                    text = buildAnnotatedString {
+                        append("Incrível! Você já utilizou nosso Cronômetro por ")
+
+                        // Inicia o estilo negrito para o tempo
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(formattedTime)
+                        }
+
+                        append(". Este projeto é independente e seu apoio ajuda a mantê-lo gratuito e sem anúncios.")
+                    },
                     style     = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                // ── Tempo destacado ───────────────────────────
-                Text(
-                    text       = formattedTime,
-                    fontSize   = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color      = MaterialTheme.colorScheme.primary
-                )
+
 
                 HorizontalDivider()
 
@@ -147,7 +151,7 @@ fun DonationDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(
-                            text       = "Doar com Cartão / Ko-fi",
+                            text       = "Doar com Cartão",
                             fontSize   = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
