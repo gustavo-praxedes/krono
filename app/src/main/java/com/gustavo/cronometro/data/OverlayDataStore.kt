@@ -32,6 +32,7 @@ class OverlayDataStore(private val context: Context) {
         val LAST_Y            = intPreferencesKey("last_y")
         val TOTAL_LIFETIME_MS  = longPreferencesKey("total_lifetime_ms")
         val CURRENT_CYCLE_MS   = longPreferencesKey("current_cycle_ms")
+        val LAST_UPDATE_CHECK  = longPreferencesKey("last_update_check")
     }
 
     val configFlow: Flow<OverlayConfig> = context.dataStore.data
@@ -62,6 +63,7 @@ class OverlayDataStore(private val context: Context) {
                 lastY              = prefs[LAST_Y] ?: -1,
                 totalLifetimeMs  = prefs[TOTAL_LIFETIME_MS] ?: 0L,
                 currentCycleMs   = prefs[CURRENT_CYCLE_MS]  ?: 0L,
+                lastUpdateCheck  = prefs[LAST_UPDATE_CHECK] ?: 0L,
             )
         }
 
@@ -122,6 +124,14 @@ class OverlayDataStore(private val context: Context) {
     suspend fun resetCycle() {
         context.dataStore.edit { prefs ->
             prefs[CURRENT_CYCLE_MS] = 0L
+        }
+    }
+
+    // Salva o timestamp da última verificação de atualização.
+    // Chamado pela MainActivity após cada checagem bem-sucedida.
+    suspend fun saveLastUpdateCheck(timestamp: Long) {
+        context.dataStore.edit { prefs ->
+            prefs[LAST_UPDATE_CHECK] = timestamp
         }
     }
 }

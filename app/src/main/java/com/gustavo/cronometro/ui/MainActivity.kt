@@ -41,14 +41,24 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontFamily
 import com.gustavo.cronometro.ACTION_SHOW_OVERLAY
+import com.gustavo.cronometro.BuildConfig
 import com.gustavo.cronometro.EXTRA_SHOW_DONATION
 import com.gustavo.cronometro.data.formatTimeLimitSeconds
 import com.gustavo.cronometro.data.parseTimeLimitInput
+import com.gustavo.cronometro.util.UpdateResult
+import kotlinx.coroutines.flow.first
+import androidx.lifecycle.lifecycleScope
+import com.gustavo.cronometro.util.UpdateInfo
+import com.gustavo.cronometro.util.checkForUpdate
+
+
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStore: OverlayDataStore
-
+    // Armazena as informações da atualização disponível.
+    // null = sem atualização ou ainda não verificado.
+    private var pendingUpdateInfo: UpdateInfo? = null
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
@@ -73,7 +83,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        // ↓ deve estar AQUI dentro, não fora
+        checkForUpdateIfNeeded { info ->
+            pendingUpdateInfo = info
+        }
     }
+
+    // Inicia a verificação de atualização em background
 
     // ========================================================
     // TELA PRINCIPAL
@@ -97,7 +114,8 @@ class MainActivity : ComponentActivity() {
         var showBgPicker   by remember { mutableStateOf(false) }
         var showTextPicker by remember { mutableStateOf(false) }
         var showAboutDialog by remember { mutableStateOf(false) }
-
+        var showUpdateDialog by remember { mutableStateOf(pendingUpdateInfo != null) }
+        var updateInfo       by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
         // ── Estado LOCAL do campo de tempo limite ─────────────
         // NÃO usa config.timeLimitHours como chave do remember —
@@ -213,6 +231,17 @@ class MainActivity : ComponentActivity() {
             // Sincroniza quando o DataStore muda externamente
             LaunchedEffect(config.timeLimitSeconds) {
                 limitText = formatTimeLimitSeconds(config.timeLimitSeconds)
+            }
+
+            // Verifica periodicamente se chegou uma atualização em background
+            LaunchedEffect(Unit) {
+                while (true) {
+                    if (pendingUpdateInfo != null && !showUpdateDialog) {
+                        updateInfo       = pendingUpdateInfo
+                        showUpdateDialog = true
+                    }
+                    kotlinx.coroutines.delay(500)
+                }
             }
 
             Row(
@@ -451,6 +480,17 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        if (showUpdateDialog && updateInfo != null) {
+            UpdateDialog(
+                updateInfo = updateInfo!!,
+                onDismiss  = {
+                    showUpdateDialog = false
+                    updateInfo       = null
+                    pendingUpdateInfo = null
+                }
+            )
+        }
+
         if (showDonation) {
             DonationDialog(
                 onDismiss = {
@@ -604,5 +644,28 @@ class MainActivity : ComponentActivity() {
         }
         startForegroundService(intent)
         finish()
+    }
+
+    // Verifica atualizações respeitando o intervalo de 24 horas.
+    // Chamada no onCreate — roda em IO e atualiza o estado na Main.
+    private fun checkForUpdateIfNeeded(
+        onUpdateAvailable: (UpdateInfo) -> Unit
+    ) {
+        lifecycleScope.launch {
+            val config  = dataStore.configFlow.first()
+            val now     = System.currentTimeMillis()
+            val elapsed = now - config.lastUpdateCheck
+            val oneDay  = 24 * 60 * 60 * 1000L
+
+            if (elapsed < oneDay) return@launch
+
+            dataStore.saveLastUpdateCheck(now)
+
+            val result = checkForUpdate(BuildConfig.VERSION_NAME)
+
+            if (result is UpdateResult.UpdateAvailable) {
+                onUpdateAvailable(result.info)
+            }
+        }
     }
 }
