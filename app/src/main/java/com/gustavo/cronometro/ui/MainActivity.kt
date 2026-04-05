@@ -96,6 +96,8 @@ class MainActivity : ComponentActivity() {
 
         var showBgPicker   by remember { mutableStateOf(false) }
         var showTextPicker by remember { mutableStateOf(false) }
+        var showAboutDialog by remember { mutableStateOf(false) }
+
 
         // ── Estado LOCAL do campo de tempo limite ─────────────
         // NÃO usa config.timeLimitHours como chave do remember —
@@ -226,7 +228,7 @@ class MainActivity : ComponentActivity() {
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text  = "HHHH:MM:SS  •  0000:00:00 = ilimitado",
+                        text  = "HH:MM:SS  •  0000:00:00 = ilimitado",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -349,6 +351,19 @@ class MainActivity : ComponentActivity() {
                         scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) }
                     }
                 )
+
+                TextButton(
+                    onClick  = { showAboutDialog = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text      = "Sobre o App",
+                        textAlign = TextAlign.Center,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(Modifier.height(32.dp))
             }
 
             Spacer(Modifier.height(32.dp))
@@ -423,6 +438,25 @@ class MainActivity : ComponentActivity() {
                     showTextPicker = false
                 },
                 onDismiss = { showTextPicker = false }
+            )
+        }
+
+        if (showAboutDialog) {
+            AboutDialog(
+                onDismiss     = { showAboutDialog = false },
+                onSupportClick = {
+                    showAboutDialog = false
+                    showDonation    = true
+                }
+            )
+        }
+
+        if (showDonation) {
+            DonationDialog(
+                onDismiss = {
+                    showDonation = false
+                    returnToOverlay()
+                }
             )
         }
     }
