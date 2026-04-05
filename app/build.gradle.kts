@@ -33,7 +33,7 @@ android {
         // ── versionName: gerenciado pelo commit-and-tag-version
         // Para atualizar, use: npm run release
         // O script scripts/update-version.js substitui este valor.
-        versionName = "1.1.1"
+        versionName = "1.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

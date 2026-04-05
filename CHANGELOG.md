@@ -2,6 +2,18 @@
 
 Histórico de mudanças do Cronômetro Flutuante.
 
+## [1.2.0](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v1.1.1...v1.2.0) (2026-04-05)
+
+
+### ✨ Novidades
+
+* Adicionada função de procurar por atualizações. ([4f1c49f](https://github.com/gustavo-praxedes/cronometro-flutuante/commit/4f1c49f943abf6068ac734a3b6bc8b9625b3d233))
+
+
+### ♻️ Refatorações
+
+* Adicionada a página 'Sobre'. ([bddc432](https://github.com/gustavo-praxedes/cronometro-flutuante/commit/bddc4325a20c644791f4852495ba52e356160faf))
+
 ## [1.1.1](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v1.1.0...v1.1.1) (2026-04-04)
 
 
