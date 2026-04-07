@@ -1,18 +1,12 @@
 {
   "name": "krono",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
-  "scripts": {
-    "release": "npx commit-and-tag-version",
-    "release:minor": "commit-and-tag-version --release-as minor",
-    "release:major": "commit-and-tag-version --release-as major",
-    "release:patch": "commit-and-tag-version --release-as patch"
-  },
-  "devDependencies": {
-    "commit-and-tag-version": "^12.0.0"
-  },
   "scripts": {
     "release": "commit-and-tag-version && npm run update-readme",
     "update-readme": "node scripts/update-readme.js"
+  },
+  "devDependencies": {
+    "commit-and-tag-version": "^12.7.1"
   }
 }

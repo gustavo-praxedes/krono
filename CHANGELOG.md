@@ -2,6 +2,23 @@
 
 Histórico de mudanças do Cronômetro Flutuante.
 
+## [1.2.1](https://github.com/gustavo-praxedes/krono/compare/v1.2.0...v1.2.1) (2026-04-07)
+
+
+### 🐛 Correções
+
+* Ajuste de site. ([35c8e90](https://github.com/gustavo-praxedes/krono/commit/35c8e909b2086771006518b8005da79d98e93b96))
+
+
+### 📝 Documentação
+
+* Atualização do README. ([8a4ede7](https://github.com/gustavo-praxedes/krono/commit/8a4ede74be91ae12f7b522545fd29de46ebccb82))
+
+
+### 🔧 Manutenção
+
+* Mudança de diretório de projeto. ([9889e56](https://github.com/gustavo-praxedes/krono/commit/9889e5691feec4c04a953248711c9639c7995db9))
+
 ## [1.2.0](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v1.1.1...v1.2.0) (2026-04-05)
 
 
