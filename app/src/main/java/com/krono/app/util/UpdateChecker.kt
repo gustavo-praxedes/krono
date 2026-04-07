@@ -16,7 +16,7 @@ import java.net.URL
 // ============================================================
 
 private const val GITHUB_API_URL =
-    "https://api.github.com/repos/gustavo-praxedes/cronometro-flutuante/releases/latest"
+    "https://api.github.com/repos/gustavo-praxedes/krono/releases/latest"
 
 private const val TIMEOUT_MS = 10_000 // 10 segundos
 
