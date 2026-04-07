@@ -2,6 +2,8 @@
 
 Histórico de mudanças do Cronômetro Flutuante.
 
+## [1.2.2](https://github.com/gustavo-praxedes/krono/compare/v1.2.1...v1.2.2) (2026-04-07)
+
 ## [1.2.1](https://github.com/gustavo-praxedes/krono/compare/v1.2.0...v1.2.1) (2026-04-07)
 
 
