@@ -18,11 +18,11 @@ fun generateVersionCode(): Int {
 }
 
 android {
-    namespace  = "com.gustavo.cronometro"
+    namespace  = "com.krono.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.gustavo.cronometro"
+        applicationId = "com.krono.app"
         minSdk        = 26
         targetSdk     = 35
 
@@ -78,7 +78,7 @@ android {
         val variant = this
         variant.outputs.map { it as com.android.build.gradle.internal.api.ApkVariantOutputImpl }
             .forEach { output ->
-                val name = "cronometro-flutuante-v${variant.versionName}.apk"
+                val name = "krono-v${variant.versionName}.apk"
                 output.outputFileName = name
             }
     }

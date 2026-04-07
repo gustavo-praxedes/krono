@@ -25,5 +25,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Cronometro"
+rootProject.name = "krono"
 include(":app")

@@ -7,14 +7,14 @@
 <resources>
 
     <!-- Nome do app exibido na gaveta e na barra de título -->
-    <string name="app_name">Cronômetro</string>
+    <string name="app_name">Krono - Cronômetro Flutuante</string>
 
     <!-- ── Notificação do Foreground Service ───────────────── -->
-    <string name="notification_channel_name">Cronômetro Flutuante</string>
+    <string name="notification_channel_name">Krono</string>
     <string name="notification_channel_description">Mantém o cronômetro rodando em segundo plano</string>
-    <string name="notification_title">Cronômetro Ativo</string>
-    <string name="notification_text_running">Cronômetro em execução</string>
-    <string name="notification_text_paused">Cronômetro pausado</string>
+    <string name="notification_title">Krono Ativo</string>
+    <string name="notification_text_running">Krono em execução</string>
+    <string name="notification_text_paused">Krono pausado</string>
 
     <!-- Botões de ação da notificação -->
     <string name="action_play">Iniciar</string>
@@ -26,7 +26,7 @@
     <string name="settings_title">Configurações</string>
     <string name="section_appearance">Aparência</string>
     <string name="section_behavior">Comportamento</string>
-    <string name="section_timer">Cronômetro</string>
+    <string name="section_timer">Krono</string>
 
     <!-- Cores -->
     <string name="label_background_color">Cor de Fundo</string>

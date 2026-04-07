@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ============================================================
-     AndroidManifest.xml
-     Declara permissões, componentes e filtros de intenção.
-     ============================================================ -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.krono.app">
 
     <!-- ========================================================
          PERMISSÕES
@@ -42,7 +39,7 @@
          APLICAÇÃO
          ======================================================== -->
     <application
-        android:name=".CronometroApp"
+        android:name=".KronoApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -109,10 +106,10 @@
             android:name=".receiver.NotificationActionReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.gustavo.cronometro.ACTION_PLAY" />
-                <action android:name="com.gustavo.cronometro.ACTION_PAUSE" />
-                <action android:name="com.gustavo.cronometro.ACTION_RESET" />
-                <action android:name="com.gustavo.cronometro.ACTION_STOP_SERVICE" />
+                <action android:name="com.krono.app.ACTION_PLAY" />
+                <action android:name="com.krono.app.ACTION_PAUSE" />
+                <action android:name="com.krono.app.ACTION_RESET" />
+                <action android:name="com.krono.app.ACTION_STOP_SERVICE" />
             </intent-filter>
         </receiver>
 
