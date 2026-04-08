@@ -2,6 +2,8 @@
 
 Histórico de mudanças do Krono.
 
+## [1.2.7](https://github.com/gustavo-praxedes/krono/compare/v1.2.6...v1.2.7) (2026-04-08)
+
 ## [1.2.6](https://github.com/gustavo-praxedes/krono/compare/v1.2.5...v1.2.6) (2026-04-08)
 
 ## [1.2.5](https://github.com/gustavo-praxedes/krono/compare/v1.2.4...v1.2.5) (2026-04-08)
