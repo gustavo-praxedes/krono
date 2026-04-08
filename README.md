@@ -1,15 +1,15 @@
 <div align="center">
 
-<img src="app/src/main/ic_launcher-playstore.png" width="120" alt="Cronômetro Flutuante"/>
+<img src="app/src/main/ic_launcher-playstore.png" width="120" alt="Krono"/>
 
-# ⏱️ Cronômetro Flutuante
+# ⏱️ Krono
 
 **Um cronômetro minimalista que flutua sobre qualquer aplicativo.**
 
-[![GitHub release (latest)](https://img.shields.io/github/v/release/gustavo-praxedes/cronometro-flutuante?style=for-the-badge&logo=github&label=Última%20Versão)](https://github.com/gustavo-praxedes/cronometro-flutuante/releases/latest)
-[![GitHub Downloads](https://img.shields.io/github/downloads/gustavo-praxedes/cronometro-flutuante/total?style=for-the-badge&logo=android&label=Downloads)](https://github.com/gustavo-praxedes/cronometro-flutuante/releases)
+[![GitHub release (latest)](https://img.shields.io/github/v/release/gustavo-praxedes/krono?style=for-the-badge&logo=github&label=Última%20Versão)](https://github.com/gustavo-praxedes/krono/releases/latest)
+[![GitHub Downloads](https://img.shields.io/github/downloads/gustavo-praxedes/krono/total?style=for-the-badge&logo=android&label=Downloads)](https://github.com/gustavo-praxedes/krono/releases)
 [![Android](https://img.shields.io/badge/Android-8.0%2B-brightgreen?style=for-the-badge&logo=android)](https://developer.android.com)
-[![License](https://img.shields.io/github/license/gustavo-praxedes/cronometro-flutuante?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/github/license/gustavo-praxedes/krono?style=for-the-badge)](LICENSE)
 
 [📥 Baixar APK](#-instalação) • [✨ Funcionalidades](#-funcionalidades) • [🖼️ Screenshots](#️-screenshots) • [🤝 Apoiar](#-apoiar-o-projeto)
 
@@ -69,9 +69,9 @@ O **Cronômetro Flutuante** é um aplicativo Android independente, gratuito e se
 
 **1.** Acesse a página da última versão:
 
-👉 **[github.com/gustavo-praxedes/cronometro-flutuante/releases/latest](https://github.com/gustavo-praxedes/cronometro-flutuante/releases/latest)**
+👉 **[github.com/gustavo-praxedes/krono/releases/latest](https://github.com/gustavo-praxedes/krono/releases/latest)**
 
-**2.** Na seção **Assets**, toque em **`cronometro-flutuante-vX.X.X.apk`** para baixar.
+**2.** Na seção **Assets**, toque em **`krono-vX.X.X.apk`** para baixar.
 
 **3.** No seu Android, acesse **Configurações → Segurança** e habilite **"Instalar de fontes desconhecidas"** (ou "Instalar apps desconhecidos") para o seu navegador ou gerenciador de arquivos.
 
@@ -121,7 +121,7 @@ As novidades da versão mais recente estão listadas abaixo:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-> ℹ️ *As notas da última versão aparecerão aqui automaticamente após a primeira release publicada via `npm run release`.*
+## [1.2.2](https://github.com/gustavo-praxedes/krono/compare/v1.2.1...v1.2.2) (2026-04-07)
 
 [//]: # (CHANGELOG_LATEST_END)
 
@@ -148,7 +148,7 @@ Qualquer contribuição ajuda a manter o projeto **gratuito e em constante evolu
 
 Encontrou um bug ou tem uma sugestão?
 
-👉 [Abrir uma Issue](https://github.com/gustavo-praxedes/cronometro-flutuante/issues/new)
+👉 [Abrir uma Issue](https://github.com/gustavo-praxedes/krono/issues/new)
 
 ---
 

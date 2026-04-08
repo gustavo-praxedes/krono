@@ -27,5 +27,5 @@
   ],
   "commitAll": true,
   "infile": "CHANGELOG.md",
-  "header": "# Changelog\n\nHistórico de mudanças do Cronômetro Flutuante.\n"
+  "header": "# Changelog\n\nHistórico de mudanças do Krono.\n"
 }
