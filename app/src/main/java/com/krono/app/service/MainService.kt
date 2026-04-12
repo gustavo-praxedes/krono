@@ -281,25 +281,21 @@ class MainService : Service(),
     // Cria um builder limpo a cada chamada mas reutiliza
     // contentPendingIntent (criado no onCreate) — sem mActions.
     private fun buildNotification(timerState: TimerState): Notification {
-        val timeText = timerState.elapsedMs.toFormattedTime(
-            showHours   = currentConfig.showHours,
-            showSeconds = currentConfig.showSeconds
-        )
 
-        fun actionIntent(action: String, requestCode: Int): PendingIntent =
-            PendingIntent.getBroadcast(
-                this, requestCode,
-                Intent(this, NotificationActionReceiver::class.java).apply {
-                    this.action = action
-                },
+        fun actionIntent(action: String, requestCode: Int): PendingIntent {
+            val i = Intent(this, NotificationActionReceiver::class.java).apply {
+                this.action = action
+            }
+            return PendingIntent.getBroadcast(
+                this, requestCode, i,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+        }
 
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(getString(R.string.notification_title))
-            .setContentText(timeText)
-            .setContentIntent(contentPendingIntent)   // reutilizado
+            .setContentIntent(contentPendingIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
@@ -321,19 +317,63 @@ class MainService : Service(),
                 getString(R.string.action_stop_service),
                 actionIntent(ACTION_STOP_SERVICE, 4)
             )
-            .build()
+
+        if (timerState.isRunning && timerState.startTime != -1L) {
+            // ── Modo Cronômetro Nativo ────────────────────────
+            // Enquanto rodando: Android gerencia o incremento visual
+            // na barra de notificações — zero atraso, zero latência.
+            // setWhen recebe o timestamp do "momento zero" do timer:
+            // tempo atual menos o que já passou (pauseOffset + sessão atual)
+            val elapsedSinceStart = System.currentTimeMillis() - timerState.startTime
+            val totalElapsed      = timerState.pauseOffset + elapsedSinceStart
+            val whenMs            = System.currentTimeMillis() - totalElapsed
+
+            builder
+                .setUsesChronometer(true)
+                .setChronometerCountDown(false)
+                .setWhen(whenMs)
+                .setShowWhen(true)
+                // Texto de apoio exibido abaixo do cronômetro nativo
+                .setContentText(getString(R.string.notification_text_running))
+
+        } else {
+            // ── Modo Texto Estático ───────────────────────────
+            // Quando pausado ou zerado: desativa o cronômetro nativo
+            // e exibe o tempo congelado como texto formatado.
+            val frozenTime = timerState.elapsedMs.toFormattedTime(
+                showHours   = currentConfig.showHours,
+                showSeconds = currentConfig.showSeconds
+            )
+            builder
+                .setUsesChronometer(false)
+                .setShowWhen(false)
+                .setContentText(frozenTime)
+        }
+
+        return builder.build()
     }
 
     // Dispatchers.Main.immediate: menor latência entre overlay e notificação
     private fun startNotificationUpdater() {
         notificationJob?.cancel()
         notificationJob = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
+            var lastIsRunning = viewModel.timerState.value.isRunning
+            var lastIsAtLimit = viewModel.timerState.value.isAtLimit
+
             viewModel.timerState.collectLatest { state ->
-                val currentSecond = state.elapsedMs / 1000L
-                if (currentSecond != lastNotifiedSecond) {
-                    lastNotifiedSecond = currentSecond
+                val stateChanged = state.isRunning != lastIsRunning ||
+                        state.isAtLimit != lastIsAtLimit
+
+                // Atualiza a notificação apenas quando o estado muda
+                // (play↔pause, reset, limite atingido).
+                // Enquanto rodando, o Android atualiza o tempo sozinho.
+                if (stateChanged) {
+                    lastIsRunning = state.isRunning
+                    lastIsAtLimit = state.isAtLimit
+                    lastNotifiedSecond = state.elapsedMs / 1000L
+
                     val notification = buildNotification(state)
-                    (getSystemService(NOTIFICATION_SERVICE) as NotificationManager)
+                    (getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager)
                         .notify(NOTIFICATION_ID, notification)
                 }
             }

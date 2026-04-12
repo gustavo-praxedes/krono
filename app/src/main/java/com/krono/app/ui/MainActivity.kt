@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -51,13 +52,17 @@ import androidx.lifecycle.lifecycleScope
 import com.krono.app.ACTION_HIDE_OVERLAY
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.checkForUpdate
-import com.krono.app.ACTION_HIDE_OVERLAY
 import com.krono.app.ACTION_START_FOCUS
-
+import com.krono.app.viewmodel.TimerViewModel
+import androidx.activity.addCallback
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStore: OverlayDataStore
-    // Armazena as informações da atualização disponível.
+    // ViewModel compartilhado entre TimerScreen, overlay e notificação
+    private val timerViewModel: TimerViewModel by lazy {
+        TimerViewModel(application)
+    }
+        // Armazena as informações da atualização disponível.
     // null = sem atualização ou ainda não verificado.
     private var pendingUpdateInfo: UpdateInfo? = null
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -72,13 +77,21 @@ class MainActivity : ComponentActivity() {
 
         val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
+        // Intercepta o botão físico de voltar para navegar
+        // entre TimerScreen → SettingsScreen → saída do app
+        // A lógica é gerenciada pelo estado currentScreen em AppContent
+        onBackPressedDispatcher.addCallback(this) {
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
+
         setContent {
             MaterialTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color    = MaterialTheme.colorScheme.background
                 ) {
-                    SettingsScreen(showDonationDialog = showDonation)
+                    AppContent(showDonationDialog = showDonation)
                 }
             }
         }
@@ -86,6 +99,42 @@ class MainActivity : ComponentActivity() {
         // ↓ deve estar AQUI dentro, não fora
         checkForUpdateIfNeeded { info ->
             pendingUpdateInfo = info
+        }
+    }
+
+    // ── Navegação principal do app ────────────────────────────
+    // Gerencia a alternância entre TimerScreen e SettingsScreen.
+    // O estado de navegação é local — não persiste entre sessões
+    // intencionalmente: o app sempre abre no cronômetro.
+    @Composable
+    private fun AppContent(showDonationDialog: Boolean = false) {
+        var currentScreen by remember { mutableStateOf(AppScreen.TIMER) }
+
+        val timerState by timerViewModel.timerState.collectAsState()
+
+        when (currentScreen) {
+            AppScreen.TIMER -> {
+                TimerScreen(
+                    timerState     = timerState,
+                    onStart        = { timerViewModel.start() },
+                    onPause        = { timerViewModel.pause() },
+                    onReset        = { timerViewModel.reset() },
+                    onOpenOverlay  = {
+                        // Inicia o serviço se não estiver rodando
+                        tryStartService { }
+                        // Minimiza a MainActivity
+                        moveTaskToBack(true)
+                    },
+                    onOpenSettings = { currentScreen = AppScreen.SETTINGS }
+                )
+            }
+
+            AppScreen.SETTINGS -> {
+                SettingsScreen(
+                    showDonationDialog = showDonationDialog,
+                    onBack             = { currentScreen = AppScreen.TIMER }
+                )
+            }
         }
     }
 
@@ -98,7 +147,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun SettingsScreen(
         showDonationDialog : Boolean = false,
-        onBack             : (() -> Unit)? = null
+        onBack             : (() -> Unit)? = null   // null = chamada direta sem navegação
     ) {
         val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
         val scope  = rememberCoroutineScope()
@@ -138,6 +187,23 @@ class MainActivity : ComponentActivity() {
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
+
+            // Botão voltar — só aparece quando há navegação (TimerScreen → Settings)
+            if (onBack != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Voltar"
+                        )
+                    }
+                }
+            }
 
             Spacer(Modifier.height(10.dp))
 
@@ -388,7 +454,7 @@ class MainActivity : ComponentActivity() {
                     minLabel = "0dp",
                     maxLabel = "50dp",
                     range    = 0f..50f,
-                    display  = "${config.cornerRadius.toInt()}px",
+                    display  = "${config.cornerRadius.toInt()}dp",
                     onChange = {
                         scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) }
                     }
