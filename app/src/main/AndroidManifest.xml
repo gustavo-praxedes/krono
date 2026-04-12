@@ -64,6 +64,14 @@
 
         </activity>
 
+        <activity
+            android:name=".ui.FocusActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Krono.Focus"
+            android:taskAffinity="com.krono.app.focus"
+            android:excludeFromRecents="true"
+            android:showOnLockScreen="false"/>
+
         <!-- ====================================================
              FOREGROUND SERVICE — Cronômetro + Overlay
              foregroundServiceType="specialUse" obrigatório no

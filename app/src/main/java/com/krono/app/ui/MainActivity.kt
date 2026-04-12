@@ -52,7 +52,7 @@ import com.krono.app.ACTION_HIDE_OVERLAY
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.checkForUpdate
 import com.krono.app.ACTION_HIDE_OVERLAY
-
+import com.krono.app.ACTION_START_FOCUS
 
 class MainActivity : ComponentActivity() {
 
@@ -211,6 +211,19 @@ class MainActivity : ComponentActivity() {
             }
             ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
                 scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
+            }
+            ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
+                scope.launch {
+                    dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled))
+                }
+
+                // Inicia o Modo Foco imediatamente se o serviço estiver rodando
+                if (isEnabled && isServiceRunning()) {
+                    val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                        action = ACTION_START_FOCUS
+                    }
+                    startForegroundService(intent)
+                }
             }
             ToggleRow("Bipe Ativo", config.isBeepEnabled) {
                 scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }

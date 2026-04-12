@@ -33,6 +33,7 @@ class OverlayDataStore(private val context: Context) {
         val TOTAL_LIFETIME_MS  = longPreferencesKey("total_lifetime_ms")
         val CURRENT_CYCLE_MS   = longPreferencesKey("current_cycle_ms")
         val LAST_UPDATE_CHECK  = longPreferencesKey("last_update_check")
+        val FOCUS_MODE_ENABLED = booleanPreferencesKey("focus_mode_enabled")
     }
 
     val configFlow: Flow<OverlayConfig> = context.dataStore.data
@@ -64,6 +65,7 @@ class OverlayDataStore(private val context: Context) {
                 totalLifetimeMs  = prefs[TOTAL_LIFETIME_MS] ?: 0L,
                 currentCycleMs   = prefs[CURRENT_CYCLE_MS]  ?: 0L,
                 lastUpdateCheck  = prefs[LAST_UPDATE_CHECK] ?: 0L,
+                focusModeEnabled  = prefs[FOCUS_MODE_ENABLED] ?: false,
             )
         }
 
@@ -100,6 +102,7 @@ class OverlayDataStore(private val context: Context) {
             prefs[LAST_Y]             = safeConfig.lastY
             prefs[TOTAL_LIFETIME_MS] = safeConfig.totalLifetimeMs
             prefs[CURRENT_CYCLE_MS]  = safeConfig.currentCycleMs
+            prefs[FOCUS_MODE_ENABLED] = safeConfig.focusModeEnabled
         }
     }
 

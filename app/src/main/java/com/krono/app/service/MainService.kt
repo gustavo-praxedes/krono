@@ -50,6 +50,7 @@ import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
 import com.krono.app.receiver.NotificationActionReceiver
 import com.krono.app.ui.FloatingTimerUi
+import com.krono.app.ui.FocusActivity
 import com.krono.app.ui.MainActivity
 import com.krono.app.viewmodel.TimerViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -61,7 +62,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-
+import com.krono.app.ACTION_START_FOCUS
 class MainService : Service(),
     LifecycleOwner,
     ViewModelStoreOwner,
@@ -166,6 +167,8 @@ class MainService : Service(),
             ACTION_SHOW_OVERLAY -> showOverlayIfHidden()
 
             ACTION_HIDE_OVERLAY -> hideOverlay()
+
+            ACTION_START_FOCUS -> startFocusMode()
 
             else -> {
                 serviceScope.launch {
@@ -469,6 +472,12 @@ class MainService : Service(),
             dataStore.configFlow.collectLatest { config ->
                 currentConfig = config
                 viewModel.setTimeLimit(config.timeLimitSeconds)
+
+                // Inicia o Modo Foco automaticamente se ativado
+                // e o overlay estiver visível
+                if (config.focusModeEnabled && overlayVisible) {
+                    startFocusMode()
+                }
             }
         }
     }
@@ -543,4 +552,15 @@ class MainService : Service(),
         i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
         startActivity(i)
     }
+
+    private var focusActivityIntent: Intent? = null
+
+    private fun startFocusMode() {
+        val intent = Intent(this, FocusActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        focusActivityIntent = intent
+        startActivity(intent)
+    }
+
 }

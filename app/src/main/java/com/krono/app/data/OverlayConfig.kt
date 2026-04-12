@@ -20,4 +20,5 @@ data class OverlayConfig(
     val totalLifetimeMs  : Long = 0L,
     val currentCycleMs   : Long = 0L,
     val lastUpdateCheck  : Long = 0L,
+    val focusModeEnabled : Boolean = false,
 )

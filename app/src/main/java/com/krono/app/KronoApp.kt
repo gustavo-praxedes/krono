@@ -26,6 +26,7 @@ const val ACTION_STOP_SERVICE = "com.krono.app.ACTION_STOP_SERVICE"
 const val ACTION_SHOW_OVERLAY  = "com.krono.app.ACTION_SHOW_OVERLAY"
 const val EXTRA_SHOW_DONATION  = "extra_show_donation"
 const val ACTION_HIDE_OVERLAY = "com.krono.app.ACTION_HIDE_OVERLAY"
+const val ACTION_START_FOCUS  = "com.krono.app.ACTION_START_FOCUS"
 
 class KronoApp : Application() {
 
