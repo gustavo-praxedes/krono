@@ -8,7 +8,7 @@
      ============================================================ -->
 <resources>
 
-    <style name="Theme.Cronometro" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.Krono" parent="Theme.Material3.DayNight.NoActionBar">
 
         <!-- Fundo escuro enquanto o Compose carrega -->
         <item name="android:windowBackground">@android:color/black</item>

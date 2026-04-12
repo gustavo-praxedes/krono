@@ -25,6 +25,8 @@ const val ACTION_RESET        = "com.krono.app.ACTION_RESET"
 const val ACTION_STOP_SERVICE = "com.krono.app.ACTION_STOP_SERVICE"
 const val ACTION_SHOW_OVERLAY  = "com.krono.app.ACTION_SHOW_OVERLAY"
 const val EXTRA_SHOW_DONATION  = "extra_show_donation"
+const val ACTION_HIDE_OVERLAY = "com.krono.app.ACTION_HIDE_OVERLAY"
+
 class KronoApp : Application() {
 
     override fun onCreate() {

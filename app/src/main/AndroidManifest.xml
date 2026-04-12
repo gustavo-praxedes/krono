@@ -45,7 +45,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Cronometro">
+        android:theme="@style/Theme.Krono">
 
         <!-- ====================================================
              ACTIVITY PRINCIPAL — Tela de configurações
@@ -110,6 +110,7 @@
                 <action android:name="com.krono.app.ACTION_PAUSE" />
                 <action android:name="com.krono.app.ACTION_RESET" />
                 <action android:name="com.krono.app.ACTION_STOP_SERVICE" />
+                <action android:name="com.krono.app.ACTION_HIDE_OVERLAY" />
             </intent-filter>
         </receiver>
 

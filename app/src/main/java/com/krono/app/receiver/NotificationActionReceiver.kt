@@ -9,6 +9,7 @@ import com.krono.app.ACTION_RESET
 import com.krono.app.ACTION_SHOW_OVERLAY
 import com.krono.app.ACTION_STOP_SERVICE
 import com.krono.app.service.MainService
+import com.krono.app.ACTION_HIDE_OVERLAY
 
 class NotificationActionReceiver : BroadcastReceiver() {
 
@@ -25,6 +26,9 @@ class NotificationActionReceiver : BroadcastReceiver() {
                 context.startForegroundService(serviceIntent)
             }
             ACTION_SHOW_OVERLAY -> {
+                context.startForegroundService(serviceIntent)
+            }
+            ACTION_HIDE_OVERLAY -> {
                 context.startForegroundService(serviceIntent)
             }
         }

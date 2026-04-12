@@ -48,9 +48,10 @@ import com.krono.app.data.parseTimeLimitInput
 import com.krono.app.util.UpdateResult
 import kotlinx.coroutines.flow.first
 import androidx.lifecycle.lifecycleScope
+import com.krono.app.ACTION_HIDE_OVERLAY
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.checkForUpdate
-
+import com.krono.app.ACTION_HIDE_OVERLAY
 
 
 class MainActivity : ComponentActivity() {
@@ -62,11 +63,9 @@ class MainActivity : ComponentActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
-
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
@@ -97,8 +96,10 @@ class MainActivity : ComponentActivity() {
     // ========================================================
 
     @Composable
-    private fun SettingsScreen(showDonationDialog: Boolean = false) {
-
+    private fun SettingsScreen(
+        showDonationDialog : Boolean = false,
+        onBack             : (() -> Unit)? = null
+    ) {
         val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
         val scope  = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
@@ -113,20 +114,15 @@ class MainActivity : ComponentActivity() {
 
         var showBgPicker   by remember { mutableStateOf(false) }
         var showTextPicker by remember { mutableStateOf(false) }
-        var showAboutDialog by remember { mutableStateOf(false) }
-        var showUpdateDialog by remember { mutableStateOf(pendingUpdateInfo != null) }
-        var updateInfo       by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
+//        var limitText by remember {
+//            mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
+//        }
+        var showAboutDialog       by remember { mutableStateOf(false) }
+        var showDonation          by remember { mutableStateOf(showDonationDialog) }
+        var showDonationFromAbout by remember { mutableStateOf(false) }
+        var showUpdateDialog      by remember { mutableStateOf(pendingUpdateInfo != null) }
+        var updateInfo            by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
-        // ── Estado LOCAL do campo de tempo limite ─────────────
-        // NÃO usa config.timeLimitHours como chave do remember —
-        // isso causava loop de recomposição e resetava o cursor.
-        // O estado é iniciado uma única vez com o valor do DataStore
-        // e sincronizado apenas no onDone do teclado.
-        var limitText by remember {
-            mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
-        }
-
-        var showDonation by remember { mutableStateOf((showDonationDialog)) }
 
         LaunchedEffect(config.autoLaunch) {
             if (config.autoLaunch && !serviceRunning) {
@@ -159,7 +155,11 @@ class MainActivity : ComponentActivity() {
             Button(
                 onClick = {
                     if (serviceRunning) {
-                        stopService(Intent(this@MainActivity, MainService::class.java))
+                        // Apenas oculta o overlay — timer continua rodando
+                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                            action = ACTION_HIDE_OVERLAY
+                        }
+                        startForegroundService(intent)
                         serviceRunning = false
                     } else {
                         tryStartService { serviceRunning = true }
@@ -433,10 +433,31 @@ class MainActivity : ComponentActivity() {
 
         if (showDonation) {
             DonationDialog(
+                // X: fecha o dialog e reexibe o overlay
                 onDismiss = {
+                    showDonation = false
+                    // Reexibe o overlay se o serviço está rodando
+                    if (isServiceRunning()) {
+                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                            action = ACTION_SHOW_OVERLAY
+                        }
+                        startForegroundService(intent)
+                    }
+                },
+                // Botões de doação: fecha o dialog, reexibe overlay e encerra Activity
+                onDonate = {
                     showDonation = false
                     returnToOverlay()
                 }
+            )
+        }
+
+        if (showDonationFromAbout) {
+            DonationDialog(
+                // X: apenas fecha o dialog
+                onDismiss = { showDonationFromAbout = false },
+                // Botões: fecha o dialog
+                onDonate  = { showDonationFromAbout = false }
             )
         }
 
@@ -472,10 +493,10 @@ class MainActivity : ComponentActivity() {
 
         if (showAboutDialog) {
             AboutDialog(
-                onDismiss     = { showAboutDialog = false },
+                onDismiss      = { showAboutDialog = false },
                 onSupportClick = {
-                    showAboutDialog = false
-                    showDonation    = true
+                    showAboutDialog       = false
+                    showDonationFromAbout = true   // ← abre a versão sem encerrar Activity
                 }
             )
         }
@@ -487,15 +508,6 @@ class MainActivity : ComponentActivity() {
                     showUpdateDialog = false
                     updateInfo       = null
                     pendingUpdateInfo = null
-                }
-            )
-        }
-
-        if (showDonation) {
-            DonationDialog(
-                onDismiss = {
-                    showDonation = false
-                    returnToOverlay()
                 }
             )
         }

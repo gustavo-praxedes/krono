@@ -121,12 +121,7 @@ As novidades da versão mais recente estão listadas abaixo:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [1.2.4](https://github.com/gustavo-praxedes/krono/compare/v1.2.3...v1.2.4) (2026-04-08)
-
-
-### 📝 Documentação
-
-* Ajuste do README. ([1f96304](https://github.com/gustavo-praxedes/krono/commit/1f963044d3822f49b33f90a41e0c50ec0b405fdd))
+## [1.2.7](https://github.com/gustavo-praxedes/krono/compare/v1.2.6...v1.2.7) (2026-04-08)
 
 [//]: # (CHANGELOG_LATEST_END)
 

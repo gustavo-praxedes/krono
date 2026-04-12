@@ -33,6 +33,7 @@ import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
+import com.krono.app.ACTION_HIDE_OVERLAY
 import com.krono.app.ACTION_PAUSE
 import com.krono.app.ACTION_PLAY
 import com.krono.app.ACTION_RESET
@@ -89,9 +90,6 @@ class MainService : Service(),
     private var vibrator: Vibrator? = null
     private var notificationJob: Job? = null
 
-    private var screenWidth: Int  = 0
-    private var screenHeight: Int = 0
-
     private var currentConfig: OverlayConfig = OverlayConfig()
     private var lastNotifiedSecond: Long = -1L
 
@@ -119,9 +117,6 @@ class MainService : Service(),
         timerPrefs     = TimerPreferences(this)
         viewModel      = TimerViewModel(application)
 
-        val metrics  = resources.displayMetrics
-        screenWidth  = metrics.widthPixels
-        screenHeight = metrics.heightPixels
 
         // Inicializa PendingIntent uma única vez
         contentPendingIntent = PendingIntent.getActivity(
@@ -163,11 +158,15 @@ class MainService : Service(),
                 triggerFeedback(currentConfig)
             }
             ACTION_RESET -> handleReset()
+
             ACTION_STOP_SERVICE -> {
                 closeAndStop()
                 return START_NOT_STICKY
             }
             ACTION_SHOW_OVERLAY -> showOverlayIfHidden()
+
+            ACTION_HIDE_OVERLAY -> hideOverlay()
+
             else -> {
                 serviceScope.launch {
                     // OBRIGA o sistema a ler o X e Y corretos ANTES de criar a janela
@@ -421,10 +420,17 @@ class MainService : Service(),
         }
     }
     private fun handleDrag(dx: Float, dy: Float) {
-        val params       = overlayParams ?: return
-        val view         = composeView   ?: return
+        val params = overlayParams ?: return
+        val view   = composeView   ?: return
+
         val widgetWidth  = view.width.takeIf  { it > 0 } ?: return
         val widgetHeight = view.height.takeIf { it > 0 } ?: return
+
+        // Lê as dimensões atuais a cada drag — garante valores
+        // corretos após rotação de tela sem reiniciar o serviço
+        val metrics      = resources.displayMetrics
+        val screenWidth  = metrics.widthPixels
+        val screenHeight = metrics.heightPixels
 
         var newX = params.x + dx.toInt()
         var newY = params.y + dy.toInt()

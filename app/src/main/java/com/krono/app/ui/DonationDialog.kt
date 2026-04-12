@@ -45,7 +45,8 @@ private const val KOFI_URL = "https://ko-fi.com/gustavopraxedes"
 
 @Composable
 fun DonationDialog(
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit, // Acionado pelo botão X
+    onDonate : () -> Unit  // Acionado pelos botões de Pix/Cartão
 ) {
     val context   = LocalContext.current
     val dataStore = remember { OverlayDataStore(context) }
@@ -74,7 +75,7 @@ fun DonationDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
-                // ── Cabeçalho com botão X ─────────────────────
+                // ── Cabeçalho com botão X (Apenas fecha) ──────
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text       = "Apoie o Projeto",
@@ -99,12 +100,9 @@ fun DonationDialog(
                 Text(
                     text = buildAnnotatedString {
                         append("Incrível! Você já utilizou nosso Cronômetro por ")
-
-                        // Inicia o estilo negrito para o tempo
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                             append(formattedTime)
                         }
-
                         append(". Este projeto é independente e seu apoio ajuda a mantê-lo gratuito e sem anúncios.")
                     },
                     style     = MaterialTheme.typography.bodyLarge,
@@ -112,11 +110,9 @@ fun DonationDialog(
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-
-
                 HorizontalDivider()
 
-                // ── Botões empilhados verticalmente ───────────
+                // ── Botões de Doação (Chamam onDonate) ─────────
                 Column(
                     modifier            = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -125,12 +121,10 @@ fun DonationDialog(
                     Button(
                         onClick = {
                             copyPixKey(context)
-                            onDismiss()
+                            onDonate() // Notifica sucesso e fecha
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape    = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text       = "Doar via Pix",
@@ -139,16 +133,14 @@ fun DonationDialog(
                         )
                     }
 
-                    // Botão 2: Ko-fi
+                    // Botão 2: Ko-fi / Cartão
                     OutlinedButton(
                         onClick = {
                             openKofi(context)
-                            onDismiss()
+                            onDonate() // Notifica sucesso e fecha
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        shape    = RoundedCornerShape(12.dp)
                     ) {
                         Text(
                             text       = "Doar com Cartão",

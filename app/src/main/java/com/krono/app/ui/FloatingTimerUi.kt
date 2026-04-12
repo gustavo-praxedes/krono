@@ -88,8 +88,7 @@ fun FloatingTimerUi(
                     launch {
                         detectTapGestures(
                             onTap = {
-                                if (currentIsRunning) currentOnPause() else currentOnStart()
-                            },
+                                if (currentIsRunning) currentOnPause() else currentOnStart() },
                             onDoubleTap = { currentOnReset() },
                             onLongPress = { currentOnSettings() }
                         )
