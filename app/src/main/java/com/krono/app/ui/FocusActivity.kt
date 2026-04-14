@@ -1,6 +1,6 @@
 package com.krono.app.ui
 
-import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -13,16 +13,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import com.krono.app.ACTION_FOCUS_DISMISSED
+import com.krono.app.service.MainService
 
 // ============================================================
 // FocusActivity.kt
-// Activity fullscreen com fundo preto para o Modo Foco.
+// Tela preta fullscreen para o Modo Foco.
 //
-// Comportamento:
-//   • Tela fica completamente preta
-//   • O overlay do MainService continua visível por cima
-//   • Toque na área preta encerra o Modo Foco
-//   • Toque no cronômetro é tratado pelo overlay normalmente
+// Correções:
+//   • Ao encerrar (onPause ou toque), notifica o MainService
+//     via ACTION_FOCUS_DISMISSED para que overlayVisible seja
+//     atualizado e o overlay possa ser reexibido corretamente.
+//   • onPause encerra a Activity apenas se não estiver
+//     finalizando já (evita duplo dispatch).
 // ============================================================
 
 class FocusActivity : ComponentActivity() {
@@ -30,13 +33,11 @@ class FocusActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Fullscreen sem barra de status e navegação
         window.apply {
             addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
-            // Fundo preto imediato — evita flash branco ao abrir
             addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-            statusBarColor  = android.graphics.Color.BLACK
+            statusBarColor     = android.graphics.Color.BLACK
             navigationBarColor = android.graphics.Color.BLACK
         }
 
@@ -48,8 +49,7 @@ class FocusActivity : ComponentActivity() {
                         .background(Color.Black)
                         .pointerInput(Unit) {
                             detectTapGestures(
-                                // Toque na área preta encerra o Modo Foco
-                                onTap = { finish() }
+                                onTap = { dismissFocus() }
                             )
                         }
                 )
@@ -59,8 +59,18 @@ class FocusActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Encerra o Modo Foco se o usuário sair por outro meio
-        // (botão home, notificação, etc.)
+        // Encerra se o usuário saiu por outros meios (Home, notificação)
+        if (!isFinishing) {
+            dismissFocus()
+        }
+    }
+
+    // Notifica o serviço e encerra a Activity
+    private fun dismissFocus() {
+        val intent = Intent(this, MainService::class.java).apply {
+            action = ACTION_FOCUS_DISMISSED
+        }
+        startForegroundService(intent)
         finish()
     }
 }

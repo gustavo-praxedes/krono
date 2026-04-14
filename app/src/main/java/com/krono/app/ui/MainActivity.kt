@@ -55,31 +55,34 @@ import com.krono.app.util.checkForUpdate
 import com.krono.app.ACTION_START_FOCUS
 import com.krono.app.viewmodel.TimerViewModel
 import androidx.activity.addCallback
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.krono.app.ui.AppRoutes
+import com.krono.app.ui.TimerScreen
+
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStore: OverlayDataStore
-    // ViewModel compartilhado entre TimerScreen, overlay e notificação
     private val timerViewModel: TimerViewModel by lazy {
         TimerViewModel(application)
     }
-        // Armazena as informações da atualização disponível.
-    // null = sem atualização ou ainda não verificado.
     private var pendingUpdateInfo: UpdateInfo? = null
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { }
+
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
 
         val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
-        // Intercepta o botão físico de voltar para navegar
-        // entre TimerScreen → SettingsScreen → saída do app
-        // A lógica é gerenciada pelo estado currentScreen em AppContent
         onBackPressedDispatcher.addCallback(this) {
             isEnabled = false
             onBackPressedDispatcher.onBackPressed()
@@ -96,86 +99,65 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // ↓ deve estar AQUI dentro, não fora
         checkForUpdateIfNeeded { info ->
             pendingUpdateInfo = info
         }
     }
 
-    // ── Navegação principal do app ────────────────────────────
-    // Gerencia a alternância entre TimerScreen e SettingsScreen.
-    // O estado de navegação é local — não persiste entre sessões
-    // intencionalmente: o app sempre abre no cronômetro.
     @Composable
     private fun AppContent(showDonationDialog: Boolean = false) {
-        var currentScreen by remember { mutableStateOf(AppScreen.TIMER) }
+        val navController = rememberNavController()
+        val timerState    by timerViewModel.timerState.collectAsState()
 
-        val timerState by timerViewModel.timerState.collectAsState()
-
-        when (currentScreen) {
-            AppScreen.TIMER -> {
+        NavHost(
+            navController    = navController,
+            startDestination = AppRoutes.TIMER
+        ) {
+            composable(AppRoutes.TIMER) {
                 TimerScreen(
                     timerState     = timerState,
                     onStart        = { timerViewModel.start() },
                     onPause        = { timerViewModel.pause() },
                     onReset        = { timerViewModel.reset() },
                     onOpenOverlay  = {
-                        // Inicia o serviço se não estiver rodando
                         tryStartService { }
-                        // Minimiza a MainActivity
                         moveTaskToBack(true)
                     },
-                    onOpenSettings = { currentScreen = AppScreen.SETTINGS }
+                    onOpenSettings = {
+                        navController.navigate(AppRoutes.SETTINGS)
+                    }
                 )
             }
 
-            AppScreen.SETTINGS -> {
+            composable(AppRoutes.SETTINGS) {
                 SettingsScreen(
                     showDonationDialog = showDonationDialog,
-                    onBack             = { currentScreen = AppScreen.TIMER }
+                    onBack             = { navController.popBackStack() }
                 )
             }
         }
     }
 
-    // Inicia a verificação de atualização em background
-
-    // ========================================================
-    // TELA PRINCIPAL
-    // ========================================================
-
     @Composable
     private fun SettingsScreen(
         showDonationDialog : Boolean = false,
-        onBack             : (() -> Unit)? = null   // null = chamada direta sem navegação
+        onBack             : (() -> Unit)? = null
     ) {
         val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
         val scope  = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
 
-        var serviceRunning by remember { mutableStateOf(false) }
-        LaunchedEffect(Unit) {
-            while (true) {
-                serviceRunning = isServiceRunning()
-                delay(500)
-            }
-        }
-
         var showBgPicker   by remember { mutableStateOf(false) }
         var showTextPicker by remember { mutableStateOf(false) }
-//        var limitText by remember {
-//            mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
-//        }
         var showAboutDialog       by remember { mutableStateOf(false) }
         var showDonation          by remember { mutableStateOf(showDonationDialog) }
         var showDonationFromAbout by remember { mutableStateOf(false) }
         var showUpdateDialog      by remember { mutableStateOf(pendingUpdateInfo != null) }
         var updateInfo            by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
-
         LaunchedEffect(config.autoLaunch) {
-            if (config.autoLaunch && !serviceRunning) {
-                tryStartService { serviceRunning = true }
+            if (config.autoLaunch && !isServiceRunning()) {
+                tryStartService { }
                 moveTaskToBack(true)
             }
         }
@@ -188,7 +170,6 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
 
-            // Botão voltar — só aparece quando há navegação (TimerScreen → Settings)
             if (onBack != null) {
                 Row(
                     modifier = Modifier
@@ -207,55 +188,12 @@ class MainActivity : ComponentActivity() {
 
             Spacer(Modifier.height(10.dp))
 
-            // ── Título ────────────────────────────────────────
             Text(
                 text       = "CONFIGURAÇÕES",
                 style      = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 modifier   = Modifier.padding(bottom = 20.dp)
             )
-
-            Spacer(Modifier.height(10.dp))
-
-            // ── Botão Principal ───────────────────────────────
-            Button(
-                onClick = {
-                    if (serviceRunning) {
-                        // Apenas oculta o overlay — timer continua rodando
-                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                            action = ACTION_HIDE_OVERLAY
-                        }
-                        startForegroundService(intent)
-                        serviceRunning = false
-                    } else {
-                        tryStartService { serviceRunning = true }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape  = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (serviceRunning)
-                        MaterialTheme.colorScheme.error
-                    else
-                        MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Icon(
-                    imageVector        = if (serviceRunning) Icons.Default.Stop
-                    else Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    modifier           = Modifier.size(20.dp)
-                )
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    text       = if (serviceRunning) "Fechar Cronômetro Flutuante"
-                    else "Abrir Cronômetro Flutuante",
-                    fontSize   = 15.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
 
             Spacer(Modifier.height(20.dp))
 
@@ -283,7 +221,6 @@ class MainActivity : ComponentActivity() {
                     dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled))
                 }
 
-                // Inicia o Modo Foco imediatamente se o serviço estiver rodando
                 if (isEnabled && isServiceRunning()) {
                     val intent = Intent(this@MainActivity, MainService::class.java).apply {
                         action = ACTION_START_FOCUS
@@ -298,21 +235,14 @@ class MainActivity : ComponentActivity() {
                 scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
             }
 
-
-            // ── Campo Tempo Limite ────────────────────────────
-            // Formato: HHHH:MM:SS | 0000:00:00 = ilimitado
-            // Estado local — não depende do DataStore durante digitação.
-            // Salva apenas ao pressionar Done no teclado.
             var limitText by remember {
                 mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
             }
 
-            // Sincroniza quando o DataStore muda externamente
             LaunchedEffect(config.timeLimitSeconds) {
                 limitText = formatTimeLimitSeconds(config.timeLimitSeconds)
             }
 
-            // Verifica periodicamente se chegou uma atualização em background
             LaunchedEffect(Unit) {
                 while (true) {
                     if (pendingUpdateInfo != null && !showUpdateDialog) {
@@ -344,9 +274,7 @@ class MainActivity : ComponentActivity() {
                 OutlinedTextField(
                     value         = limitText,
                     onValueChange = { input ->
-                        // Aceita apenas dígitos e ":" — formata automaticamente
                         val digits = input.filter { it.isDigit() }.take(8)
-                        // Reconstrói no formato HHHH:MM:SS ao digitar
                         limitText = when {
                             digits.length <= 4 -> digits
                             digits.length <= 6 ->
@@ -388,9 +316,8 @@ class MainActivity : ComponentActivity() {
                     textStyle     = LocalTextStyle.current.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        textAlign  = TextAlign.Center, // Centralização Horizontal
+                        textAlign  = TextAlign.Center,
                         fontSize   = 18.sp,
-                        // REMOVE O ESPAÇO EXTRA DA FONTE (Centralização Vertical Perfeita)
                         platformStyle = androidx.compose.ui.text.PlatformTextStyle(
                             includeFontPadding = false
                         )
@@ -402,7 +329,6 @@ class MainActivity : ComponentActivity() {
             HorizontalDivider()
             Spacer(Modifier.height(20.dp))
 
-            // ── Seção APARÊNCIA ───────────────────────────────
             Text(
                 text       = "APARÊNCIA",
                 style      = MaterialTheme.typography.titleMedium,
@@ -427,14 +353,10 @@ class MainActivity : ComponentActivity() {
 
             Spacer(Modifier.height(20.dp))
 
-            // ── Sliders Escala e Cantos ───────────────────────
-            // Column com fillMaxWidth garante comprimentos idênticos
-            // e alinhamento consistente com os ToggleRows acima.
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Escala: 0.5x – 2.0x
                 AppearanceSlider(
                     label    = "Escala",
                     value    = config.scale,
@@ -447,7 +369,6 @@ class MainActivity : ComponentActivity() {
                     }
                 )
 
-                // Cantos: 0dp – 50dp (máximo restringido a 50)
                 AppearanceSlider(
                     label    = "Cantos",
                     value    = config.cornerRadius,
@@ -473,11 +394,9 @@ class MainActivity : ComponentActivity() {
 
                 Spacer(Modifier.height(32.dp))
             }
-
-            Spacer(Modifier.height(32.dp))
         }
 
-        // ── Diálogos de Cor ───────────────────────────────────
+        // ── Diálogos ──────────────────────────────────────────
 
         if (showBgPicker) {
             ColorPickerDialog(
@@ -486,22 +405,12 @@ class MainActivity : ComponentActivity() {
                 initialOpacity = config.bgOpacity,
                 onPreview = { color, opacity ->
                     scope.launch {
-                        dataStore.updateConfig(
-                            config.copy(
-                                backgroundColor = color.toArgb(),
-                                bgOpacity       = opacity
-                            )
-                        )
+                        dataStore.updateConfig(config.copy(backgroundColor = color.toArgb(), bgOpacity = opacity))
                     }
                 },
                 onConfirm = { color, opacity ->
                     scope.launch {
-                        dataStore.updateConfig(
-                            config.copy(
-                                backgroundColor = color.toArgb(),
-                                bgOpacity       = opacity
-                            )
-                        )
+                        dataStore.updateConfig(config.copy(backgroundColor = color.toArgb(), bgOpacity = opacity))
                     }
                     showBgPicker = false
                 },
@@ -509,13 +418,10 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-
         if (showDonation) {
             DonationDialog(
-                // X: fecha o dialog e reexibe o overlay
                 onDismiss = {
                     showDonation = false
-                    // Reexibe o overlay se o serviço está rodando
                     if (isServiceRunning()) {
                         val intent = Intent(this@MainActivity, MainService::class.java).apply {
                             action = ACTION_SHOW_OVERLAY
@@ -523,7 +429,6 @@ class MainActivity : ComponentActivity() {
                         startForegroundService(intent)
                     }
                 },
-                // Botões de doação: fecha o dialog, reexibe overlay e encerra Activity
                 onDonate = {
                     showDonation = false
                     returnToOverlay()
@@ -533,9 +438,7 @@ class MainActivity : ComponentActivity() {
 
         if (showDonationFromAbout) {
             DonationDialog(
-                // X: apenas fecha o dialog
                 onDismiss = { showDonationFromAbout = false },
-                // Botões: fecha o dialog
                 onDonate  = { showDonationFromAbout = false }
             )
         }
@@ -547,22 +450,12 @@ class MainActivity : ComponentActivity() {
                 initialOpacity = config.textOpacity,
                 onPreview = { color, opacity ->
                     scope.launch {
-                        dataStore.updateConfig(
-                            config.copy(
-                                textColor   = color.toArgb(),
-                                textOpacity = opacity
-                            )
-                        )
+                        dataStore.updateConfig(config.copy(textColor = color.toArgb(), textOpacity = opacity))
                     }
                 },
                 onConfirm = { color, opacity ->
                     scope.launch {
-                        dataStore.updateConfig(
-                            config.copy(
-                                textColor   = color.toArgb(),
-                                textOpacity = opacity
-                            )
-                        )
+                        dataStore.updateConfig(config.copy(textColor = color.toArgb(), textOpacity = opacity))
                     }
                     showTextPicker = false
                 },
@@ -575,7 +468,7 @@ class MainActivity : ComponentActivity() {
                 onDismiss      = { showAboutDialog = false },
                 onSupportClick = {
                     showAboutDialog       = false
-                    showDonationFromAbout = true   // ← abre a versão sem encerrar Activity
+                    showDonationFromAbout = true
                 }
             )
         }
@@ -592,40 +485,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ========================================================
-    // COMPONENTES REUTILIZÁVEIS
-    // ========================================================
-
     @Composable
-    private fun ToggleRow(
-        label    : String,
-        checked  : Boolean,
-        onChange : (Boolean) -> Unit
-    ) {
+    private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
         Row(
-            modifier              = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            verticalAlignment     = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text     = label,
-                style    = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f)
-            )
+            Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
             Switch(checked = checked, onCheckedChange = onChange)
         }
     }
 
     @Composable
-    private fun ColorRow(
-        label   : String,
-        color   : Color,
-        onClick : () -> Unit
-    ) {
+    private fun ColorRow(label: String, color: Color, onClick: () -> Unit) {
         Row(
-            modifier          = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -641,66 +516,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Slider de aparência com label, min/max e valor atual.
-    // Usa fillMaxWidth para alinhar com os ToggleRows.
     @Composable
-    private fun AppearanceSlider(
-        label    : String,
-        value    : Float,
-        minLabel : String,
-        maxLabel : String,
-        range    : ClosedFloatingPointRange<Float>,
-        display  : String,
-        onChange : (Float) -> Unit
-    ) {
+    private fun AppearanceSlider(label: String, value: Float, minLabel: String, maxLabel: String, range: ClosedFloatingPointRange<Float>, display: String, onChange: (Float) -> Unit) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Linha de label + valor atual
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically
-            ) {
-                Text(
-                    text  = label,
-                    style = MaterialTheme.typography.bodyLarge
-                )
-                Text(
-                    text       = display,
-                    style      = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold,
-                    color      = MaterialTheme.colorScheme.primary
-                )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                Text(text = display, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
-            // Linha do slider com labels min/max
-            Row(
-                modifier          = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text     = minLabel,
-                    style    = MaterialTheme.typography.bodySmall,
-                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-                Slider(
-                    value         = value,
-                    onValueChange = onChange,
-                    valueRange    = range,
-                    modifier      = Modifier.weight(1f)
-                )
-                Text(
-                    text     = maxLabel,
-                    style    = MaterialTheme.typography.bodySmall,
-                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(text = minLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 4.dp))
+                Slider(value = value, onValueChange = onChange, valueRange = range, modifier = Modifier.weight(1f))
+                Text(text = maxLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
             }
         }
     }
-
-    // ========================================================
-    // UTILITÁRIOS
-    // ========================================================
 
     @Suppress("DEPRECATION")
     private fun isServiceRunning(): Boolean {
@@ -711,49 +540,31 @@ class MainActivity : ComponentActivity() {
 
     private fun tryStartService(onStarted: () -> Unit) {
         if (!Settings.canDrawOverlays(this)) {
-            overlayPermissionLauncher.launch(
-                Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName")
-                )
-            )
+            overlayPermissionLauncher.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(
-                android.Manifest.permission.POST_NOTIFICATIONS
-            )
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         startForegroundService(Intent(this, MainService::class.java))
         onStarted()
     }
-    // Notifica o MainService para reexibir o overlay
-    // e encerra a MainActivity completamente.
+
     private fun returnToOverlay() {
-        val intent = Intent(this, MainService::class.java).apply {
-            action = ACTION_SHOW_OVERLAY
-        }
+        val intent = Intent(this, MainService::class.java).apply { action = ACTION_SHOW_OVERLAY }
         startForegroundService(intent)
         finish()
     }
 
-    // Verifica atualizações respeitando o intervalo de 24 horas.
-    // Chamada no onCreate — roda em IO e atualiza o estado na Main.
-    private fun checkForUpdateIfNeeded(
-        onUpdateAvailable: (UpdateInfo) -> Unit
-    ) {
+    private fun checkForUpdateIfNeeded(onUpdateAvailable: (UpdateInfo) -> Unit) {
         lifecycleScope.launch {
             val config  = dataStore.configFlow.first()
             val now     = System.currentTimeMillis()
             val elapsed = now - config.lastUpdateCheck
             val oneDay  = 24 * 60 * 60 * 1000L
-
             if (elapsed < oneDay) return@launch
-
             dataStore.saveLastUpdateCheck(now)
-
             val result = checkForUpdate(BuildConfig.VERSION_NAME)
-
             if (result is UpdateResult.UpdateAvailable) {
                 onUpdateAvailable(result.info)
             }

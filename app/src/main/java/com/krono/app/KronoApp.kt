@@ -28,6 +28,7 @@ const val EXTRA_SHOW_DONATION  = "extra_show_donation"
 const val ACTION_HIDE_OVERLAY = "com.krono.app.ACTION_HIDE_OVERLAY"
 const val ACTION_START_FOCUS  = "com.krono.app.ACTION_START_FOCUS"
 
+const val ACTION_FOCUS_DISMISSED = "com.krono.app.ACTION_FOCUS_DISMISSED"
 class KronoApp : Application() {
 
     override fun onCreate() {

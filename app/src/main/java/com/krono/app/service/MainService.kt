@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import com.krono.app.ACTION_START_FOCUS
+const val ACTION_FOCUS_DISMISSED = "com.krono.app.ACTION_FOCUS_DISMISSED"
 class MainService : Service(),
     LifecycleOwner,
     ViewModelStoreOwner,
@@ -169,6 +170,13 @@ class MainService : Service(),
             ACTION_HIDE_OVERLAY -> hideOverlay()
 
             ACTION_START_FOCUS -> startFocusMode()
+
+            ACTION_FOCUS_DISMISSED -> {
+                // FocusActivity encerrou — marca o overlay como visível
+                // para que showOverlayIfHidden() funcione corretamente
+                overlayVisible = false
+                showOverlayIfHidden()
+            }
 
             else -> {
                 serviceScope.launch {
@@ -435,6 +443,11 @@ class MainService : Service(),
         windowManager.addView(view, overlayParams)
         overlayVisible = true
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+
+        // Se Modo Foco estava habilitado, ativa imediatamente
+        if (currentConfig.focusModeEnabled) {
+            startFocusMode()
+        }
     }
 
     private fun removeOverlay() {
@@ -512,12 +525,6 @@ class MainService : Service(),
             dataStore.configFlow.collectLatest { config ->
                 currentConfig = config
                 viewModel.setTimeLimit(config.timeLimitSeconds)
-
-                // Inicia o Modo Foco automaticamente se ativado
-                // e o overlay estiver visível
-                if (config.focusModeEnabled && overlayVisible) {
-                    startFocusMode()
-                }
             }
         }
     }
@@ -599,8 +606,9 @@ class MainService : Service(),
         val intent = Intent(this, FocusActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        focusActivityIntent = intent
         startActivity(intent)
+        // NÃO altera overlayVisible aqui — o overlay continua
+        // tecnicamente visível, apenas coberto pelo FocusActivity
     }
 
 }

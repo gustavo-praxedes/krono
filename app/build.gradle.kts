@@ -124,4 +124,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
+    implementation(libs.androidx.navigation.compose)
 }

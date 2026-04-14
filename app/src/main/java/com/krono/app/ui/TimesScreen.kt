@@ -2,6 +2,7 @@ package com.krono.app.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -17,27 +18,19 @@ import androidx.compose.ui.unit.sp
 import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
 
-// ============================================================
-// TimerScreen.kt
-// Tela principal do app — espelho visual do TimerViewModel.
-// Não tem lógica própria de tempo — apenas observa e exibe
-// o mesmo estado que o overlay e a notificação usam.
-// ============================================================
-
 @Composable
 fun TimerScreen(
-    timerState       : TimerState,
-    onStart          : () -> Unit,
-    onPause          : () -> Unit,
-    onReset          : () -> Unit,
-    onOpenOverlay    : () -> Unit,
-    onOpenSettings   : () -> Unit
+    timerState     : TimerState,
+    onStart        : () -> Unit,
+    onPause        : () -> Unit,
+    onReset        : () -> Unit,
+    onOpenOverlay  : () -> Unit,
+    onOpenSettings : () -> Unit
 ) {
     val isRunning = timerState.isRunning
 
     Scaffold(
         topBar = {
-            // Barra superior com engrenagem de configurações
             @OptIn(ExperimentalMaterial3Api::class)
             TopAppBar(
                 title = {
@@ -70,18 +63,20 @@ fun TimerScreen(
             Spacer(Modifier.weight(1f))
 
             // ── Display do Tempo ──────────────────────────────
+            // Tamanho aumentado para 80sp
             Text(
                 text       = timerState.elapsedMs.toFormattedTime(
                     showHours   = true,
                     showSeconds = true
                 ),
-                fontSize   = 64.sp,
+                fontSize   = 80.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
-                color      = MaterialTheme.colorScheme.onBackground
+                color      = MaterialTheme.colorScheme.onBackground,
+                maxLines   = 1,
+                softWrap   = false
             )
 
-            // ── Indicador de limite ───────────────────────────
             if (timerState.isAtLimit) {
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -91,9 +86,10 @@ fun TimerScreen(
                 )
             }
 
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(56.dp))
 
-            // ── Botões Play / Pause / Reset ───────────────────
+            // ── Botões de controle ────────────────────────────
+            // Todos com o mesmo tamanho (72dp) e estilo FilledIconButton
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment     = Alignment.CenterVertically
@@ -101,51 +97,43 @@ fun TimerScreen(
                 // Reset
                 FilledTonalIconButton(
                     onClick  = onReset,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(72.dp)
                 ) {
                     Icon(
                         imageVector        = Icons.Default.Refresh,
                         contentDescription = "Reset",
-                        modifier           = Modifier.size(28.dp)
+                        modifier           = Modifier.size(32.dp)
                     )
                 }
 
-                // Play / Pause — botão maior e destaque
+                // Play / Pause
                 FilledIconButton(
                     onClick  = { if (isRunning) onPause() else onStart() },
                     enabled  = !timerState.isAtLimit,
-                    modifier = Modifier.size(80.dp)
+                    modifier = Modifier.size(72.dp)
                 ) {
                     Icon(
-                        imageVector = if (isRunning) Icons.Default.Pause
+                        imageVector        = if (isRunning) Icons.Default.Pause
                         else Icons.Default.PlayArrow,
                         contentDescription = if (isRunning) "Pausar" else "Iniciar",
-                        modifier           = Modifier.size(40.dp)
+                        modifier           = Modifier.size(32.dp)
                     )
                 }
 
-                // Placeholder para simetria visual
-                Spacer(Modifier.size(56.dp))
+                // Abrir Overlay — mesmo tamanho dos outros botões
+                FilledTonalIconButton(
+                    onClick  = onOpenOverlay,
+                    modifier = Modifier.size(72.dp)
+                ) {
+                    Icon(
+                        imageVector        = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = "Abrir Overlay",
+                        modifier           = Modifier.size(32.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.weight(1f))
-
-            // ── Botão Iniciar Overlay ─────────────────────────
-            Button(
-                onClick  = onOpenOverlay,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Text(
-                    text       = "Iniciar Overlay",
-                    fontSize   = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }

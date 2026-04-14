@@ -2,11 +2,10 @@ package com.krono.app.ui
 
 // ============================================================
 // AppNavigation.kt
-// Controla a navegação entre TimerScreen e SettingsScreen.
-// Usado diretamente no setContent da MainActivity.
+// Rotas de navegação usadas pelo NavHost na MainActivity.
 // ============================================================
 
-enum class AppScreen {
-    TIMER,
-    SETTINGS
+object AppRoutes {
+    const val TIMER    = "timer"
+    const val SETTINGS = "settings"
 }
