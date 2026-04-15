@@ -35,14 +35,14 @@ fun TimerScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text       = "Krono",
+                        text = "Krono",
                         fontWeight = FontWeight.Bold
                     )
                 },
                 actions = {
                     IconButton(onClick = onOpenSettings) {
                         Icon(
-                            imageVector        = Icons.Default.Settings,
+                            imageVector = Icons.Default.Settings,
                             contentDescription = "Configurações"
                         )
                     }
@@ -56,84 +56,79 @@ fun TimerScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Spacer(Modifier.weight(1f))
+            // 1/4 superior — espaço acima do cronômetro
+            Spacer(Modifier.fillMaxHeight(0.10f))
 
             // ── Display do Tempo ──────────────────────────────
-            // Tamanho aumentado para 80sp
             Text(
-                text       = timerState.elapsedMs.toFormattedTime(
-                    showHours   = true,
+                text = timerState.elapsedMs.toFormattedTime(
+                    showHours = true,
                     showSeconds = true
                 ),
-                fontSize   = 80.sp,
+                fontSize = 80.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
-                color      = MaterialTheme.colorScheme.onBackground,
-                maxLines   = 1,
-                softWrap   = false
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                softWrap = false
             )
 
             if (timerState.isAtLimit) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text  = "LIMITE ATINGIDO",
+                    text = "LIMITE ATINGIDO",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.error
                 )
             }
 
-            Spacer(Modifier.height(56.dp))
+            // Empurra os botões para o centro/baixo
+            Spacer(Modifier.weight(1f))
 
             // ── Botões de controle ────────────────────────────
-            // Todos com o mesmo tamanho (72dp) e estilo FilledIconButton
             Row(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
-                verticalAlignment     = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Reset
                 FilledTonalIconButton(
-                    onClick  = onReset,
+                    onClick = onReset,
                     modifier = Modifier.size(72.dp)
                 ) {
                     Icon(
-                        imageVector        = Icons.Default.Refresh,
+                        imageVector = Icons.Default.Refresh,
                         contentDescription = "Reset",
-                        modifier           = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
 
-                // Play / Pause
                 FilledIconButton(
-                    onClick  = { if (isRunning) onPause() else onStart() },
-                    enabled  = !timerState.isAtLimit,
+                    onClick = { if (isRunning) onPause() else onStart() },
+                    enabled = !timerState.isAtLimit,
                     modifier = Modifier.size(72.dp)
                 ) {
                     Icon(
-                        imageVector        = if (isRunning) Icons.Default.Pause
+                        imageVector = if (isRunning) Icons.Default.Pause
                         else Icons.Default.PlayArrow,
                         contentDescription = if (isRunning) "Pausar" else "Iniciar",
-                        modifier           = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
 
-                // Abrir Overlay — mesmo tamanho dos outros botões
                 FilledTonalIconButton(
-                    onClick  = onOpenOverlay,
+                    onClick = onOpenOverlay,
                     modifier = Modifier.size(72.dp)
                 ) {
                     Icon(
-                        imageVector        = Icons.AutoMirrored.Filled.OpenInNew,
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Abrir Overlay",
-                        modifier           = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(Modifier.height(48.dp))
         }
     }
 }

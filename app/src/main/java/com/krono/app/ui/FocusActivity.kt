@@ -1,6 +1,9 @@
 package com.krono.app.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -18,20 +21,37 @@ import com.krono.app.service.MainService
 
 // ============================================================
 // FocusActivity.kt
-// Tela preta fullscreen para o Modo Foco.
 //
-// Correções:
-//   • Ao encerrar (onPause ou toque), notifica o MainService
-//     via ACTION_FOCUS_DISMISSED para que overlayVisible seja
-//     atualizado e o overlay possa ser reexibido corretamente.
-//   • onPause encerra a Activity apenas se não estiver
-//     finalizando já (evita duplo dispatch).
+// Comportamento corrigido:
+//   • Toque fora do overlay → fecha APENAS a tela preta,
+//     overlay continua ativo, app anterior fica visível
+//   • Botão X do overlay → fecha tela preta E overlay
+//     (o MainService envia ACTION_FOCUS_DISMISSED via broadcast)
+//   • onPause → encerra apenas se não estiver finalizando
+//   • Recebe broadcast ACTION_FOCUS_DISMISSED para auto-encerrar
+//     quando o overlay é fechado pelo X
 // ============================================================
 
 class FocusActivity : ComponentActivity() {
 
+    // Recebe sinal do MainService para encerrar junto com o overlay
+    private val dismissReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == ACTION_FOCUS_DISMISSED && !isFinishing) {
+                finish()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Registra o receiver para encerrar quando o overlay fechar
+        registerReceiver(
+            dismissReceiver,
+            IntentFilter(ACTION_FOCUS_DISMISSED),
+            RECEIVER_NOT_EXPORTED
+        )
 
         window.apply {
             addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -49,7 +69,11 @@ class FocusActivity : ComponentActivity() {
                         .background(Color.Black)
                         .pointerInput(Unit) {
                             detectTapGestures(
-                                onTap = { dismissFocus() }
+                                // Toque na área preta:
+                                // fecha APENAS a tela preta
+                                // overlay continua visível
+                                // mostra o que estava aberto antes
+                                onTap = { finish() }
                             )
                         }
                 )
@@ -59,18 +83,13 @@ class FocusActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        // Encerra se o usuário saiu por outros meios (Home, notificação)
-        if (!isFinishing) {
-            dismissFocus()
-        }
+        // Encerra se saiu por outros meios (Home, etc.)
+        // mas NÃO notifica o service — overlay continua ativo
+        if (!isFinishing) finish()
     }
 
-    // Notifica o serviço e encerra a Activity
-    private fun dismissFocus() {
-        val intent = Intent(this, MainService::class.java).apply {
-            action = ACTION_FOCUS_DISMISSED
-        }
-        startForegroundService(intent)
-        finish()
+    override fun onDestroy() {
+        super.onDestroy()
+        try { unregisterReceiver(dismissReceiver) } catch (_: Exception) { }
     }
 }

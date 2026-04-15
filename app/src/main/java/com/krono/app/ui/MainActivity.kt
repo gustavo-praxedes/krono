@@ -6,12 +6,23 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -19,54 +30,66 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.krono.app.data.OverlayConfig
-import com.krono.app.data.OverlayDataStore
-import com.krono.app.service.MainService
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.ui.text.font.FontFamily
-import com.krono.app.ACTION_SHOW_OVERLAY
-import com.krono.app.BuildConfig
-import com.krono.app.EXTRA_SHOW_DONATION
-import com.krono.app.data.formatTimeLimitSeconds
-import com.krono.app.data.parseTimeLimitInput
-import com.krono.app.util.UpdateResult
-import kotlinx.coroutines.flow.first
 import androidx.lifecycle.lifecycleScope
-import com.krono.app.ACTION_HIDE_OVERLAY
-import com.krono.app.util.UpdateInfo
-import com.krono.app.util.checkForUpdate
-import com.krono.app.ACTION_START_FOCUS
-import com.krono.app.viewmodel.TimerViewModel
-import androidx.activity.addCallback
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.krono.app.ui.AppRoutes
-import com.krono.app.ui.TimerScreen
+import com.krono.app.ACTION_RESET
+import com.krono.app.ACTION_SHOW_OVERLAY
+import com.krono.app.ACTION_START_FOCUS
+import com.krono.app.BuildConfig
+import com.krono.app.EXTRA_SHOW_DONATION
+import com.krono.app.KronoApp
+import com.krono.app.data.OverlayConfig
+import com.krono.app.data.OverlayDataStore
+import com.krono.app.data.formatTimeLimitSeconds
+import com.krono.app.data.parseTimeLimitInput
+import com.krono.app.service.MainService
+import com.krono.app.util.UpdateInfo
+import com.krono.app.util.UpdateResult
+import com.krono.app.util.checkForUpdate
+import com.krono.app.viewmodel.TimerViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStore: OverlayDataStore
-    private val timerViewModel: TimerViewModel by lazy {
-        TimerViewModel(application)
-    }
+    // Usa o singleton da Application — mesma instância do MainService
+    private val timerViewModel: TimerViewModel
+        get() = (application as KronoApp).timerViewModel
     private var pendingUpdateInfo: UpdateInfo? = null
 
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -108,6 +131,17 @@ class MainActivity : ComponentActivity() {
     private fun AppContent(showDonationDialog: Boolean = false) {
         val navController = rememberNavController()
         val timerState    by timerViewModel.timerState.collectAsState()
+        val config        by dataStore.configFlow.collectAsState(
+            initial = com.krono.app.data.OverlayConfig()
+        )
+
+        // AutoLaunch: abre overlay ao iniciar o app se configurado
+        LaunchedEffect(config.autoLaunch) {
+            if (config.autoLaunch) {
+                tryStartService { }
+                moveTaskToBack(true)
+            }
+        }
 
         NavHost(
             navController    = navController,
@@ -118,7 +152,15 @@ class MainActivity : ComponentActivity() {
                     timerState     = timerState,
                     onStart        = { timerViewModel.start() },
                     onPause        = { timerViewModel.pause() },
-                    onReset        = { timerViewModel.reset() },
+                    onReset        = {
+                        // Envia para o MainService para acumular
+                        // o tempo antes de resetar (lógica de doação)
+                        val intent = Intent(
+                            this@MainActivity,
+                            MainService::class.java
+                        ).apply { action = ACTION_RESET }
+                        startForegroundService(intent)
+                    },
                     onOpenOverlay  = {
                         tryStartService { }
                         moveTaskToBack(true)
@@ -154,13 +196,6 @@ class MainActivity : ComponentActivity() {
         var showDonationFromAbout by remember { mutableStateOf(false) }
         var showUpdateDialog      by remember { mutableStateOf(pendingUpdateInfo != null) }
         var updateInfo            by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
-
-        LaunchedEffect(config.autoLaunch) {
-            if (config.autoLaunch && !isServiceRunning()) {
-                tryStartService { }
-                moveTaskToBack(true)
-            }
-        }
 
         Column(
             modifier = Modifier
