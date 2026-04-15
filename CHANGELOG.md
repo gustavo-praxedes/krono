@@ -2,6 +2,21 @@
 
 Histórico de mudanças do Krono.
 
+## [2.1.0](https://github.com/gustavo-praxedes/krono/compare/v2.0.0...v2.1.0) (2026-04-15)
+
+
+### ✨ Novidades
+
+* Adicionado o modo foco. ([9a1280e](https://github.com/gustavo-praxedes/krono/commit/9a1280ee6ec03d071566420aa2867173bdc9d3f0))
+* Tela principal com cronômetro. Tela de configurações secundária. ([aa8dd40](https://github.com/gustavo-praxedes/krono/commit/aa8dd40f780c8ad39a87f5a19dd46579a4f3e63f))
+
+
+### 🐛 Correções
+
+* Bugs Corrigidos: Botão fechar na Doação, overlay travado na mudança de orientação, primeiro toque inválido. ([2d1e68e](https://github.com/gustavo-praxedes/krono/commit/2d1e68e52ae92e7ff0f51bf9651045c512c59049))
+* Correção de abertura do overlay com o modo foco ativado. ([d8e9bf1](https://github.com/gustavo-praxedes/krono/commit/d8e9bf1b04ed9da590d0d4f221f45f4aa82ce7e7))
+* Correção de bugs no modo foco. ([0b6a5fa](https://github.com/gustavo-praxedes/krono/commit/0b6a5fa64767846010c0539f69a3ad9899a2016a))
+
 ## [2.0.0](https://github.com/gustavo-praxedes/krono/compare/v1.2.7...v2.0.0) (2026-04-08)
 
 ## [1.2.7](https://github.com/gustavo-praxedes/krono/compare/v1.2.6...v1.2.7) (2026-04-08)
