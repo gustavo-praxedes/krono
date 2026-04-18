@@ -1,167 +1,162 @@
 <div align="center">
 
-<img src="app/src/main/ic_launcher-playstore.png" width="120" alt="Krono"/>
+<img src="app/src/main/ic_launcher-playstore.png" width="96" alt="Krono Logo"/>
 
-# ⏱️ Krono
+<h1>Krono</h1>
 
-**Um cronômetro minimalista que flutua sobre qualquer aplicativo.**
+<p><em>O cronômetro minimalista que flutua sobre sua produtividade.</em></p>
 
-[![GitHub release (latest)](https://img.shields.io/github/v/release/gustavo-praxedes/krono?style=for-the-badge&logo=github&label=Última%20Versão)](https://github.com/gustavo-praxedes/krono/releases/latest)
-[![GitHub Downloads](https://img.shields.io/github/downloads/gustavo-praxedes/krono/total?style=for-the-badge&logo=android&label=Downloads)](https://github.com/gustavo-praxedes/krono/releases)
-[![Android](https://img.shields.io/badge/Android-8.0%2B-brightgreen?style=for-the-badge&logo=android)](https://developer.android.com)
-[![License](https://img.shields.io/github/license/gustavo-praxedes/krono?style=for-the-badge)](LICENSE)
+<p>
+  <a href="https://github.com/gustavo-praxedes/krono/releases/latest">
+    <img src="https://img.shields.io/github/v/release/gustavo-praxedes/krono?style=flat-square&logo=github&color=4f46e5&label=Vers%C3%A3o" alt="Versão"/>
+  </a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+"/>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/gustavo-praxedes/krono?style=flat-square&color=6b7280" alt="Licença"/>
+  </a>
+  <img src="https://img.shields.io/badge/offline--first-6366f1?style=flat-square" alt="Offline First"/>
+  <img src="https://img.shields.io/badge/sem%20an%C3%BAncios-10b981?style=flat-square" alt="Sem Anúncios"/>
+</p>
 
-[📥 Baixar APK](#-instalação) • [✨ Funcionalidades](#-funcionalidades) • [🖼️ Screenshots](#️-screenshots) • [🤝 Apoiar](#-apoiar-o-projeto)
-
-</div>
-
----
-
-## 📖 Sobre o Projeto
-
-O **Cronômetro Flutuante** é um aplicativo Android independente, gratuito e sem anúncios. Ele exibe um widget flutuante sobre qualquer tela do dispositivo — ideal para medir tempo durante reuniões, treinos, estudos ou qualquer atividade que exija monitoramento de tempo contínuo sem interromper o que você está fazendo.
-
----
-
-## ✨ Funcionalidades
-
-### ⚙️ Widget Flutuante
-- Exibe o cronômetro **sobre qualquer aplicativo** usando `WindowManager`
-- **Arraste livre** pela tela com física de borda — gruda nas bordas ao se aproximar e desgruda ao arrastar para dentro
-- **Posição persistida** — lembra onde você deixou o widget ao fechar e reabrir
-- **Sem interferência** no app em uso — o widget não captura foco nem bloqueia toques
-
-### 🎨 Personalização Completa
-- 🎨 **Cor de fundo e de texto** independentes com seletor HSB (Matiz, Saturação, Brilho)
-- 🔍 **Opacidade** independente para fundo e texto (0% a 100%)
-- 📏 **Escala** do widget de 0.5× a 1.5×
-- 🔘 **Arredondamento** das bordas de 0px a 40px
-- 💾 Todas as configurações são salvas **automaticamente**
-
-### ⏱️ Controle do Cronômetro
-- **Modo Botões** — Play/Pause, Reset, Configurações e Fechar visíveis no widget
-- **Modo Gestos** — Controle sem botões:
-    - 1 toque → Play / Pause
-    - 2 toques → Reset
-    - Toque longo → Abrir configurações
-- **Notificação Persistente** com botões de Play/Pause, Reset e Fechar — funciona mesmo com o widget oculto
-
-### ⚙️ Configurações Avançadas
-- ⏰ **Exibir ou ocultar** horas e segundos independentemente (`HH:MM:SS`, `MM:SS` ou `HH:MM`)
-- 🔒 **Limite de tempo** configurável no formato `HHHH:MM:SS` — o cronômetro para automaticamente ao atingir o limite
-- 📱 **Manter tela ligada** enquanto o cronômetro estiver rodando
-- 🚀 **Abrir diretamente** o widget ao iniciar o app
-- 🔔 **Bipe e vibração** ao dar Play/Pause
-- 🔄 **Sobrevive a reboots** — o cronômetro é restaurado após reiniciar o dispositivo
-
-### 🔒 Confiável e Eficiente
-- Roda como **Foreground Service** — o Android não encerra o cronômetro em background
-- Tempo baseado em **Unix Timestamp** — preciso mesmo após fechamentos forçados
-- Sem coleta de dados, sem rastreamento, sem internet obrigatória
-
----
-
-## 📥 Instalação
-
-> ⚠️ **Requisito:** Android 8.0 (Oreo) ou superior.
-
-### Passo a passo
-
-**1.** Acesse a página da última versão:
-
-👉 **[github.com/gustavo-praxedes/krono/releases/latest](https://github.com/gustavo-praxedes/krono/releases/latest)**
-
-**2.** Na seção **Assets**, toque em **`krono-vX.X.X.apk`** para baixar.
-
-**3.** No seu Android, acesse **Configurações → Segurança** e habilite **"Instalar de fontes desconhecidas"** (ou "Instalar apps desconhecidos") para o seu navegador ou gerenciador de arquivos.
-
-**4.** Abra o arquivo `.apk` baixado e toque em **Instalar**.
-
-**5.** Abra o app e conceda as permissões solicitadas:
-- **Exibir sobre outros apps** — necessária para o widget flutuante
-- **Notificações** — necessária para a notificação persistente (Android 13+)
-
----
-
-## 🖼️ Screenshots
-
-<div align="center">
-
-| Tela de Configurações | Widget Flutuante | Seletor de Cores |
-|:---:|:---:|:---:|
-| *(em breve)* | *(em breve)* | *(em breve)* |
+<p>
+  <a href="https://github.com/gustavo-praxedes/krono/releases/latest">
+    <img src="https://img.shields.io/badge/↓ Baixar APK-4f46e5?style=for-the-badge" alt="Baixar APK"/>
+  </a>
+  &nbsp;
+  <a href="https://github.com/gustavo-praxedes/krono/issues">
+    <img src="https://img.shields.io/badge/Reportar Bug-ef4444?style=for-the-badge" alt="Reportar Bug"/>
+  </a>
+  &nbsp;
+  <a href="https://ko-fi.com/gustavo-praxedes">
+    <img src="https://img.shields.io/badge/Apoiar o Projeto-f59e0b?style=for-the-badge" alt="Apoiar Projeto"/>
+  </a>
+</p>
 
 </div>
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## O que é o Krono
 
-| Tecnologia | Uso |
-|---|---|
-| **Kotlin** | Linguagem principal |
-| **Jetpack Compose** | Interface declarativa |
-| **Foreground Service** | Cronômetro em background |
-| **WindowManager** | Widget flutuante sobre outros apps |
-| **DataStore Preferences** | Persistência de configurações |
-| **SharedPreferences** | Persistência do estado do timer |
-| **Coroutines + Flow** | Programação assíncrona reativa |
+O **Krono** é um cronômetro Android de código aberto com widget flutuante. Ele roda sobre qualquer aplicativo, é controlado por gestos e não coleta nenhum dado do usuário.
+
+**O Krono faz:**
+- Iniciar, pausar e resetar o tempo com um toque
+- Flutuar sobre qualquer app sem bloquear a interação com ele
+- Persistir o estado do cronômetro após reinicialização do dispositivo
+- Permitir personalização completa de cor, opacidade e tamanho
+
+**O Krono não faz:**
+- Coletar dados, exibir anúncios ou requer internet
+- Funcionar como agenda, lembrete ou temporizador regressivo
+- Suportar múltiplos cronômetros simultâneos (por enquanto)
+
+---
+
+## Pré-requisitos
+
+Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
+
+| Requisito | Mínimo | Recomendado |
+|:---|:---|:---|
+| **Versão do Android** | 8.0 (Oreo, API 26) | 11+ |
+| **Permissão de sobreposição** | Obrigatória | — |
+| **Conexão com internet** | Não necessária | — |
+| **Espaço em disco** | ~5 MB | — |
+
+> **Por que a permissão de sobreposição é obrigatória?**
+> O widget flutuante usa a API `WindowManager` do Android para renderizar sobre outros aplicativos.
+> Sem essa permissão, o app não tem como exibir o cronômetro fora da própria tela.
+> Nenhum dado é acessado por meio dessa permissão — ela serve apenas para exibição visual.
 
 ---
 
-## 📋 O que há de novo
+## Instalação
 
-<!-- O bloco abaixo é atualizado automaticamente pelo CHANGELOG.md a cada release -->
-
-Veja o histórico completo de mudanças em **[CHANGELOG.md](CHANGELOG.md)**.
-
-As novidades da versão mais recente estão listadas abaixo:
+1. Acesse **[Releases](https://github.com/gustavo-praxedes/krono/releases)** e baixe o `.apk` mais recente.
+2. No Android, vá em **Configurações → Aplicativos → Instalar apps desconhecidos** e habilite para o seu gerenciador de arquivos.
+3. Abra o arquivo `.apk` baixado e confirme a instalação.
+4. Na primeira execução, o Krono solicitará a permissão de **"Sobrepor a outros apps"** — conceda-a para que o widget funcione.
 
 ---
+
+## Funcionalidades
+
+<table>
+  <tr>
+    <td valign="top" width="50%">
+      <h4>Widget Flutuante</h4>
+      <ul>
+        <li><strong>WindowManager</strong> — Flutua sobre qualquer app</li>
+        <li><strong>Física de Borda</strong> — Gruda suavemente nas laterais</li>
+        <li><strong>Persistência</strong> — Lembra a última posição ao reabrir</li>
+        <li><strong>Passivo</strong> — Não bloqueia toques no app de fundo</li>
+      </ul>
+    </td>
+    <td valign="top" width="50%">
+      <h4>Personalização</h4>
+      <ul>
+        <li><strong>Cores HSB</strong> — Ajuste de tom e saturação</li>
+        <li><strong>Opacidade</strong> — Transparência de 0% a 100%</li>
+        <li><strong>Tamanho</strong> — Escala de 0.5× a 1.5×</li>
+        <li><strong>Bordas</strong> — Arredondamento customizável</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td valign="top" width="50%">
+      <h4>Controle por Gestos</h4>
+      <ul>
+        <li><strong>Toque simples</strong> — Play / Pause</li>
+        <li><strong>Toque duplo</strong> — Resetar</li>
+        <li><strong>Notificação</strong> — Controles na barra de status</li>
+        <li><strong>Pós-reboot</strong> — Retoma o estado automaticamente</li>
+      </ul>
+    </td>
+    <td valign="top" width="50%">
+      <h4>Confiabilidade</h4>
+      <ul>
+        <li><strong>Código aberto</strong> — Auditável e transparente</li>
+        <li><strong>Sem rastreadores</strong> — Zero coleta de dados</li>
+        <li><strong>Offline</strong> — Sem dependência de rede</li>
+        <li><strong>Leve</strong> — Consumo mínimo de CPU e bateria</li>
+      </ul>
+    </td>
+  </tr>
+</table>
+
+---
+
+## Tecnologias
+
+| Tecnologia | Badge | Função |
+|:---|:---|:---|
+| **Kotlin** | ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white) | Linguagem principal |
+| **Jetpack Compose** | ![Compose](https://img.shields.io/badge/Compose-4285F4?style=flat-square&logo=android&logoColor=white) | Interface declarativa |
+| **Coroutines** | ![Coroutines](https://img.shields.io/badge/Coroutines-1565C0?style=flat-square&logo=kotlin&logoColor=white) | Operações assíncronas |
+| **DataStore** | ![DataStore](https://img.shields.io/badge/DataStore-3DDC84?style=flat-square&logo=android&logoColor=white) | Persistência de preferências |
+
+---
+
+## Contribuindo
+
+Contribuições são bem-vindas. Para garantir consistência:
+
+1. Abra uma [issue](https://github.com/gustavo-praxedes/krono/issues) descrevendo o bug ou a funcionalidade antes de enviar um PR.
+2. Siga o padrão de código Kotlin existente no projeto.
+3. Adicione uma entrada no [CHANGELOG.md](CHANGELOG.md) descrevendo sua mudança.
+4. PRs sem contexto ou sem entrada no changelog não serão aceitos.
+
+---
+
+## Changelog
+
+Consulte o **[CHANGELOG.md](CHANGELOG.md)** para o histórico completo de versões e mudanças.
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [1.2.7](https://github.com/gustavo-praxedes/krono/compare/v1.2.6...v1.2.7) (2026-04-08)
-
-[//]: # (CHANGELOG_LATEST_END)
-
----
-
-## 🤝 Apoiar o Projeto
-
-Este app é **gratuito, sem anúncios e de código aberto**. Se ele tem sido útil para você, considere apoiar o desenvolvimento:
-
-<div align="center">
-
-| Forma de apoio |                              Link                               |
-|:---:|:---------------------------------------------------------------:|
-| 💛 **Ko-fi** | [ko-fi.com/gustavo-praxedes](https://ko-fi.com/gustavopraxedes) |
-| 🟩 **Pix** |                         `SUA_CHAVE_PIX`                         |
-
-</div>
-
-Qualquer contribuição ajuda a manter o projeto **gratuito e em constante evolução**. Obrigado! 🙏
-
----
-
-## 🐛 Reportar Problemas
-
-Encontrou um bug ou tem uma sugestão?
-
-👉 [Abrir uma Issue](https://github.com/gustavo-praxedes/krono/issues/new)
-
----
-
-## 📄 Licença
-
-Distribuído sob a licença **MIT**. Veja [LICENSE](LICENSE) para mais informações.
-
 ---
 
 <div align="center">
-
-Feito com ❤️ por [Gustavo Praxedes](https://github.com/gustavo-praxedes)
-
-⭐ Se este projeto foi útil, deixe uma estrela no repositório!
-
+  <sub>Se o Krono foi útil para você, considere deixar uma ⭐ no repositório.</sub>
 </div>

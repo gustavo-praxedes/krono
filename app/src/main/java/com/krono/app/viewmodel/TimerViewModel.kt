@@ -123,7 +123,7 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
         timerJob = viewModelScope.launch {
 
             while (true) {
-                delay(10L)
+                delay(100L)
 
                 val current = _timerState.value
                 if (!current.isRunning) break

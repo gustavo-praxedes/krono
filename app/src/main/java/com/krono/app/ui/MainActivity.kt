@@ -200,235 +200,147 @@ class MainActivity : ComponentActivity() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+                .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-
-            if (onBack != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            Text(
-                text       = "CONFIGURAÇÕES",
-                style      = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                modifier   = Modifier.padding(bottom = 20.dp)
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            // ── Toggles ───────────────────────────────────────
-
-            ToggleRow("Abrir Diretamente", config.autoLaunch) {
-                scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
-            }
-            ToggleRow("Exibir Horas", config.showHours) {
-                if (!it && !config.showSeconds) return@ToggleRow
-                scope.launch { dataStore.updateConfig(config.copy(showHours = it)) }
-            }
-            ToggleRow("Exibir Segundos", config.showSeconds) {
-                if (!it && !config.showHours) return@ToggleRow
-                scope.launch { dataStore.updateConfig(config.copy(showSeconds = it)) }
-            }
-            ToggleRow("Exibir Botões", config.showButtons) {
-                scope.launch { dataStore.updateConfig(config.copy(showButtons = it)) }
-            }
-            ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
-                scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
-            }
-            ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
-                scope.launch {
-                    dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled))
-                }
-
-                if (isEnabled && isServiceRunning()) {
-                    val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                        action = ACTION_START_FOCUS
-                    }
-                    startForegroundService(intent)
-                }
-            }
-            ToggleRow("Bipe Ativo", config.isBeepEnabled) {
-                scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }
-            }
-            ToggleRow("Vibração Ativa", config.isVibrationEnabled) {
-                scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
-            }
-
-            var limitText by remember {
-                mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds))
-            }
-
-            LaunchedEffect(config.timeLimitSeconds) {
-                limitText = formatTimeLimitSeconds(config.timeLimitSeconds)
-            }
-
-            LaunchedEffect(Unit) {
-                while (true) {
-                    if (pendingUpdateInfo != null && !showUpdateDialog) {
-                        updateInfo       = pendingUpdateInfo
-                        showUpdateDialog = true
-                    }
-                    kotlinx.coroutines.delay(500)
-                }
-            }
-
-            Row(
+            // 1. ÁREA DE CONTEÚDO (ROLA SE FOR MAIOR QUE A TELA)
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 0.dp, vertical = 0.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text  = "Tempo Limite Máximo",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Text(
-                        text  = "HH:MM:SS  •  0000:00:00 = ilimitado",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                OutlinedTextField(
-                    value         = limitText,
-                    onValueChange = { input ->
-                        val digits = input.filter { it.isDigit() }.take(8)
-                        limitText = when {
-                            digits.length <= 4 -> digits
-                            digits.length <= 6 ->
-                                "${digits.substring(0, 4)}:${digits.substring(4)}"
-                            else ->
-                                "${digits.substring(0, 4)}:${digits.substring(4, 6)}:${digits.substring(6)}"
-                        }
-                    },
-                    placeholder = {
-                        Text(
-                            text      = "0000:00:00",
-                            color     = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                            modifier  = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
-                    },
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction    = ImeAction.Done
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = {
-                            val seconds = parseTimeLimitInput(limitText) ?: 0L
-                            limitText = formatTimeLimitSeconds(seconds)
+                Spacer(Modifier.height(5.dp))
 
+                Text(
+                    text = "CONFIGURAÇÕES",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 25.sp,
+                    modifier = Modifier.padding(bottom = 20.dp)
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                // ── Toggles ───────────────────────────────────────
+                ToggleRow("Abrir Diretamente", config.autoLaunch) {
+                    scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
+                }
+                ToggleRow("Exibir Horas", config.showHours) {
+                    if (!it && !config.showSeconds) return@ToggleRow
+                    scope.launch { dataStore.updateConfig(config.copy(showHours = it)) }
+                }
+                ToggleRow("Exibir Segundos", config.showSeconds) {
+                    if (!it && !config.showHours) return@ToggleRow
+                    scope.launch { dataStore.updateConfig(config.copy(showSeconds = it)) }
+                }
+                ToggleRow("Exibir Botões", config.showButtons) {
+                    scope.launch { dataStore.updateConfig(config.copy(showButtons = it)) }
+                }
+                ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
+                    scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
+                }
+                ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
+                    scope.launch { dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled)) }
+                    if (isEnabled && isServiceRunning()) {
+                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                            action = ACTION_START_FOCUS
+                        }
+                        startForegroundService(intent)
+                    }
+                }
+                ToggleRow("Bipe Ativo", config.isBeepEnabled) {
+                    scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }
+                }
+                ToggleRow("Vibração Ativa", config.isVibrationEnabled) {
+                    scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
+                }
+
+                // ── Tempo Limite ──────────────────────────────────
+                var limitText by remember { mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds)) }
+                LaunchedEffect(config.timeLimitSeconds) { limitText = formatTimeLimitSeconds(config.timeLimitSeconds) }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Tempo Limite Máximo", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = "HH:MM:SS • 0000:00:00 = ilimitado", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    OutlinedTextField(
+                        value = limitText,
+                        onValueChange = { input ->
+                            val digits = input.filter { it.isDigit() }.take(8)
+                            limitText = when {
+                                digits.length <= 4 -> digits
+                                digits.length <= 6 -> "${digits.substring(0, 4)}:${digits.substring(4)}"
+                                else -> "${digits.substring(0, 4)}:${digits.substring(4, 6)}:${digits.substring(6)}"
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            val seconds = parseTimeLimitInput(limitText) ?: 0L
                             scope.launch {
-                                dataStore.updateConfig(
-                                    config.copy(timeLimitSeconds = seconds)
-                                )
+                                dataStore.updateConfig(config.copy(timeLimitSeconds = seconds))
                                 focusManager.clearFocus()
                             }
-                        }
-                    ),
-                    singleLine  = true,
-                    modifier = Modifier
-                        .width(160.dp)
-                        .height(64.dp),
-                    shape       = RoundedCornerShape(8.dp),
-                    textStyle     = LocalTextStyle.current.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        textAlign  = TextAlign.Center,
-                        fontSize   = 18.sp,
-                        platformStyle = androidx.compose.ui.text.PlatformTextStyle(
-                            includeFontPadding = false
-                        )
-                    )
-                )
-            }
-
-            Spacer(Modifier.height(20.dp))
-            HorizontalDivider()
-            Spacer(Modifier.height(20.dp))
-
-            Text(
-                text       = "APARÊNCIA",
-                style      = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color      = MaterialTheme.colorScheme.primary,
-                modifier   = Modifier.padding(bottom = 16.dp)
-            )
-
-            ColorRow(
-                label   = "Cor de Fundo",
-                color   = Color(config.backgroundColor).copy(alpha = config.bgOpacity),
-                onClick = { showBgPicker = true }
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            ColorRow(
-                label   = "Cor do Texto",
-                color   = Color(config.textColor).copy(alpha = config.textOpacity),
-                onClick = { showTextPicker = true }
-            )
-
-            Spacer(Modifier.height(20.dp))
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AppearanceSlider(
-                    label    = "Escala",
-                    value    = config.scale,
-                    minLabel = "0.5x",
-                    maxLabel = "1.5x",
-                    range    = 0.5f..1.5f,
-                    display  = "${String.format("%.1f", config.scale)}x",
-                    onChange = {
-                        scope.launch { dataStore.updateConfig(config.copy(scale = it)) }
-                    }
-                )
-
-                AppearanceSlider(
-                    label    = "Cantos",
-                    value    = config.cornerRadius,
-                    minLabel = "0dp",
-                    maxLabel = "50dp",
-                    range    = 0f..50f,
-                    display  = "${config.cornerRadius.toInt()}dp",
-                    onChange = {
-                        scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) }
-                    }
-                )
-
-                TextButton(
-                    onClick  = { showAboutDialog = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text      = "Sobre o App",
-                        textAlign = TextAlign.Center,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant
+                        }),
+                        singleLine = true,
+                        modifier = Modifier.width(160.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center, fontSize = 18.sp)
                     )
                 }
 
-                Spacer(Modifier.height(32.dp))
+                Spacer(Modifier.height(20.dp))
+                HorizontalDivider()
+                Spacer(Modifier.height(20.dp))
+
+                Text(text = "APARÊNCIA", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 16.dp))
+
+                ColorRow(label = "Cor de Fundo", color = Color(config.backgroundColor).copy(alpha = config.bgOpacity), onClick = { showBgPicker = true })
+                Spacer(Modifier.height(12.dp))
+                ColorRow(label = "Cor do Texto", color = Color(config.textColor).copy(alpha = config.textOpacity), onClick = { showTextPicker = true })
+
+                Spacer(Modifier.height(20.dp))
+
+                // ── Sliders (Ajustados para evitar erros de compilação) ──
+                AppearanceSlider(
+                    label = "Escala",
+                    value = config.scale,
+                    minLabel = "0.5x",
+                    maxLabel = "1.5x",
+                    range = 0.5f..1.5f,
+                    display = "${String.format("%.1f", config.scale)}x",
+                    onChange = { scope.launch { dataStore.updateConfig(config.copy(scale = it)) } }
+                )
+
+                AppearanceSlider(
+                    label = "Cantos",
+                    value = config.cornerRadius,
+                    minLabel = "0dp",
+                    maxLabel = "50dp",
+                    range = 0f..50f,
+                    display = "${config.cornerRadius.toInt()}dp",
+                    onChange = { scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) } }
+                )
+
+                Spacer(Modifier.height(32.dp)) // Espaço final dentro do scroll
             }
+
+            // 2. RODAPÉ (FORA DO SCROLL, EMPURRADO PELO WEIGHT)
+            TextButton(
+                onClick = { showAboutDialog = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Sobre o App",
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(32.dp)) // Espaço final.
         }
 
         // ── Diálogos ──────────────────────────────────────────
