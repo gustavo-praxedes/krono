@@ -546,7 +546,7 @@ class MainService : Service(),
         private fun observeScreenState() {
             serviceScope.launch {
                 combine(dataStore.configFlow, viewModel.timerState) { config, state ->
-                    config.keepScreenOn && state.isRunning
+                    config.keepScreenOn
                 }.collect { shouldKeepOn ->
                     applyScreenOn(shouldKeepOn)
                 }
