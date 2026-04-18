@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,20 +37,17 @@ fun FloatingTimerUi(
     onDrag     : (dx: Float, dy: Float) -> Unit,
     onDragEnd  : () -> Unit,
     onClose    : () -> Unit,
-    onSettings : () -> Unit
+    onSettings : () -> Unit  // Mantido — usado pelo long press (GIT 4)
 ) {
-    val isRunning    = timerState.isRunning
-    val scale        = config.scale
+    val isRunning = timerState.isRunning
+    val scale     = config.scale
 
-    // Agora o corner radius e todos os tamanhos reagem à escala proporcionalmente
-    val cornerRadius = (config.cornerRadius * scale).coerceAtMost(64f).dp
+    val cornerRadius  = (config.cornerRadius * scale).coerceAtMost(64f).dp
+    val bgColor       = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
+    val txtColor      = Color(config.textColor).copy(alpha = config.textOpacity)
+    val shape         = RoundedCornerShape(cornerRadius)
 
-    val bgColor  = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
-    val txtColor = Color(config.textColor).copy(alpha = config.textOpacity)
-    val shape = RoundedCornerShape(cornerRadius)
-
-    // ── Tamanhos PROPORCIONAIS (Multiplicamos pela escala aqui) ──
-    // Isso garante que o "box" real do Android diminua junto com o desenho
+    // ── Tamanhos proporcionais à escala ──────────────────────────
     val timeFontSize  = (32f * scale).sp
     val iconSizeDp    = (24f * scale).dp
     val btnSize       = (40f * scale).dp
@@ -61,13 +57,12 @@ fun FloatingTimerUi(
     val btnTopPadding = (8f  * scale).dp
     val limitFontSize = (10f * scale).sp
 
-    val currentOnStart by rememberUpdatedState(onStart)
-    val currentOnPause by rememberUpdatedState(onPause)
-    val currentOnReset by rememberUpdatedState(onReset)
+    val currentOnStart   by rememberUpdatedState(onStart)
+    val currentOnPause   by rememberUpdatedState(onPause)
+    val currentOnReset   by rememberUpdatedState(onReset)
     val currentOnSettings by rememberUpdatedState(onSettings)
     val currentIsRunning by rememberUpdatedState(isRunning)
 
-    // Removido o Box externo com dynamicPadding que causava o distanciamento
     Box(
         modifier = Modifier
             .wrapContentSize()
@@ -77,9 +72,9 @@ fun FloatingTimerUi(
                 coroutineScope {
                     launch {
                         detectDragGestures(
-                            onDragEnd = { onDragEnd() },
+                            onDragEnd    = { onDragEnd() },
                             onDragCancel = { onDragEnd() },
-                            onDrag = { change, dragAmount ->
+                            onDrag       = { change, dragAmount ->
                                 change.consume()
                                 onDrag(dragAmount.x, dragAmount.y)
                             }
@@ -87,23 +82,23 @@ fun FloatingTimerUi(
                     }
                     launch {
                         detectTapGestures(
-                            onTap = {
-                                if (currentIsRunning) currentOnPause() else currentOnStart() },
+                            onTap       = { if (currentIsRunning) currentOnPause() else currentOnStart() },
                             onDoubleTap = { currentOnReset() },
-                            onLongPress = { currentOnSettings() }
+                            onLongPress = { currentOnSettings() }  // GIT 4 substituirá por menu
                         )
                     }
                 }
             }
     ) {
         Column(
-            modifier = Modifier
+            modifier            = Modifier
                 .wrapContentSize()
                 .padding(horizontal = paddingH, vertical = paddingV),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // ── Display do tempo ─────────────────────────────────
             Text(
-                text = timerState.elapsedMs.toFormattedTime(
+                text       = timerState.elapsedMs.toFormattedTime(
                     showHours   = config.showHours,
                     showSeconds = config.showSeconds
                 ),
@@ -125,37 +120,55 @@ fun FloatingTimerUi(
                 )
             }
 
+            // ── Botões: Play/Pause · Reset · Fechar ─────────────
             if (config.showButtons) {
                 Row(
-                    modifier = Modifier
+                    modifier              = Modifier
                         .wrapContentWidth()
                         .padding(top = btnTopPadding),
                     horizontalArrangement = Arrangement.spacedBy(btnSpacing),
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
+                    // Play / Pause
                     IconButton(
-                        onClick  = { if (isRunning) currentOnPause() else currentOnStart() },
+                        onClick  = { if (currentIsRunning) currentOnPause() else currentOnStart() },
                         enabled  = !timerState.isAtLimit,
                         modifier = Modifier.size(btnSize)
                     ) {
                         Icon(
-                            imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            imageVector        = if (currentIsRunning) Icons.Default.Pause
+                            else Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint = if (timerState.isAtLimit) txtColor.copy(alpha = 0.4f) else txtColor,
-                            modifier = Modifier.size(iconSizeDp)
+                            tint               = if (timerState.isAtLimit) txtColor.copy(alpha = 0.4f)
+                            else txtColor,
+                            modifier           = Modifier.size(iconSizeDp)
                         )
                     }
 
-                    IconButton(onClick = currentOnReset, modifier = Modifier.size(btnSize)) {
-                        Icon(Icons.Default.Refresh, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                    // Reset
+                    IconButton(
+                        onClick  = currentOnReset,
+                        modifier = Modifier.size(btnSize)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.Refresh,
+                            contentDescription = null,
+                            tint               = txtColor,
+                            modifier           = Modifier.size(iconSizeDp)
+                        )
                     }
 
-                    IconButton(onClick = currentOnSettings, modifier = Modifier.size(btnSize)) {
-                        Icon(Icons.Default.Settings, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
-                    }
-
-                    IconButton(onClick = onClose, modifier = Modifier.size(btnSize)) {
-                        Icon(Icons.Default.Close, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                    // Fechar
+                    IconButton(
+                        onClick  = onClose,
+                        modifier = Modifier.size(btnSize)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.Close,
+                            contentDescription = null,
+                            tint               = txtColor,
+                            modifier           = Modifier.size(iconSizeDp)
+                        )
                     }
                 }
             }
