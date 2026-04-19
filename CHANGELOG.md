@@ -7,6 +7,29 @@ Histórico de mudanças do Krono.
 
 ### ✨ Novidades
 
+* Adicionado temas. ([b82bec8](https://github.com/gustavo-praxedes/krono/commit/b82bec82c400af3aaf7d32f9c9bb173e61d4e1f6))
+* **ui:** modernizar UI/UX para padrões Pro Max, automatizar releases e melhorar sistema de atualização ([582a057](https://github.com/gustavo-praxedes/krono/commit/582a057d6b3c96a48584cafa00e6cf900c69f868))
+
+
+### 🐛 Correções
+
+* **automação:** corrigir caminho do apk no workflow de release ([33be13f](https://github.com/gustavo-praxedes/krono/commit/33be13f7d694a9509da3ecf2b9163ea7fc6152d2))
+
+
+### 🔧 Manutenção
+
+* Ajuste botões overlay. ([5636934](https://github.com/gustavo-praxedes/krono/commit/56369348cf1c31fa8792f5cc950eae608b53cdaf))
+* Ajuste do overlay. ([2c7ec46](https://github.com/gustavo-praxedes/krono/commit/2c7ec46b355135e32df2f90a5d3218a3ee8e01a3))
+* Ajuste espaçamentos overlay. ([e040307](https://github.com/gustavo-praxedes/krono/commit/e0403076bb0c758789491d8403d8d947a58cdc8d))
+* atualizar versão no about dialog ([339ddd4](https://github.com/gustavo-praxedes/krono/commit/339ddd42c94c1074a80957f3b4b33f9baa86f582))
+* Aumentado o tempo do loop de 10ml para 100ml. ([d738887](https://github.com/gustavo-praxedes/krono/commit/d738887de791062ae127fff236646521061304aa))
+* Corrigir comportamento Manter Tela Ligada. ([99fb677](https://github.com/gustavo-praxedes/krono/commit/99fb6775df34b44e7f45a66244e91a0d44dcaee7))
+
+## [2.2.0](https://github.com/gustavo-praxedes/krono/compare/v2.1.0...v2.2.0) (2026-04-19)
+
+
+### ✨ Novidades
+
 * **UI Pro Max:** Modernização completa da interface para Material 3 com foco em hierarquia visual, tipografia e espaçamentos premium.
 * **Sistema de Atualização:** Novo verificador que exibe notas de lançamento (changelog) diretamente no app e filtra downloads por APK.
 * **Automação de Release:** Integração com GitHub Actions para geração automática de APKs e releases ao subir tags.
