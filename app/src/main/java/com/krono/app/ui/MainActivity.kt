@@ -278,10 +278,24 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // ── Tempo Limite ──────────────────────────────────
-                var limitText by remember { mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds)) }
+                var typedDigits by remember { mutableStateOf("") }
+                
                 LaunchedEffect(config.timeLimitSeconds) {
-                    limitText = formatTimeLimitSeconds(config.timeLimitSeconds)
+                    if (typedDigits.isEmpty() && config.timeLimitSeconds > 0) {
+                        val hrs = config.timeLimitSeconds / 3600
+                        val mins = (config.timeLimitSeconds % 3600) / 60
+                        val secs = config.timeLimitSeconds % 60
+                        typedDigits = String.format("%04d%02d%02d", hrs, mins, secs).toLongOrNull()?.toString() ?: ""
+                    }
                 }
+
+                val limitPadded = typedDigits.padStart(8, '0')
+                val limitFormatted = "${limitPadded.substring(0, 4)}:${limitPadded.substring(4, 6)}:${limitPadded.substring(6)}"
+                
+                val limitTextFieldValue = androidx.compose.ui.text.input.TextFieldValue(
+                    text = limitFormatted,
+                    selection = androidx.compose.ui.text.TextRange(limitFormatted.length)
+                )
 
                 Row(
                     modifier              = Modifier.fillMaxWidth().padding(vertical = 12.dp),
@@ -297,13 +311,22 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     OutlinedTextField(
-                        value         = limitText,
+                        value         = limitTextFieldValue,
                         onValueChange = { input ->
-                            val digits = input.filter { it.isDigit() }.take(8)
-                            limitText = when {
-                                digits.length <= 4 -> digits
-                                digits.length <= 6 -> "${digits.substring(0, 4)}:${digits.substring(4)}"
-                                else -> "${digits.substring(0, 4)}:${digits.substring(4, 6)}:${digits.substring(6)}"
+                            val rawDigits = input.text.filter { it.isDigit() }
+                            if (rawDigits.length > 8) {
+                                val added = rawDigits.last()
+                                val base = if (typedDigits.length < 8) typedDigits else typedDigits.drop(1)
+                                val candidate = base + added
+                                val candidatePadded = candidate.padStart(8, '0')
+                                val candidateMins = candidatePadded.substring(4, 6).toIntOrNull() ?: 0
+                                val candidateSecs = candidatePadded.substring(6, 8).toIntOrNull() ?: 0
+                                
+                                if (candidateMins <= 59 && candidateSecs <= 59) {
+                                    typedDigits = candidate.toLongOrNull()?.toString() ?: ""
+                                }
+                            } else if (rawDigits.length < 8) {
+                                if (typedDigits.isNotEmpty()) typedDigits = typedDigits.dropLast(1)
                             }
                         },
                         keyboardOptions = KeyboardOptions(
@@ -311,7 +334,7 @@ class MainActivity : ComponentActivity() {
                             imeAction    = ImeAction.Done
                         ),
                         keyboardActions = KeyboardActions(onDone = {
-                            val seconds = parseTimeLimitInput(limitText) ?: 0L
+                            val seconds = parseTimeLimitInput(limitFormatted) ?: 0L
                             scope.launch {
                                 dataStore.updateConfig(config.copy(timeLimitSeconds = seconds))
                                 focusManager.clearFocus()

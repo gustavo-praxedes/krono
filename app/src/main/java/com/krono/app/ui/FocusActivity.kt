@@ -28,8 +28,8 @@ import kotlinx.coroutines.delay
 //
 // Novo comportamento:
 //   • Toque na área preta → oculta a sobreposição escura
-//   • Após 5s sem toque → reativa a sobreposição escura
-//   • Qualquer toque enquanto oculta → reseta o timer de 5s
+//   • Após 6s sem toque → reativa a sobreposição escura
+//   • Qualquer toque enquanto oculta → reseta o timer de 10s
 //   • FLAG_KEEP_SCREEN_ON sempre ativo enquanto em Modo Foco
 //   • onPause já NÃO encerra automaticamente (usuário pode
 //     navegar e voltar; a tela preta reaparece pelo timer)
@@ -37,9 +37,20 @@ import kotlinx.coroutines.delay
 //     ou serviço parou)
 // ============================================================
 
-private const val FOCUS_HIDE_TIMEOUT_MS = 5_000L
+private const val FOCUS_HIDE_TIMEOUT_MS = 6_000L
 
 class FocusActivity : ComponentActivity() {
+
+    // Tick incrementável capturado no nível da Window (Activity) 
+    // para podermos atualizar a reativação mesmo com layout pass-through
+    val globalInteractionTick = mutableIntStateOf(0)
+
+    override fun dispatchTouchEvent(ev: android.view.MotionEvent?): Boolean {
+        if (ev?.action == android.view.MotionEvent.ACTION_OUTSIDE) {
+            globalInteractionTick.intValue++
+        }
+        return super.dispatchTouchEvent(ev)
+    }
 
     private val dismissReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -71,7 +82,7 @@ class FocusActivity : ComponentActivity() {
 
         setContent {
             MaterialTheme {
-                FocusScreen()
+                FocusScreen(this)
             }
         }
     }
@@ -87,43 +98,38 @@ class FocusActivity : ComponentActivity() {
 }
 
 @Composable
-private fun FocusScreen() {
+private fun FocusScreen(activity: FocusActivity) {
     // true  = tela preta visível
     // false = tela preta oculta (usuário tocou)
     var blackVisible by remember { mutableStateOf(true) }
 
-    // Tick para resetar o timer sem precisar desligar/ligar blackVisible
-    var interactionTick by remember { mutableIntStateOf(0) }
-
-    // Timer de reativação: 5s após o último toque
-    LaunchedEffect(blackVisible, interactionTick) {
+    // Timer de reativação: 10s após o último toque
+    LaunchedEffect(blackVisible, activity.globalInteractionTick.intValue) {
         if (!blackVisible) {
             delay(FOCUS_HIDE_TIMEOUT_MS)
             blackVisible = true
         }
     }
 
+    LaunchedEffect(blackVisible) {
+        val window = activity.window
+        if (blackVisible) {
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+            window.setLayout(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT, 
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        } else {
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH)
+            // Encolher a janela força o Android a disparar ACTION_OUTSIDE para toques 
+            // no resto (100%) da tela
+            window.setLayout(1, 1)
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
-        // Camada de captura de toque — sempre presente e fillMaxSize.
-        // Detecta toques mesmo quando a tela preta está oculta,
-        // resetando o timer de reativação.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            if (blackVisible) {
-                                // Primeiro toque: oculta a tela preta
-                                blackVisible = false
-                            } else {
-                                // Toques subsequentes: apenas reset do timer
-                                interactionTick++
-                            }
-                        }
-                    )
-                }
-        )
 
         // Sobreposição preta com fade in/out suave
         AnimatedVisibility(
@@ -135,6 +141,13 @@ private fun FocusScreen() {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                blackVisible = false
+                            }
+                        )
+                    }
             )
         }
     }

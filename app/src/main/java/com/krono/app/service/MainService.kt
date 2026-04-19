@@ -412,6 +412,20 @@ class MainService : Service(),
                             )
                         }
                     },
+                    onToggleAutoLaunch     = {
+                        serviceScope.launch {
+                            dataStore.updateConfig(
+                                currentConfig.copy(autoLaunch = !currentConfig.autoLaunch)
+                            )
+                        }
+                    },
+                    onToggleBeep           = {
+                        serviceScope.launch {
+                            dataStore.updateConfig(
+                                currentConfig.copy(isBeepEnabled = !currentConfig.isBeepEnabled)
+                            )
+                        }
+                    },
                     onMenuVisibilityChange = { menuOpen ->
                         setOverlayFocusable(menuOpen)
                     }
@@ -517,8 +531,19 @@ class MainService : Service(),
     private fun observeConfig() {
         serviceScope.launch {
             dataStore.configFlow.collectLatest { config ->
+                val focusDisabled = currentConfig.focusModeEnabled && !config.focusModeEnabled
+                val focusEnabled = !currentConfig.focusModeEnabled && config.focusModeEnabled
+
                 currentConfig = config
                 viewModel.setTimeLimit(config.timeLimitSeconds)
+
+                if (focusDisabled) {
+                    sendBroadcast(Intent(ACTION_FOCUS_DISMISSED).apply {
+                        `package` = packageName
+                    })
+                } else if (focusEnabled && viewModel.timerState.value.isRunning && overlayVisible) {
+                    startFocusMode()
+                }
             }
         }
     }

@@ -13,6 +13,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -38,7 +41,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val QUICK_MENU_TIMEOUT_MS = 5_000L
+private const val QUICK_MENU_TIMEOUT_MS = 4_000L
 
 @Composable
 fun FloatingTimerUi(
@@ -53,6 +56,8 @@ fun FloatingTimerUi(
     onSettings            : () -> Unit,
     onToggleFocus         : () -> Unit,
     onToggleKeepScreenOn  : () -> Unit,
+    onToggleAutoLaunch    : () -> Unit,
+    onToggleBeep          : () -> Unit,
     onMenuVisibilityChange: (Boolean) -> Unit
 ) {
     val isRunning = timerState.isRunning
@@ -83,6 +88,8 @@ fun FloatingTimerUi(
     val currentOnSettings           by rememberUpdatedState(onSettings)
     val currentOnToggleFocus        by rememberUpdatedState(onToggleFocus)
     val currentOnToggleKeepScreenOn by rememberUpdatedState(onToggleKeepScreenOn)
+    val currentOnToggleAutoLaunch   by rememberUpdatedState(onToggleAutoLaunch)
+    val currentOnToggleBeep         by rememberUpdatedState(onToggleBeep)
     val currentIsRunning            by rememberUpdatedState(isRunning)
 
     var menuVisible by remember { mutableStateOf(false) }
@@ -138,9 +145,6 @@ fun FloatingTimerUi(
                             onDoubleTap = {
                                 menuVisible = false
                                 currentOnReset()
-                            },
-                            onLongPress = {
-                                menuVisible = true
                             }
                         )
                     }
@@ -170,7 +174,7 @@ fun FloatingTimerUi(
                 softWrap   = false
             )
 
-            if (config.showButtons) {
+            val MainButtonRow = @Composable {
                 Row(
                     modifier              = Modifier
                         .fillMaxWidth()
@@ -205,11 +209,34 @@ fun FloatingTimerUi(
                     }
 
                     IconButton(
+                        onClick  = {
+                            menuVisible = false
+                            currentOnSettings()
+                        },
+                        modifier = Modifier.size(btnSize)
+                    ) {
+                        Icon(Icons.Default.Settings, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                    }
+
+                    IconButton(
                         onClick  = onClose,
                         modifier = Modifier.size(btnSize)
                     ) {
                         Icon(Icons.Default.Close, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
                     }
+                }
+            }
+
+            if (config.showButtons) {
+                MainButtonRow()
+            } else {
+                AnimatedVisibility(
+                    visible = menuVisible,
+                    modifier = Modifier.fillMaxWidth(),
+                    enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
+                ) {
+                    MainButtonRow()
                 }
             }
 
@@ -235,22 +262,6 @@ fun FloatingTimerUi(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        // ⚙️ Configurações gerais
-                        IconButton(
-                            onClick  = {
-                                menuVisible = false
-                                currentOnSettings()
-                            },
-                            modifier = Modifier.size(quickBtnSize)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.Settings,
-                                contentDescription = "Configurações",
-                                tint               = txtColor,
-                                modifier           = Modifier.size(quickIconSize)
-                            )
-                        }
-
                         // 🎯 Toggle Modo Foco
                         IconButton(
                             onClick  = {
@@ -282,18 +293,75 @@ fun FloatingTimerUi(
                                 modifier           = Modifier.size(quickIconSize)
                             )
                         }
+
+                        // 🚀 Toggle Abrir Diretamente
+                        IconButton(
+                            onClick  = {
+                                resetMenuTimer()
+                                currentOnToggleAutoLaunch()
+                            },
+                            modifier = Modifier.size(quickBtnSize)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.OpenInNew,
+                                contentDescription = "Abrir Diretamente",
+                                tint               = if (config.autoLaunch) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                modifier           = Modifier.size(quickIconSize)
+                            )
+                        }
+
+                        // 🔔 Toggle Bip
+                        IconButton(
+                            onClick  = {
+                                resetMenuTimer()
+                                currentOnToggleBeep()
+                            },
+                            modifier = Modifier.size(quickBtnSize)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.VolumeUp,
+                                contentDescription = "Bipe Ativo",
+                                tint               = if (config.isBeepEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                modifier           = Modifier.size(quickIconSize)
+                            )
+                        }
                     }
                 }
             }
 
             Icon(
                 imageVector = Icons.Default.MoreHoriz,
-                contentDescription = null,
-                tint = txtColor.copy(alpha = 0.3f),
+                contentDescription = "Expandir Menu",
+                tint = txtColor.copy(alpha = 0.4f),
                 modifier = Modifier
-                    .padding(top = (2f * scale).dp)
-                    .height((18f * scale).dp)
+                    .height((20f * scale).dp)
                     .fillMaxWidth()
+                    .pointerInput(Unit) {
+                        coroutineScope {
+                            launch {
+                                detectDragGestures(
+                                    onDragEnd = { onDragEnd() },
+                                    onDragCancel = { onDragEnd() },
+                                    onDrag = { change, dragAmount ->
+                                        change.consume()
+                                        if (dragAmount.y > 1f && !menuVisible) {
+                                            menuVisible = true
+                                        }
+                                        onDrag(dragAmount.x, dragAmount.y)
+                                        if (menuVisible) resetMenuTimer()
+                                    }
+                                )
+                            }
+                            launch {
+                                detectTapGestures(
+                                    onTap = {
+                                        menuVisible = !menuVisible
+                                        if (menuVisible) resetMenuTimer()
+                                    }
+                                )
+                            }
+                        }
+                    }
             )
             }
         }
