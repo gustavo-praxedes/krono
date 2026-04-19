@@ -146,7 +146,7 @@ fun AboutDialog(
 
                 // ── Versão do app ─────────────────────────────
                 Text(
-                    text      = "Versão ${BuildConfig.VERSION_NAME}",
+                    text      = "Versão 2.2.0",
                     style     = MaterialTheme.typography.labelMedium,
                     color     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
