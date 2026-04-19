@@ -117,21 +117,21 @@ fun ColorPickerDialog(
     ) {
         Surface(
             modifier       = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
-            shape          = RoundedCornerShape(20.dp),
+            shape          = RoundedCornerShape(28.dp),
             color          = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(24.dp)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
 
                 Text(
                     text       = title,
-                    style      = MaterialTheme.typography.titleLarge,
+                    style      = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
 
@@ -143,9 +143,9 @@ fun ColorPickerDialog(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(width = 72.dp, height = 72.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+                            .size(width = 80.dp, height = 80.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                     ) {
                         CheckerboardBackground(Modifier.matchParentSize())
                         Box(modifier = Modifier.matchParentSize().background(previewColor))
@@ -153,7 +153,7 @@ fun ColorPickerDialog(
 
                     Column(
                         modifier            = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Campo HEX
                         OutlinedTextField(
@@ -176,6 +176,7 @@ fun ColorPickerDialog(
                                 onDone = { applyHex(hexText) }
                             ),
                             singleLine = true,
+                            shape      = RoundedCornerShape(12.dp),
                             textStyle  = LocalTextStyle.current.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize   = 14.sp
@@ -186,7 +187,7 @@ fun ColorPickerDialog(
                         // Campos R / G / B
                         Row(
                             modifier              = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             // R
                             RgbField(
@@ -216,9 +217,9 @@ fun ColorPickerDialog(
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                // ── Slider H ─────────────────────────────────
+                // ── Sliders ──────────────────────────────────
                 val hueGradient = remember {
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -236,7 +237,6 @@ fun ColorPickerDialog(
                     onValueChange = { hue = it }
                 )
 
-                // ── Slider S ─────────────────────────────────
                 val satBrush by remember(hue, bri) {
                     derivedStateOf {
                         Brush.horizontalGradient(
@@ -256,7 +256,6 @@ fun ColorPickerDialog(
                     onValueChange = { sat = it }
                 )
 
-                // ── Slider B ─────────────────────────────────
                 val briBrush by remember(hue, sat) {
                     derivedStateOf {
                         Brush.horizontalGradient(
@@ -276,9 +275,8 @@ fun ColorPickerDialog(
                     onValueChange = { bri = it }
                 )
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-                // ── Slider Opacidade ─────────────────────────
                 val opacityBrush by remember(previewArgb) {
                     derivedStateOf {
                         Brush.horizontalGradient(
@@ -295,6 +293,8 @@ fun ColorPickerDialog(
                     onValueChange = { opacity = it }
                 )
 
+                Spacer(Modifier.height(8.dp))
+
                 // ── Botões ───────────────────────────────────
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
@@ -302,12 +302,14 @@ fun ColorPickerDialog(
                 ) {
                     OutlinedButton(
                         onClick  = onDismiss,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        shape    = RoundedCornerShape(16.dp)
                     ) { Text("Cancelar") }
 
                     Button(
                         onClick  = { onConfirm(Color(previewArgb), opacity) },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        shape    = RoundedCornerShape(16.dp)
                     ) { Text("Confirmar") }
                 }
             }

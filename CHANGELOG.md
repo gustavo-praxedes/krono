@@ -2,6 +2,23 @@
 
 Histórico de mudanças do Krono.
 
+## [2.2.0](https://github.com/gustavo-praxedes/krono/compare/v2.1.0...v2.2.0) (2026-04-19)
+
+
+### ✨ Novidades
+
+* **UI Pro Max:** Modernização completa da interface para Material 3 com foco em hierarquia visual, tipografia e espaçamentos premium.
+* **Sistema de Atualização:** Novo verificador que exibe notas de lançamento (changelog) diretamente no app e filtra downloads por APK.
+* **Automação de Release:** Integração com GitHub Actions para geração automática de APKs e releases ao subir tags.
+* **Gestos do Overlay:** Refinamento dos gestos de expansão do menu (swipe down) e redução de espaçamento lateral.
+
+
+### 🐛 Correções
+
+* **Bug de Toque:** Corrigido o problema onde o primeiro toque no overlay era ignorado pelo sistema.
+* **Consistência:** Unificação de cores, temas e tipografias no `KronoTheme.kt`.
+
+
 ## [2.1.0](https://github.com/gustavo-praxedes/krono/compare/v2.0.0...v2.1.0) (2026-04-15)
 
 

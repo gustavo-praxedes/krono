@@ -23,7 +23,8 @@ private const val TIMEOUT_MS = 10_000 // 10 segundos
 data class UpdateInfo(
     val tagName    : String,  // ex: "1.2.0"
     val releaseUrl : String,  // página da release no GitHub
-    val downloadUrl: String?  // link direto do APK (pode ser null)
+    val downloadUrl: String?, // link direto do APK (pode ser null)
+    val changelog  : String   // Notas da release (markdown)
 )
 
 // Resultado selado — evita uso de exceções como controle de fluxo
@@ -58,14 +59,21 @@ suspend fun checkForUpdate(currentVersion: String): UpdateResult =
             val json       = JSONObject(body)
             val tagName    = json.getString("tag_name").removePrefix("v")
             val releaseUrl = json.getString("html_url")
+            val changelog  = json.optString("body", "Nenhuma nota de lançamento disponível.")
 
-            // Tenta obter o link direto do APK no primeiro asset
-            val downloadUrl: String? = try {
+            // Filtra os assets para encontrar especificamente o arquivo .apk
+            var downloadUrl: String? = null
+            try {
                 val assets = json.getJSONArray("assets")
-                if (assets.length() > 0) {
-                    assets.getJSONObject(0).getString("browser_download_url")
-                } else null
-            } catch (_: Exception) { null }
+                for (i in 0 until assets.length()) {
+                    val asset = assets.getJSONObject(i)
+                    val name  = asset.getString("name")
+                    if (name.endsWith(".apk", ignoreCase = true)) {
+                        downloadUrl = asset.getString("browser_download_url")
+                        break
+                    }
+                }
+            } catch (_: Exception) { /* Fallback para null */ }
 
             // Compara versões semanticamente (major.minor.patch)
             if (isNewerVersion(tagName, currentVersion)) {
@@ -73,7 +81,8 @@ suspend fun checkForUpdate(currentVersion: String): UpdateResult =
                     UpdateInfo(
                         tagName     = tagName,
                         releaseUrl  = releaseUrl,
-                        downloadUrl = downloadUrl
+                        downloadUrl = downloadUrl,
+                        changelog   = changelog
                     )
                 )
             } else {

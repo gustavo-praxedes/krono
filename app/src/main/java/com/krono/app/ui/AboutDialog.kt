@@ -47,12 +47,12 @@ fun AboutDialog(
             modifier       = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
-            shape          = RoundedCornerShape(20.dp),
+            shape          = RoundedCornerShape(28.dp),
             color          = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
-                modifier            = Modifier.padding(24.dp),
+                modifier            = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -61,7 +61,7 @@ fun AboutDialog(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text       = "Sobre o App",
-                        style      = MaterialTheme.typography.titleLarge,
+                        style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier   = Modifier.align(Alignment.Center)
                     )
@@ -76,7 +76,7 @@ fun AboutDialog(
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Texto descritivo ──────────────────────────
                 Text(
@@ -90,30 +90,30 @@ fun AboutDialog(
                             "de código aberto. Se ele tem sido útil para " +
                             "você, considere apoiar o desenvolvimento para " +
                             "que ele continue evoluindo.",
-                    style     = MaterialTheme.typography.bodyMedium,
+                    style     = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Start,
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Botões empilhados verticalmente ───────────
                 Column(
                     modifier            = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Botão Apoiar — abre o DonationDialog
                     Button(
                         onClick  = onSupportClick,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape = RoundedCornerShape(12.dp)
+                            .height(56.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Text(
                             text       = "Apoiar o Projeto",
                             fontSize   = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
@@ -127,8 +127,8 @@ fun AboutDialog(
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
-                        shape  = RoundedCornerShape(12.dp),
+                            .height(56.dp),
+                        shape  = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Black,
                             contentColor   = Color.White
@@ -137,19 +137,18 @@ fun AboutDialog(
                         Text(
                             text       = "Ver no GitHub",
                             fontSize   = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
 
+                Spacer(Modifier.height(8.dp))
+
                 // ── Versão do app ─────────────────────────────
-                // BuildConfig.VERSION_NAME lê dinamicamente o
-                // versionName do build.gradle.kts — atualizado
-                // automaticamente pelo commit-and-tag-version.
                 Text(
                     text      = "Versão ${BuildConfig.VERSION_NAME}",
-                    style     = MaterialTheme.typography.bodySmall,
-                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style     = MaterialTheme.typography.labelMedium,
+                    color     = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                     modifier  = Modifier.fillMaxWidth()
                 )

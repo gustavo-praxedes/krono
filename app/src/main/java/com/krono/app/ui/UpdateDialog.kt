@@ -2,8 +2,11 @@ package com.krono.app.ui
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -43,12 +46,12 @@ fun UpdateDialog(
             modifier       = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
-            shape          = RoundedCornerShape(20.dp),
+            shape          = RoundedCornerShape(28.dp),
             color          = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
-                modifier            = Modifier.padding(24.dp),
+                modifier            = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -57,7 +60,7 @@ fun UpdateDialog(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text       = "Atualização Disponível",
-                        style      = MaterialTheme.typography.titleLarge,
+                        style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier   = Modifier.align(Alignment.Center)
                     )
@@ -72,28 +75,54 @@ fun UpdateDialog(
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Mensagem informativa ──────────────────────
                 Text(
-                    text = "Uma nova versão do Cronômetro está disponível " +
-                            "(${updateInfo.tagName}).\n\n" +
-                            "Baixe a atualização para obter as últimas " +
-                            "melhorias e correções.",
+                    text = "Uma nova versão do Cronômetro está disponível.\n" +
+                            "Confira as novidades abaixo:",
                     style     = MaterialTheme.typography.bodyLarge,
                     textAlign = TextAlign.Center,
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                // ── Versão em destaque ────────────────────────
-                Text(
-                    text       = updateInfo.tagName,
-                    fontSize   = 28.sp,
-                    fontWeight = FontWeight.Bold,
-                    color      = MaterialTheme.colorScheme.primary
-                )
+                // ── Notas de Lançamento (Changelog) ───────────
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp),
+                    color    = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    shape    = RoundedCornerShape(16.dp),
+                    border   = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .verticalScroll(rememberScrollState())
+                    ) {
+                        Text(
+                            text  = updateInfo.changelog,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-                HorizontalDivider()
+                // ── Versão em destaque ────────────────────────
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text       = "Versão ${updateInfo.tagName}",
+                        style      = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color      = MaterialTheme.colorScheme.primary,
+                        modifier   = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Botão de download ─────────────────────────
                 Button(
@@ -105,13 +134,17 @@ fun UpdateDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(52.dp),
-                    shape = RoundedCornerShape(12.dp)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Text(
                         text       = "Baixar Atualização",
                         fontSize   = 16.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
