@@ -1,6 +1,7 @@
 package com.krono.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -11,16 +12,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
@@ -61,16 +65,17 @@ fun FloatingTimerUi(
 
     val timeFontSize  = (32f * scale).sp
     val iconSizeDp    = (24f * scale).dp
-    val btnSize       = (40f * scale).dp
-    val quickIconSize = (28f * scale).dp
-    val quickBtnSize  = (48f * scale).dp
-    val paddingH      = (16f * scale).dp
+    val btnSize       = (24f * scale).dp
+    val quickIconSize = (24f * scale).dp
+    val quickBtnSize  = (24f * scale).dp
+    val paddingH      = (12f * scale).dp
     val paddingV      = (12f * scale).dp
     val btnSpacing    = (4f  * scale).dp
-    val btnTopPadding = (8f  * scale).dp
+    val btnTopPadding = (4f  * scale).dp
     val limitFontSize = (10f * scale).sp
-    val menuPaddingV  = (10f * scale).dp
-    val menuSpacing   = (16f * scale).dp
+    val menuPaddingV  = (4f  * scale).dp
+    val menuSpacing   = (12f * scale).dp
+    val minColWidth   = (144f * scale).dp
 
     val currentOnStart              by rememberUpdatedState(onStart)
     val currentOnPause              by rememberUpdatedState(onPause)
@@ -99,6 +104,13 @@ fun FloatingTimerUi(
     Box(
         modifier = Modifier
             .wrapContentSize()
+            .padding((8f * scale).dp) // Reserva espaço da Window pro shadow respirar
+            .shadow(
+                elevation = (6f * scale).dp, 
+                shape = shape,
+                ambientColor = Color.Black.copy(alpha = 0.3f), // Opcional, dá mais volume na sombra
+                spotColor = Color.Black.copy(alpha = 0.8f)
+            )
             .clip(shape)
             .background(bgColor)
             .pointerInput(Unit) {
@@ -137,11 +149,15 @@ fun FloatingTimerUi(
     ) {
         Column(
             modifier            = Modifier
-                .wrapContentSize()
+                .widthIn(min = minColWidth)
                 .padding(horizontal = paddingH, vertical = paddingV),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
+            Column(
+                modifier = Modifier.width(IntrinsicSize.Max),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
                 text       = timerState.elapsedMs.toFormattedTime(
                     showHours   = config.showHours,
                     showSeconds = config.showSeconds
@@ -154,22 +170,12 @@ fun FloatingTimerUi(
                 softWrap   = false
             )
 
-            if (timerState.isAtLimit) {
-                Text(
-                    text       = "LIMITE",
-                    color      = txtColor.copy(alpha = 0.8f),
-                    fontSize   = limitFontSize,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
-                )
-            }
-
             if (config.showButtons) {
                 Row(
                     modifier              = Modifier
-                        .wrapContentWidth()
+                        .fillMaxWidth()
                         .padding(top = btnTopPadding),
-                    horizontalArrangement = Arrangement.spacedBy(btnSpacing),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
                     IconButton(
@@ -181,11 +187,9 @@ fun FloatingTimerUi(
                         modifier = Modifier.size(btnSize)
                     ) {
                         Icon(
-                            imageVector        = if (currentIsRunning) Icons.Default.Pause
-                            else Icons.Default.PlayArrow,
+                            imageVector        = if (currentIsRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint               = if (timerState.isAtLimit) txtColor.copy(alpha = 0.4f)
-                            else txtColor,
+                            tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
                             modifier           = Modifier.size(iconSizeDp)
                         )
                     }
@@ -212,66 +216,85 @@ fun FloatingTimerUi(
             // ── Menu de Configurações Rápidas ────────────────────
             AnimatedVisibility(
                 visible = menuVisible,
-                enter   = expandVertically(expandFrom = Alignment.Top),
-                exit    = shrinkVertically(shrinkTowards = Alignment.Top)
+                modifier = Modifier.fillMaxWidth(),
+                enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
             ) {
-                Row(
-                    modifier              = Modifier
-                        .wrapContentWidth()
-                        .padding(vertical = menuPaddingV),
-                    horizontalArrangement = Arrangement.spacedBy(menuSpacing),
-                    verticalAlignment     = Alignment.CenterVertically
-                ) {
-                    // ⚙️ Configurações gerais
-                    IconButton(
-                        onClick  = {
-                            menuVisible = false
-                            currentOnSettings()
-                        },
-                        modifier = Modifier.size(quickBtnSize)
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = menuPaddingV),
+                        thickness = 0.5.dp,
+                        color = txtColor.copy(alpha = 0.2f)
+                    )
+                    Row(
+                        modifier              = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = menuPaddingV),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector        = Icons.Default.Settings,
-                            contentDescription = "Configurações",
-                            tint               = txtColor,
-                            modifier           = Modifier.size(quickIconSize)
-                        )
-                    }
+                        // ⚙️ Configurações gerais
+                        IconButton(
+                            onClick  = {
+                                menuVisible = false
+                                currentOnSettings()
+                            },
+                            modifier = Modifier.size(quickBtnSize)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.Settings,
+                                contentDescription = "Configurações",
+                                tint               = txtColor,
+                                modifier           = Modifier.size(quickIconSize)
+                            )
+                        }
 
-                    // 🎯 Toggle Modo Foco
-                    IconButton(
-                        onClick  = {
-                            resetMenuTimer()
-                            currentOnToggleFocus()
-                        },
-                        modifier = Modifier.size(quickBtnSize)
-                    ) {
-                        Icon(
-                            imageVector        = Icons.Default.VisibilityOff,
-                            contentDescription = "Modo Foco",
-                            tint               = if (config.focusModeEnabled) txtColor
-                            else txtColor.copy(alpha = 0.4f),
-                            modifier           = Modifier.size(quickIconSize)
-                        )
-                    }
+                        // 🎯 Toggle Modo Foco
+                        IconButton(
+                            onClick  = {
+                                resetMenuTimer()
+                                currentOnToggleFocus()
+                            },
+                            modifier = Modifier.size(quickBtnSize)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.TrackChanges,
+                                contentDescription = "Modo Foco",
+                                tint               = if (config.focusModeEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                modifier           = Modifier.size(quickIconSize)
+                            )
+                        }
 
-                    // 💡 Toggle Manter Tela Ligada
-                    IconButton(
-                        onClick  = {
-                            resetMenuTimer()
-                            currentOnToggleKeepScreenOn()
-                        },
-                        modifier = Modifier.size(quickBtnSize)
-                    ) {
-                        Icon(
-                            imageVector        = Icons.Default.LightMode,
-                            contentDescription = "Manter Tela Ligada",
-                            tint               = if (config.keepScreenOn) txtColor
-                            else txtColor.copy(alpha = 0.4f),
-                            modifier           = Modifier.size(quickIconSize)
-                        )
+                        // 💡 Toggle Manter Tela Ligada
+                        IconButton(
+                            onClick  = {
+                                resetMenuTimer()
+                                currentOnToggleKeepScreenOn()
+                            },
+                            modifier = Modifier.size(quickBtnSize)
+                        ) {
+                            Icon(
+                                imageVector        = Icons.Default.LightMode,
+                                contentDescription = "Manter Tela Ligada",
+                                tint               = if (config.keepScreenOn) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                modifier           = Modifier.size(quickIconSize)
+                            )
+                        }
                     }
                 }
+            }
+
+            Icon(
+                imageVector = Icons.Default.MoreHoriz,
+                contentDescription = null,
+                tint = txtColor.copy(alpha = 0.3f),
+                modifier = Modifier
+                    .padding(top = (2f * scale).dp)
+                    .height((18f * scale).dp)
+                    .fillMaxWidth()
+            )
             }
         }
     }

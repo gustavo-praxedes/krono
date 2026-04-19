@@ -93,7 +93,15 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    private val navigationEvents = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
     private lateinit var dataStore: OverlayDataStore
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra("open_settings", false)) {
+            navigationEvents.tryEmit(AppRoutes.SETTINGS)
+        }
+    }
     private val timerViewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
     private var pendingUpdateInfo: UpdateInfo? = null
@@ -109,6 +117,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
+
+        if (intent?.getBooleanExtra("open_settings", false) == true) {
+            navigationEvents.tryEmit(AppRoutes.SETTINGS)
+        }
 
         val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
@@ -142,8 +154,14 @@ class MainActivity : ComponentActivity() {
         val timerState    by timerViewModel.timerState.collectAsState()
         val config        by dataStore.configFlow.collectAsState(initial = OverlayConfig())
 
-        // GIT 6: LaunchedEffect corrigido com isTaskRoot
         LaunchedEffect(Unit) {
+            launch {
+                navigationEvents.collect { route ->
+                    navController.navigate(route) {
+                        launchSingleTop = true
+                    }
+                }
+            }
             val cfg = dataStore.configFlow.first()
             if (cfg.autoLaunch && !isTaskRoot) {
                 tryStartService { }
