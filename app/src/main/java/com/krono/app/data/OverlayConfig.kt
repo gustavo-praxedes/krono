@@ -17,8 +17,9 @@ data class OverlayConfig(
     val isVibrationEnabled: Boolean = false,
     val lastX             : Int     = -1,
     val lastY             : Int     = -1,
-    val totalLifetimeMs  : Long = 0L,
-    val currentCycleMs   : Long = 0L,
-    val lastUpdateCheck  : Long = 0L,
-    val focusModeEnabled : Boolean = false,
+    val totalLifetimeMs   : Long    = 0L,
+    val currentCycleMs    : Long    = 0L,
+    val lastUpdateCheck   : Long    = 0L,
+    val focusModeEnabled  : Boolean = false,
+    val selectedTheme     : String  = "AUTO",   // GIT 7
 )

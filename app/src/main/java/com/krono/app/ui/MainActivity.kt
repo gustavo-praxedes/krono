@@ -30,11 +30,16 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
@@ -77,6 +82,8 @@ import com.krono.app.data.OverlayDataStore
 import com.krono.app.data.formatTimeLimitSeconds
 import com.krono.app.data.parseTimeLimitInput
 import com.krono.app.service.MainService
+import com.krono.app.ui.theme.KronoTheme
+import com.krono.app.ui.theme.KronoThemeOption
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.UpdateResult
 import com.krono.app.util.checkForUpdate
@@ -87,7 +94,6 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStore: OverlayDataStore
-    // Usa o singleton da Application — mesma instância do MainService
     private val timerViewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
     private var pendingUpdateInfo: UpdateInfo? = null
@@ -112,7 +118,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MaterialTheme {
+            val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
+
+            // GIT 7: KronoTheme substitui MaterialTheme direto
+            KronoTheme(selectedTheme = config.selectedTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color    = MaterialTheme.colorScheme.background
@@ -131,13 +140,12 @@ class MainActivity : ComponentActivity() {
     private fun AppContent(showDonationDialog: Boolean = false) {
         val navController = rememberNavController()
         val timerState    by timerViewModel.timerState.collectAsState()
-        val config        by dataStore.configFlow.collectAsState(
-            initial = com.krono.app.data.OverlayConfig()
-        )
+        val config        by dataStore.configFlow.collectAsState(initial = OverlayConfig())
 
-        // AutoLaunch: abre overlay ao iniciar o app se configurado
-        LaunchedEffect(config.autoLaunch) {
-            if (config.autoLaunch) {
+        // GIT 6: LaunchedEffect corrigido com isTaskRoot
+        LaunchedEffect(Unit) {
+            val cfg = dataStore.configFlow.first()
+            if (cfg.autoLaunch && !isTaskRoot) {
                 tryStartService { }
                 moveTaskToBack(true)
             }
@@ -153,8 +161,6 @@ class MainActivity : ComponentActivity() {
                     onStart        = { timerViewModel.start() },
                     onPause        = { timerViewModel.pause() },
                     onReset        = {
-                        // Envia para o MainService para acumular
-                        // o tempo antes de resetar (lógica de doação)
                         val intent = Intent(
                             this@MainActivity,
                             MainService::class.java
@@ -185,12 +191,12 @@ class MainActivity : ComponentActivity() {
         showDonationDialog : Boolean = false,
         onBack             : (() -> Unit)? = null
     ) {
-        val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
+        val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
         val scope  = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
 
-        var showBgPicker   by remember { mutableStateOf(false) }
-        var showTextPicker by remember { mutableStateOf(false) }
+        var showBgPicker          by remember { mutableStateOf(false) }
+        var showTextPicker        by remember { mutableStateOf(false) }
         var showAboutDialog       by remember { mutableStateOf(false) }
         var showDonation          by remember { mutableStateOf(showDonationDialog) }
         var showDonationFromAbout by remember { mutableStateOf(false) }
@@ -202,7 +208,6 @@ class MainActivity : ComponentActivity() {
                 .fillMaxSize()
                 .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-            // 1. ÁREA DE CONTEÚDO (ROLA SE FOR MAIOR QUE A TELA)
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -212,16 +217,15 @@ class MainActivity : ComponentActivity() {
                 Spacer(Modifier.height(5.dp))
 
                 Text(
-                    text = "CONFIGURAÇÕES",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text       = "CONFIGURAÇÕES",
+                    style      = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 25.sp,
-                    modifier = Modifier.padding(bottom = 20.dp)
+                    fontSize   = 25.sp,
+                    modifier   = Modifier.padding(bottom = 20.dp)
                 )
 
                 Spacer(Modifier.height(20.dp))
 
-                // ── Toggles ───────────────────────────────────────
                 ToggleRow("Abrir Diretamente", config.autoLaunch) {
                     scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
                 }
@@ -257,19 +261,25 @@ class MainActivity : ComponentActivity() {
 
                 // ── Tempo Limite ──────────────────────────────────
                 var limitText by remember { mutableStateOf(formatTimeLimitSeconds(config.timeLimitSeconds)) }
-                LaunchedEffect(config.timeLimitSeconds) { limitText = formatTimeLimitSeconds(config.timeLimitSeconds) }
+                LaunchedEffect(config.timeLimitSeconds) {
+                    limitText = formatTimeLimitSeconds(config.timeLimitSeconds)
+                }
 
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                    modifier              = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                    verticalAlignment     = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = "Tempo Limite Máximo", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "HH:MM:SS • 0000:00:00 = ilimitado", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            text  = "HH:MM:SS • 0000:00:00 = ilimitado",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     OutlinedTextField(
-                        value = limitText,
+                        value         = limitText,
                         onValueChange = { input ->
                             val digits = input.filter { it.isDigit() }.take(8)
                             limitText = when {
@@ -278,7 +288,10 @@ class MainActivity : ComponentActivity() {
                                 else -> "${digits.substring(0, 4)}:${digits.substring(4, 6)}:${digits.substring(6)}"
                             }
                         },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction    = ImeAction.Done
+                        ),
                         keyboardActions = KeyboardActions(onDone = {
                             val seconds = parseTimeLimitInput(limitText) ?: 0L
                             scope.launch {
@@ -286,10 +299,14 @@ class MainActivity : ComponentActivity() {
                                 focusManager.clearFocus()
                             }
                         }),
-                        singleLine = true,
-                        modifier = Modifier.width(160.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center, fontSize = 18.sp)
+                        singleLine  = true,
+                        modifier    = Modifier.width(160.dp),
+                        shape       = RoundedCornerShape(8.dp),
+                        textStyle   = LocalTextStyle.current.copy(
+                            fontFamily = FontFamily.Monospace,
+                            textAlign  = TextAlign.Center,
+                            fontSize   = 18.sp
+                        )
                     )
                 }
 
@@ -297,60 +314,82 @@ class MainActivity : ComponentActivity() {
                 HorizontalDivider()
                 Spacer(Modifier.height(20.dp))
 
-                Text(text = "APARÊNCIA", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 16.dp))
+                Text(
+                    text     = "APARÊNCIA",
+                    style    = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color    = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
 
-                ColorRow(label = "Cor de Fundo", color = Color(config.backgroundColor).copy(alpha = config.bgOpacity), onClick = { showBgPicker = true })
+                // ── Seletor de Tema — primeiro item da seção ──────
+                ThemeSelector(
+                    selectedTheme = config.selectedTheme,
+                    onChange      = { theme ->
+                        scope.launch { dataStore.updateConfig(config.copy(selectedTheme = theme)) }
+                    }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                ColorRow(
+                    label   = "Cor de Fundo",
+                    color   = Color(config.backgroundColor).copy(alpha = config.bgOpacity),
+                    onClick = { showBgPicker = true }
+                )
                 Spacer(Modifier.height(12.dp))
-                ColorRow(label = "Cor do Texto", color = Color(config.textColor).copy(alpha = config.textOpacity), onClick = { showTextPicker = true })
+                ColorRow(
+                    label   = "Cor do Texto",
+                    color   = Color(config.textColor).copy(alpha = config.textOpacity),
+                    onClick = { showTextPicker = true }
+                )
 
                 Spacer(Modifier.height(20.dp))
 
-                // ── Sliders (Ajustados para evitar erros de compilação) ──
                 AppearanceSlider(
-                    label = "Escala",
-                    value = config.scale,
+                    label    = "Escala",
+                    value    = config.scale,
                     minLabel = "0.5x",
                     maxLabel = "1.5x",
-                    range = 0.5f..1.5f,
-                    display = "${String.format("%.1f", config.scale)}x",
+                    range    = 0.5f..1.5f,
+                    display  = "${String.format("%.1f", config.scale)}x",
                     onChange = { scope.launch { dataStore.updateConfig(config.copy(scale = it)) } }
                 )
 
                 AppearanceSlider(
-                    label = "Cantos",
-                    value = config.cornerRadius,
+                    label    = "Cantos",
+                    value    = config.cornerRadius,
                     minLabel = "0dp",
                     maxLabel = "50dp",
-                    range = 0f..50f,
-                    display = "${config.cornerRadius.toInt()}dp",
+                    range    = 0f..50f,
+                    display  = "${config.cornerRadius.toInt()}dp",
                     onChange = { scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) } }
                 )
 
-                Spacer(Modifier.height(32.dp)) // Espaço final dentro do scroll
+                Spacer(Modifier.height(32.dp))
             }
 
-            // 2. RODAPÉ (FORA DO SCROLL, EMPURRADO PELO WEIGHT)
             TextButton(
-                onClick = { showAboutDialog = true },
+                onClick  = { showAboutDialog = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Sobre o App",
+                    text      = "Sobre o App",
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color     = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(Modifier.height(32.dp)) // Espaço final.
+            Spacer(Modifier.height(32.dp))
         }
 
-        // ── Diálogos ──────────────────────────────────────────
+        // ── Diálogos ──────────────────────────────────────────────
 
         if (showBgPicker) {
             ColorPickerDialog(
                 title          = "Cor de Fundo",
                 initialColor   = Color(config.backgroundColor),
                 initialOpacity = config.bgOpacity,
-                onPreview = { color, opacity ->
+                onPreview      = { color, opacity ->
                     scope.launch {
                         dataStore.updateConfig(config.copy(backgroundColor = color.toArgb(), bgOpacity = opacity))
                     }
@@ -395,7 +434,7 @@ class MainActivity : ComponentActivity() {
                 title          = "Cor do Texto",
                 initialColor   = Color(config.textColor),
                 initialOpacity = config.textOpacity,
-                onPreview = { color, opacity ->
+                onPreview      = { color, opacity ->
                     scope.launch {
                         dataStore.updateConfig(config.copy(textColor = color.toArgb(), textOpacity = opacity))
                     }
@@ -424,19 +463,68 @@ class MainActivity : ComponentActivity() {
             UpdateDialog(
                 updateInfo = updateInfo!!,
                 onDismiss  = {
-                    showUpdateDialog = false
-                    updateInfo       = null
+                    showUpdateDialog  = false
+                    updateInfo        = null
                     pendingUpdateInfo = null
                 }
             )
         }
     }
 
+    // ── Seletor de tema com ExposedDropdownMenuBox ────────────
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    private fun ThemeSelector(selectedTheme: String, onChange: (String) -> Unit) {
+        var expanded by remember { mutableStateOf(false) }
+        val current = KronoThemeOption.entries.find { it.name == selectedTheme }
+            ?: KronoThemeOption.AUTO
+
+        Row(
+            modifier              = Modifier.fillMaxWidth(),
+            verticalAlignment     = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = "Tema", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+
+            ExposedDropdownMenuBox(
+                expanded        = expanded,
+                onExpandedChange = { expanded = !expanded },
+                modifier        = Modifier.width(200.dp)
+            ) {
+                OutlinedTextField(
+                    value            = current.label,
+                    onValueChange    = {},
+                    readOnly         = true,
+                    trailingIcon     = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    shape            = RoundedCornerShape(8.dp),
+                    modifier         = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    textStyle        = MaterialTheme.typography.bodyMedium,
+                    singleLine       = true,
+                )
+
+                ExposedDropdownMenu(
+                    expanded        = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    KronoThemeOption.entries.forEach { option ->
+                        DropdownMenuItem(
+                            text    = { Text(option.label) },
+                            onClick = {
+                                onChange(option.name)
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+
     @Composable
     private fun ToggleRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier              = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
@@ -447,8 +535,8 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun ColorRow(label: String, color: Color, onClick: () -> Unit) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier              = Modifier.fillMaxWidth(),
+            verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(text = label, style = MaterialTheme.typography.bodyLarge)
@@ -464,16 +552,51 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun AppearanceSlider(label: String, value: Float, minLabel: String, maxLabel: String, range: ClosedFloatingPointRange<Float>, display: String, onChange: (Float) -> Unit) {
+    private fun AppearanceSlider(
+        label    : String,
+        value    : Float,
+        minLabel : String,
+        maxLabel : String,
+        range    : ClosedFloatingPointRange<Float>,
+        display  : String,
+        onChange : (Float) -> Unit
+    ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier              = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment     = Alignment.CenterVertically
+            ) {
                 Text(text = label, style = MaterialTheme.typography.bodyLarge)
-                Text(text = display, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(
+                    text       = display,
+                    style      = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Bold,
+                    color      = MaterialTheme.colorScheme.primary
+                )
             }
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(text = minLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 4.dp))
-                Slider(value = value, onValueChange = onChange, valueRange = range, modifier = Modifier.weight(1f))
-                Text(text = maxLabel, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
+            Row(
+                modifier          = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text     = minLabel,
+                    style    = MaterialTheme.typography.bodySmall,
+                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Slider(
+                    value        = value,
+                    onValueChange = onChange,
+                    valueRange   = range,
+                    modifier     = Modifier.weight(1f)
+                )
+                Text(
+                    text     = maxLabel,
+                    style    = MaterialTheme.typography.bodySmall,
+                    color    = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
         }
     }
@@ -487,7 +610,9 @@ class MainActivity : ComponentActivity() {
 
     private fun tryStartService(onStarted: () -> Unit) {
         if (!Settings.canDrawOverlays(this)) {
-            overlayPermissionLauncher.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
+            overlayPermissionLauncher.launch(
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            )
             return
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

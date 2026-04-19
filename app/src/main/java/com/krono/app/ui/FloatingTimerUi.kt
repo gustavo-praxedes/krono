@@ -1,5 +1,8 @@
 package com.krono.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -7,9 +10,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,43 +31,70 @@ import com.krono.app.data.OverlayConfig
 import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private const val QUICK_MENU_TIMEOUT_MS = 5_000L
 
 @Composable
 fun FloatingTimerUi(
-    timerState : TimerState,
-    config     : OverlayConfig,
-    onStart    : () -> Unit,
-    onPause    : () -> Unit,
-    onReset    : () -> Unit,
-    onDrag     : (dx: Float, dy: Float) -> Unit,
-    onDragEnd  : () -> Unit,
-    onClose    : () -> Unit,
-    onSettings : () -> Unit  // Mantido — usado pelo long press (GIT 4)
+    timerState            : TimerState,
+    config                : OverlayConfig,
+    onStart               : () -> Unit,
+    onPause               : () -> Unit,
+    onReset               : () -> Unit,
+    onDrag                : (dx: Float, dy: Float) -> Unit,
+    onDragEnd             : () -> Unit,
+    onClose               : () -> Unit,
+    onSettings            : () -> Unit,
+    onToggleFocus         : () -> Unit,
+    onToggleKeepScreenOn  : () -> Unit,
+    onMenuVisibilityChange: (Boolean) -> Unit
 ) {
     val isRunning = timerState.isRunning
     val scale     = config.scale
 
-    val cornerRadius  = (config.cornerRadius * scale).coerceAtMost(64f).dp
-    val bgColor       = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
-    val txtColor      = Color(config.textColor).copy(alpha = config.textOpacity)
-    val shape         = RoundedCornerShape(cornerRadius)
+    val cornerRadius = (config.cornerRadius * scale).coerceAtMost(64f).dp
+    val bgColor      = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
+    val txtColor     = Color(config.textColor).copy(alpha = config.textOpacity)
+    val shape        = RoundedCornerShape(cornerRadius)
 
-    // ── Tamanhos proporcionais à escala ──────────────────────────
     val timeFontSize  = (32f * scale).sp
     val iconSizeDp    = (24f * scale).dp
     val btnSize       = (40f * scale).dp
+    val quickIconSize = (28f * scale).dp
+    val quickBtnSize  = (48f * scale).dp
     val paddingH      = (16f * scale).dp
     val paddingV      = (12f * scale).dp
     val btnSpacing    = (4f  * scale).dp
     val btnTopPadding = (8f  * scale).dp
     val limitFontSize = (10f * scale).sp
+    val menuPaddingV  = (10f * scale).dp
+    val menuSpacing   = (16f * scale).dp
 
-    val currentOnStart   by rememberUpdatedState(onStart)
-    val currentOnPause   by rememberUpdatedState(onPause)
-    val currentOnReset   by rememberUpdatedState(onReset)
-    val currentOnSettings by rememberUpdatedState(onSettings)
-    val currentIsRunning by rememberUpdatedState(isRunning)
+    val currentOnStart              by rememberUpdatedState(onStart)
+    val currentOnPause              by rememberUpdatedState(onPause)
+    val currentOnReset              by rememberUpdatedState(onReset)
+    val currentOnSettings           by rememberUpdatedState(onSettings)
+    val currentOnToggleFocus        by rememberUpdatedState(onToggleFocus)
+    val currentOnToggleKeepScreenOn by rememberUpdatedState(onToggleKeepScreenOn)
+    val currentIsRunning            by rememberUpdatedState(isRunning)
+
+    var menuVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(menuVisible) {
+        onMenuVisibilityChange(menuVisible)
+    }
+
+    var menuInteractionTick by remember { mutableIntStateOf(0) }
+    LaunchedEffect(menuVisible, menuInteractionTick) {
+        if (menuVisible) {
+            delay(QUICK_MENU_TIMEOUT_MS)
+            menuVisible = false
+        }
+    }
+
+    fun resetMenuTimer() { menuInteractionTick++ }
 
     Box(
         modifier = Modifier
@@ -77,14 +110,26 @@ fun FloatingTimerUi(
                             onDrag       = { change, dragAmount ->
                                 change.consume()
                                 onDrag(dragAmount.x, dragAmount.y)
+                                if (menuVisible) resetMenuTimer()
                             }
                         )
                     }
                     launch {
                         detectTapGestures(
-                            onTap       = { if (currentIsRunning) currentOnPause() else currentOnStart() },
-                            onDoubleTap = { currentOnReset() },
-                            onLongPress = { currentOnSettings() }  // GIT 4 substituirá por menu
+                            onTap = {
+                                if (menuVisible) {
+                                    menuVisible = false
+                                } else {
+                                    if (currentIsRunning) currentOnPause() else currentOnStart()
+                                }
+                            },
+                            onDoubleTap = {
+                                menuVisible = false
+                                currentOnReset()
+                            },
+                            onLongPress = {
+                                menuVisible = true
+                            }
                         )
                     }
                 }
@@ -96,7 +141,6 @@ fun FloatingTimerUi(
                 .padding(horizontal = paddingH, vertical = paddingV),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ── Display do tempo ─────────────────────────────────
             Text(
                 text       = timerState.elapsedMs.toFormattedTime(
                     showHours   = config.showHours,
@@ -120,7 +164,6 @@ fun FloatingTimerUi(
                 )
             }
 
-            // ── Botões: Play/Pause · Reset · Fechar ─────────────
             if (config.showButtons) {
                 Row(
                     modifier              = Modifier
@@ -129,9 +172,11 @@ fun FloatingTimerUi(
                     horizontalArrangement = Arrangement.spacedBy(btnSpacing),
                     verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    // Play / Pause
                     IconButton(
-                        onClick  = { if (currentIsRunning) currentOnPause() else currentOnStart() },
+                        onClick  = {
+                            if (menuVisible) resetMenuTimer()
+                            if (currentIsRunning) currentOnPause() else currentOnStart()
+                        },
                         enabled  = !timerState.isAtLimit,
                         modifier = Modifier.size(btnSize)
                     ) {
@@ -145,29 +190,85 @@ fun FloatingTimerUi(
                         )
                     }
 
-                    // Reset
                     IconButton(
-                        onClick  = currentOnReset,
+                        onClick  = {
+                            if (menuVisible) resetMenuTimer()
+                            currentOnReset()
+                        },
                         modifier = Modifier.size(btnSize)
                     ) {
-                        Icon(
-                            imageVector        = Icons.Default.Refresh,
-                            contentDescription = null,
-                            tint               = txtColor,
-                            modifier           = Modifier.size(iconSizeDp)
-                        )
+                        Icon(Icons.Default.Refresh, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
                     }
 
-                    // Fechar
                     IconButton(
                         onClick  = onClose,
                         modifier = Modifier.size(btnSize)
                     ) {
+                        Icon(Icons.Default.Close, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                    }
+                }
+            }
+
+            // ── Menu de Configurações Rápidas ────────────────────
+            AnimatedVisibility(
+                visible = menuVisible,
+                enter   = expandVertically(expandFrom = Alignment.Top),
+                exit    = shrinkVertically(shrinkTowards = Alignment.Top)
+            ) {
+                Row(
+                    modifier              = Modifier
+                        .wrapContentWidth()
+                        .padding(vertical = menuPaddingV),
+                    horizontalArrangement = Arrangement.spacedBy(menuSpacing),
+                    verticalAlignment     = Alignment.CenterVertically
+                ) {
+                    // ⚙️ Configurações gerais
+                    IconButton(
+                        onClick  = {
+                            menuVisible = false
+                            currentOnSettings()
+                        },
+                        modifier = Modifier.size(quickBtnSize)
+                    ) {
                         Icon(
-                            imageVector        = Icons.Default.Close,
-                            contentDescription = null,
+                            imageVector        = Icons.Default.Settings,
+                            contentDescription = "Configurações",
                             tint               = txtColor,
-                            modifier           = Modifier.size(iconSizeDp)
+                            modifier           = Modifier.size(quickIconSize)
+                        )
+                    }
+
+                    // 🎯 Toggle Modo Foco
+                    IconButton(
+                        onClick  = {
+                            resetMenuTimer()
+                            currentOnToggleFocus()
+                        },
+                        modifier = Modifier.size(quickBtnSize)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.VisibilityOff,
+                            contentDescription = "Modo Foco",
+                            tint               = if (config.focusModeEnabled) txtColor
+                            else txtColor.copy(alpha = 0.4f),
+                            modifier           = Modifier.size(quickIconSize)
+                        )
+                    }
+
+                    // 💡 Toggle Manter Tela Ligada
+                    IconButton(
+                        onClick  = {
+                            resetMenuTimer()
+                            currentOnToggleKeepScreenOn()
+                        },
+                        modifier = Modifier.size(quickBtnSize)
+                    ) {
+                        Icon(
+                            imageVector        = Icons.Default.LightMode,
+                            contentDescription = "Manter Tela Ligada",
+                            tint               = if (config.keepScreenOn) txtColor
+                            else txtColor.copy(alpha = 0.4f),
+                            modifier           = Modifier.size(quickIconSize)
                         )
                     }
                 }

@@ -82,8 +82,6 @@ class MainService : Service(),
     private lateinit var dataStore: OverlayDataStore
     private lateinit var timerPrefs: TimerPreferences
 
-    // ViewModel singleton da Application — mesma instância
-    // usada pela MainActivity e pelo overlay
     private val viewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
     private var composeView: ComposeView? = null
@@ -95,8 +93,6 @@ class MainService : Service(),
     private var currentConfig: OverlayConfig = OverlayConfig()
     private var lastNotifiedSecond: Long = -1L
 
-    // PendingIntent reutilizado — criado uma vez no onCreate.
-    // Evita overhead de IPC a cada segundo sem precisar de mActions.
     private lateinit var contentPendingIntent: PendingIntent
 
     companion object {
@@ -118,7 +114,6 @@ class MainService : Service(),
         dataStore = OverlayDataStore(this)
         timerPrefs = TimerPreferences(this)
 
-        // Inicializa PendingIntent uma única vez
         contentPendingIntent = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java).apply {
@@ -176,13 +171,13 @@ class MainService : Service(),
 
             else -> {
                 serviceScope.launch {
-                    // OBRIGA o sistema a ler o X e Y corretos ANTES de criar a janela
                     if (composeView == null) {
                         currentConfig = dataStore.configFlow.first()
                         showOverlay()
                     }
                     observeConfig()
                     observeScreenState()
+                    observeTimerRunning()
                     startNotificationUpdater()
                     observeTimerLimit()
                 }
@@ -219,7 +214,6 @@ class MainService : Service(),
         timerPrefs.setServiceActive(false)
         applyScreenOn(false)
 
-        // Encerra o Modo Foco se estiver ativo
         sendBroadcast(Intent(ACTION_FOCUS_DISMISSED).apply {
             `package` = packageName
         })
@@ -228,16 +222,6 @@ class MainService : Service(),
         stopSelf()
     }
 
-    // Chamado exclusivamente no Reset — nunca durante a contagem.
-    // 1. Captura o tempo da sessão atual ANTES de zerar
-    // 2. Acumula no DataStore
-    // 3. Verifica o gatilho de 12h
-    // 4. Reseta o ViewModel
-    // Chamado exclusivamente no Reset — nunca durante a contagem.
-    // 1. Captura o tempo da sessão atual ANTES de zerar
-    // 2. Acumula no DataStore
-    // 3. Verifica o gatilho de 12h
-    // 4. Reseta o ViewModel
     private fun handleReset() {
         val sessionMs = viewModel.currentSessionMs
 
@@ -260,7 +244,8 @@ class MainService : Service(),
                 }
                 startActivity(intent)
             }
-            // Reseta o cronômetro independente do gatilho
+            // Reset NÃO envia ACTION_FOCUS_DISMISSED —
+            // o Modo Foco permanece ativo após resetar
             viewModel.reset()
         }
     }
@@ -272,7 +257,6 @@ class MainService : Service(),
     @SuppressLint("InlinedApi")
     private fun startForegroundWithNotification() {
         val notification = buildNotification(viewModel.timerState.value)
-        // FOREGROUND_SERVICE_TYPE_SPECIAL_USE requer API 34
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(
                 NOTIFICATION_ID,
@@ -284,8 +268,6 @@ class MainService : Service(),
         }
     }
 
-    // Cria um builder limpo a cada chamada mas reutiliza
-    // contentPendingIntent (criado no onCreate) — sem mActions.
     private fun buildNotification(timerState: TimerState): Notification {
 
         fun actionIntent(action: String, requestCode: Int): PendingIntent {
@@ -325,29 +307,20 @@ class MainService : Service(),
             )
 
         if (timerState.isRunning && timerState.startTime != -1L) {
-            // ── Modo Cronômetro Nativo ────────────────────────
-            // Enquanto rodando: Android gerencia o incremento visual
-            // na barra de notificações — zero atraso, zero latência.
-            // setWhen recebe o timestamp do "momento zero" do timer:
-            // tempo atual menos o que já passou (pauseOffset + sessão atual)
             val elapsedSinceStart = System.currentTimeMillis() - timerState.startTime
-            val totalElapsed = timerState.pauseOffset + elapsedSinceStart
-            val whenMs = System.currentTimeMillis() - totalElapsed
+            val totalElapsed      = timerState.pauseOffset + elapsedSinceStart
+            val whenMs            = System.currentTimeMillis() - totalElapsed
 
             builder
                 .setUsesChronometer(true)
                 .setChronometerCountDown(false)
                 .setWhen(whenMs)
                 .setShowWhen(true)
-                // Texto de apoio exibido abaixo do cronômetro nativo
                 .setContentText(getString(R.string.notification_text_running))
 
         } else {
-            // ── Modo Texto Estático ───────────────────────────
-            // Quando pausado ou zerado: desativa o cronômetro nativo
-            // e exibe o tempo congelado como texto formatado.
             val frozenTime = timerState.elapsedMs.toFormattedTime(
-                showHours = currentConfig.showHours,
+                showHours   = currentConfig.showHours,
                 showSeconds = currentConfig.showSeconds
             )
             builder
@@ -359,7 +332,6 @@ class MainService : Service(),
         return builder.build()
     }
 
-    // Dispatchers.Main.immediate: menor latência entre overlay e notificação
     private fun startNotificationUpdater() {
         notificationJob?.cancel()
         notificationJob = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
@@ -370,9 +342,6 @@ class MainService : Service(),
                 val stateChanged = state.isRunning != lastIsRunning ||
                         state.isAtLimit != lastIsAtLimit
 
-                // Atualiza a notificação apenas quando o estado muda
-                // (play↔pause, reset, limite atingido).
-                // Enquanto rodando, o Android atualiza o tempo sozinho.
                 if (stateChanged) {
                     lastIsRunning = state.isRunning
                     lastIsAtLimit = state.isAtLimit
@@ -410,25 +379,42 @@ class MainService : Service(),
 
         val view = ComposeView(this).apply {
             setContent {
-                val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
+                val config     by dataStore.configFlow.collectAsState(initial = OverlayConfig())
                 val timerState by viewModel.timerState.collectAsState()
 
                 FloatingTimerUi(
-                    timerState = timerState,
-                    config = config,
-                    onStart = {
+                    timerState             = timerState,
+                    config                 = config,
+                    onStart                = {
                         viewModel.start()
                         triggerFeedback(currentConfig)
                     },
-                    onPause = {
+                    onPause                = {
                         viewModel.pause()
                         triggerFeedback(currentConfig)
                     },
-                    onReset = { handleReset() },
-                    onDrag = { dx, dy -> handleDrag(dx, dy) },
-                    onDragEnd = { saveOverlayPosition() },
-                    onClose = { closeAndStop() },
-                    onSettings = { openMainActivity() }
+                    onReset                = { handleReset() },
+                    onDrag                 = { dx, dy -> handleDrag(dx, dy) },
+                    onDragEnd              = { saveOverlayPosition() },
+                    onClose                = { closeAndStop() },
+                    onSettings             = { openMainActivity() },
+                    onToggleFocus          = {
+                        serviceScope.launch {
+                            dataStore.updateConfig(
+                                currentConfig.copy(focusModeEnabled = !currentConfig.focusModeEnabled)
+                            )
+                        }
+                    },
+                    onToggleKeepScreenOn   = {
+                        serviceScope.launch {
+                            dataStore.updateConfig(
+                                currentConfig.copy(keepScreenOn = !currentConfig.keepScreenOn)
+                            )
+                        }
+                    },
+                    onMenuVisibilityChange = { menuOpen ->
+                        setOverlayFocusable(menuOpen)
+                    }
                 )
             }
         }
@@ -442,193 +428,193 @@ class MainService : Service(),
         overlayVisible = true
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
 
-        // Ativa Modo Foco imediatamente se configurado
         if (currentConfig.focusModeEnabled) {
             startFocusMode()
         }
     }
-        private fun removeOverlay() {
-            composeView?.let {
-                try {
-                    windowManager.removeView(it)
-                } catch (_: Exception) {
-                }
-                composeView = null
-            }
-        }
 
-        private fun hideOverlay() {
-            // Encerra Modo Foco se estiver ativo antes de ocultar
-            sendBroadcast(Intent(ACTION_FOCUS_DISMISSED).apply {
-                `package` = packageName
-            })
-
-            composeView?.let {
-                try {
-                    windowManager.removeView(it)
-                } catch (_: Exception) {
-                }
-            }
-            overlayVisible = false
-        }
-
-        // Reexibe o overlay após o fechamento do diálogo de doação.
-        // Chamado pelo ACTION_SHOW_OVERLAY vindo da MainActivity.
-        private fun showOverlayIfHidden() {
-            if (!overlayVisible && composeView != null) {
-                try {
-                    windowManager.addView(composeView, overlayParams)
-                    overlayVisible = true
-                } catch (_: Exception) {
-                }
-            }
-        }
-
-        private fun handleDrag(dx: Float, dy: Float) {
-            val params = overlayParams ?: return
-            val view = composeView ?: return
-
-            val widgetWidth = view.width.takeIf { it > 0 } ?: return
-            val widgetHeight = view.height.takeIf { it > 0 } ?: return
-
-            // Lê as dimensões atuais a cada drag — garante valores
-            // corretos após rotação de tela sem reiniciar o serviço
-            val metrics = resources.displayMetrics
-            val screenWidth = metrics.widthPixels
-            val screenHeight = metrics.heightPixels
-
-            var newX = params.x + dx.toInt()
-            var newY = params.y + dy.toInt()
-
-            val rightEdge = screenWidth - widgetWidth
-            val bottomEdge = screenHeight - widgetHeight
-
-            when {
-                newX <= EDGE_SNAP_THRESHOLD && dx <= 0 -> newX = 0
-                newX >= rightEdge - EDGE_SNAP_THRESHOLD && dx >= 0 -> newX = rightEdge
-            }
-            when {
-                newY <= EDGE_SNAP_THRESHOLD && dy <= 0 -> newY = 0
-                newY >= bottomEdge - EDGE_SNAP_THRESHOLD && dy >= 0 -> newY = bottomEdge
-            }
-
-            params.x = newX.coerceIn(0, maxOf(0, rightEdge))
-            params.y = newY.coerceIn(0, maxOf(0, bottomEdge))
-
-            try {
-                windowManager.updateViewLayout(view, params)
-            } catch (_: Exception) {
-            }
-        }
-
-        private fun saveOverlayPosition() {
-            val params = overlayParams ?: return
-            serviceScope.launch {
-                dataStore.savePosition(params.x, params.y)
-            }
-        }
-
-        // ========================================================
-        // OBSERVADORES
-        // ========================================================
-
-        private fun observeConfig() {
-            serviceScope.launch {
-                dataStore.configFlow.collectLatest { config ->
-                    currentConfig = config
-                    viewModel.setTimeLimit(config.timeLimitSeconds)
-                    // Modo Foco é ativado apenas pelo showOverlay()
-                    // nunca pelo observer de config
-                }
-            }
-        }
-
-        private fun observeScreenState() {
-            serviceScope.launch {
-                combine(dataStore.configFlow, viewModel.timerState) { config, state ->
-                    config.keepScreenOn
-                }.collect { shouldKeepOn ->
-                    applyScreenOn(shouldKeepOn)
-                }
-            }
-        }
-
-        private fun observeTimerLimit() {
-            serviceScope.launch {
-                viewModel.timerState.collect { state ->
-                    if (state.isAtLimit) closeAndStop()
-                }
-            }
-        }
-
-        // ========================================================
-        // WAKELOCK E TELA
-        // ========================================================
-
-        private fun applyScreenOn(enable: Boolean) {
-            val params = overlayParams ?: return
-            val view = composeView ?: return
-
-            if (enable) {
-                params.flags = params.flags or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                try {
-                    windowManager.updateViewLayout(view, params)
-                } catch (_: Exception) {
-                }
-
-                if (wakeLock?.isHeld != true) {
-                    val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-                    wakeLock = pm.newWakeLock(
-                        PowerManager.PARTIAL_WAKE_LOCK,
-                        "Cronometro::WakeLock"
-                    ).apply { acquire(99 * 60 * 60 * 1000L) }
-                }
-            } else {
-                params.flags = params.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON.inv()
-                try {
-                    windowManager.updateViewLayout(view, params)
-                } catch (_: Exception) {
-                }
-                releaseWakeLock()
-            }
-        }
-
-        private fun releaseWakeLock() {
-            if (wakeLock?.isHeld == true) wakeLock?.release()
-            wakeLock = null
-        }
-
-        // ========================================================
-        // FEEDBACK
-        // ========================================================
-
-        private fun triggerFeedback(config: OverlayConfig) {
-            if (config.isBeepEnabled) {
-                toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
-            }
-            if (config.isVibrationEnabled) {
-                // VibrationEffect disponível desde API 26 (minSdk) — sem check necessário
-                vibrator?.vibrate(
-                    VibrationEffect.createOneShot(50L, VibrationEffect.DEFAULT_AMPLITUDE)
-                )
-            }
-        }
-
-        private fun openMainActivity() {
-            val i = Intent(this, MainActivity::class.java)
-            i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            startActivity(i)
-        }
-
-        private var focusActivityIntent: Intent? = null
-
-        private fun startFocusMode() {
-            // Só ativa se o overlay estiver visível
-            if (!overlayVisible) return
-
-            val intent = Intent(this, FocusActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            startActivity(intent)
+    private fun removeOverlay() {
+        composeView?.let {
+            try { windowManager.removeView(it) } catch (_: Exception) { }
+            composeView = null
         }
     }
+
+    private fun hideOverlay() {
+        // Desabilitar overlay também desativa o Modo Foco
+        sendBroadcast(Intent(ACTION_FOCUS_DISMISSED).apply {
+            `package` = packageName
+        })
+        composeView?.let {
+            try { windowManager.removeView(it) } catch (_: Exception) { }
+        }
+        overlayVisible = false
+    }
+
+    private fun showOverlayIfHidden() {
+        if (!overlayVisible && composeView != null) {
+            try {
+                windowManager.addView(composeView, overlayParams)
+                overlayVisible = true
+            } catch (_: Exception) { }
+        }
+    }
+
+    private fun setOverlayFocusable(focusable: Boolean) {
+        val params = overlayParams ?: return
+        val view   = composeView   ?: return
+        params.flags = if (focusable) {
+            params.flags and WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.inv()
+        } else {
+            params.flags or WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+        }
+        try { windowManager.updateViewLayout(view, params) } catch (_: Exception) { }
+    }
+
+    private fun handleDrag(dx: Float, dy: Float) {
+        val params = overlayParams ?: return
+        val view   = composeView   ?: return
+
+        val widgetWidth  = view.width.takeIf  { it > 0 } ?: return
+        val widgetHeight = view.height.takeIf { it > 0 } ?: return
+
+        val metrics      = resources.displayMetrics
+        val screenWidth  = metrics.widthPixels
+        val screenHeight = metrics.heightPixels
+
+        var newX = params.x + dx.toInt()
+        var newY = params.y + dy.toInt()
+
+        val rightEdge  = screenWidth  - widgetWidth
+        val bottomEdge = screenHeight - widgetHeight
+
+        when {
+            newX <= EDGE_SNAP_THRESHOLD && dx <= 0             -> newX = 0
+            newX >= rightEdge - EDGE_SNAP_THRESHOLD && dx >= 0 -> newX = rightEdge
+        }
+        when {
+            newY <= EDGE_SNAP_THRESHOLD && dy <= 0              -> newY = 0
+            newY >= bottomEdge - EDGE_SNAP_THRESHOLD && dy >= 0 -> newY = bottomEdge
+        }
+
+        params.x = newX.coerceIn(0, maxOf(0, rightEdge))
+        params.y = newY.coerceIn(0, maxOf(0, bottomEdge))
+
+        try { windowManager.updateViewLayout(view, params) } catch (_: Exception) { }
+    }
+
+    private fun saveOverlayPosition() {
+        val params = overlayParams ?: return
+        serviceScope.launch {
+            dataStore.savePosition(params.x, params.y)
+        }
+    }
+
+    // ========================================================
+    // OBSERVADORES
+    // ========================================================
+
+    private fun observeConfig() {
+        serviceScope.launch {
+            dataStore.configFlow.collectLatest { config ->
+                currentConfig = config
+                viewModel.setTimeLimit(config.timeLimitSeconds)
+            }
+        }
+    }
+
+    // GIT 2 + GIT 5: keepScreenOn independe de isRunning.
+    // O Modo Foco força a tela ligada via FLAG na própria
+    // FocusActivity — não depende deste observer.
+    private fun observeScreenState() {
+        serviceScope.launch {
+            dataStore.configFlow.collect { config ->
+                applyScreenOn(config.keepScreenOn)
+            }
+        }
+    }
+
+    // GIT 5: Ativa o Modo Foco automaticamente quando o
+    // cronômetro inicia, se focusModeEnabled estiver ligado.
+    // Persiste no Pause e no Reset (não recebem dismiss).
+    private fun observeTimerRunning() {
+        serviceScope.launch {
+            var wasRunning = viewModel.timerState.value.isRunning
+            viewModel.timerState.collect { state ->
+                val justStarted = !wasRunning && state.isRunning
+                wasRunning = state.isRunning
+                if (justStarted && currentConfig.focusModeEnabled && overlayVisible) {
+                    startFocusMode()
+                }
+            }
+        }
+    }
+
+    private fun observeTimerLimit() {
+        serviceScope.launch {
+            viewModel.timerState.collect { state ->
+                if (state.isAtLimit) closeAndStop()
+            }
+        }
+    }
+
+    // ========================================================
+    // WAKELOCK E TELA
+    // ========================================================
+
+    private fun applyScreenOn(enable: Boolean) {
+        val params = overlayParams ?: return
+        val view   = composeView   ?: return
+
+        if (enable) {
+            params.flags = params.flags or WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+            try { windowManager.updateViewLayout(view, params) } catch (_: Exception) { }
+
+            if (wakeLock?.isHeld != true) {
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = pm.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "Cronometro::WakeLock"
+                ).apply { acquire(99 * 60 * 60 * 1000L) }
+            }
+        } else {
+            params.flags = params.flags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON.inv()
+            try { windowManager.updateViewLayout(view, params) } catch (_: Exception) { }
+            releaseWakeLock()
+        }
+    }
+
+    private fun releaseWakeLock() {
+        if (wakeLock?.isHeld == true) wakeLock?.release()
+        wakeLock = null
+    }
+
+    // ========================================================
+    // FEEDBACK
+    // ========================================================
+
+    private fun triggerFeedback(config: OverlayConfig) {
+        if (config.isBeepEnabled) {
+            toneGenerator?.startTone(ToneGenerator.TONE_PROP_BEEP, 150)
+        }
+        if (config.isVibrationEnabled) {
+            vibrator?.vibrate(
+                VibrationEffect.createOneShot(50L, VibrationEffect.DEFAULT_AMPLITUDE)
+            )
+        }
+    }
+
+    private fun openMainActivity() {
+        val i = Intent(this, MainActivity::class.java)
+        i.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+        startActivity(i)
+    }
+
+    private fun startFocusMode() {
+        if (!overlayVisible) return
+        val intent = Intent(this, FocusActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+        }
+        startActivity(intent)
+    }
+}
