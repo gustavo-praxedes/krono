@@ -30,6 +30,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -221,206 +223,225 @@ class MainActivity : ComponentActivity() {
         var showUpdateDialog      by remember { mutableStateOf(pendingUpdateInfo != null) }
         var updateInfo            by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 24.dp)
-        ) {
+        @OptIn(ExperimentalMaterial3Api::class)
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Configurações",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        )
+                    },
+                    navigationIcon = {
+                        if (onBack != null) {
+                            IconButton(onClick = onBack) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Voltar"
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        ) { paddingValues ->
             Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(0.dp)
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp)
             ) {
-                Spacer(Modifier.height(5.dp))
-
-                Text(
-                    text       = "CONFIGURAÇÕES",
-                    style      = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    fontSize   = 25.sp,
-                    modifier   = Modifier.padding(bottom = 20.dp)
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                ToggleRow("Abrir Diretamente", config.autoLaunch) {
-                    scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
-                }
-                ToggleRow("Exibir Horas", config.showHours) {
-                    if (!it && !config.showSeconds) return@ToggleRow
-                    scope.launch { dataStore.updateConfig(config.copy(showHours = it)) }
-                }
-                ToggleRow("Exibir Segundos", config.showSeconds) {
-                    if (!it && !config.showHours) return@ToggleRow
-                    scope.launch { dataStore.updateConfig(config.copy(showSeconds = it)) }
-                }
-                ToggleRow("Exibir Botões", config.showButtons) {
-                    scope.launch { dataStore.updateConfig(config.copy(showButtons = it)) }
-                }
-                ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
-                    scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
-                }
-                ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
-                    scope.launch { dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled)) }
-                    if (isEnabled && isServiceRunning()) {
-                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                            action = ACTION_START_FOCUS
-                        }
-                        startForegroundService(intent)
-                    }
-                }
-                ToggleRow("Bipe Ativo", config.isBeepEnabled) {
-                    scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }
-                }
-                ToggleRow("Vibração Ativa", config.isVibrationEnabled) {
-                    scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
-                }
-
-                // ── Tempo Limite ──────────────────────────────────
-                var typedDigits by remember { mutableStateOf("") }
-                
-                LaunchedEffect(config.timeLimitSeconds) {
-                    if (typedDigits.isEmpty() && config.timeLimitSeconds > 0) {
-                        val hrs = config.timeLimitSeconds / 3600
-                        val mins = (config.timeLimitSeconds % 3600) / 60
-                        val secs = config.timeLimitSeconds % 60
-                        typedDigits = String.format("%04d%02d%02d", hrs, mins, secs).toLongOrNull()?.toString() ?: ""
-                    }
-                }
-
-                val limitPadded = typedDigits.padStart(8, '0')
-                val limitFormatted = "${limitPadded.substring(0, 4)}:${limitPadded.substring(4, 6)}:${limitPadded.substring(6)}"
-                
-                val limitTextFieldValue = androidx.compose.ui.text.input.TextFieldValue(
-                    text = limitFormatted,
-                    selection = androidx.compose.ui.text.TextRange(limitFormatted.length)
-                )
-
-                Row(
-                    modifier              = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    verticalAlignment     = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Tempo Limite Máximo", style = MaterialTheme.typography.bodyLarge)
-                        Text(
-                            text  = "HH:MM:SS • 0000:00:00 = ilimitado",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(Modifier.height(16.dp))
+
+                    ToggleRow("Abrir Diretamente", config.autoLaunch) {
+                        scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
+                    }
+                    ToggleRow("Exibir Horas", config.showHours) {
+                        if (!it && !config.showSeconds) return@ToggleRow
+                        scope.launch { dataStore.updateConfig(config.copy(showHours = it)) }
+                    }
+                    ToggleRow("Exibir Segundos", config.showSeconds) {
+                        if (!it && !config.showHours) return@ToggleRow
+                        scope.launch { dataStore.updateConfig(config.copy(showSeconds = it)) }
+                    }
+                    ToggleRow("Exibir Botões", config.showButtons) {
+                        scope.launch { dataStore.updateConfig(config.copy(showButtons = it)) }
+                    }
+                    ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
+                        scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
+                    }
+                    ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
+                        scope.launch { dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled)) }
+                        if (isEnabled && isServiceRunning()) {
+                            val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                                action = ACTION_START_FOCUS
+                            }
+                            startForegroundService(intent)
+                        }
+                    }
+                    ToggleRow("Bipe Ativo", config.isBeepEnabled) {
+                        scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }
+                    }
+                    ToggleRow("Vibração Ativa", config.isVibrationEnabled) {
+                        scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    // ── Tempo Limite ──────────────────────────────────
+                    var typedDigits by remember { mutableStateOf("") }
+                    
+                    LaunchedEffect(config.timeLimitSeconds) {
+                        if (typedDigits.isEmpty() && config.timeLimitSeconds > 0) {
+                            val hrs = config.timeLimitSeconds / 3600
+                            val mins = (config.timeLimitSeconds % 3600) / 60
+                            val secs = config.timeLimitSeconds % 60
+                            typedDigits = String.format("%04d%02d%02d", hrs, mins, secs).toLongOrNull()?.toString() ?: ""
+                        }
+                    }
+
+                    val limitPadded = typedDigits.padStart(8, '0')
+                    val limitFormatted = "${limitPadded.substring(0, 4)}:${limitPadded.substring(4, 6)}:${limitPadded.substring(6)}"
+                    
+                    val limitTextFieldValue = androidx.compose.ui.text.input.TextFieldValue(
+                        text = limitFormatted,
+                        selection = androidx.compose.ui.text.TextRange(limitFormatted.length)
+                    )
+
+                    Row(
+                        modifier              = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                        verticalAlignment     = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(text = "Tempo Limite Máximo", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text  = "HH:MM:SS • 0000:00:00 = ilimitado",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        OutlinedTextField(
+                            value         = limitTextFieldValue,
+                            onValueChange = { input ->
+                                val rawDigits = input.text.filter { it.isDigit() }
+                                if (rawDigits.length > 8) {
+                                    val added = rawDigits.last()
+                                    val base = if (typedDigits.length < 8) typedDigits else typedDigits.drop(1)
+                                    val candidate = base + added
+                                    val candidatePadded = candidate.padStart(8, '0')
+                                    val candidateMins = candidatePadded.substring(4, 6).toIntOrNull() ?: 0
+                                    val candidateSecs = candidatePadded.substring(6, 8).toIntOrNull() ?: 0
+                                    
+                                    if (candidateMins <= 59 && candidateSecs <= 59) {
+                                        typedDigits = candidate.toLongOrNull()?.toString() ?: ""
+                                    }
+                                } else if (rawDigits.length < 8) {
+                                    if (typedDigits.isNotEmpty()) typedDigits = typedDigits.dropLast(1)
+                                }
+                            },
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number,
+                                imeAction    = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(onDone = {
+                                val seconds = parseTimeLimitInput(limitFormatted) ?: 0L
+                                scope.launch {
+                                    dataStore.updateConfig(config.copy(timeLimitSeconds = seconds))
+                                    focusManager.clearFocus()
+                                }
+                            }),
+                            singleLine  = true,
+                            modifier    = Modifier.width(160.dp),
+                            shape       = RoundedCornerShape(12.dp),
+                            textStyle   = LocalTextStyle.current.copy(
+                                fontFamily = FontFamily.Monospace,
+                                textAlign  = TextAlign.Center,
+                                fontSize   = 18.sp
+                            )
                         )
                     }
-                    OutlinedTextField(
-                        value         = limitTextFieldValue,
-                        onValueChange = { input ->
-                            val rawDigits = input.text.filter { it.isDigit() }
-                            if (rawDigits.length > 8) {
-                                val added = rawDigits.last()
-                                val base = if (typedDigits.length < 8) typedDigits else typedDigits.drop(1)
-                                val candidate = base + added
-                                val candidatePadded = candidate.padStart(8, '0')
-                                val candidateMins = candidatePadded.substring(4, 6).toIntOrNull() ?: 0
-                                val candidateSecs = candidatePadded.substring(6, 8).toIntOrNull() ?: 0
-                                
-                                if (candidateMins <= 59 && candidateSecs <= 59) {
-                                    typedDigits = candidate.toLongOrNull()?.toString() ?: ""
-                                }
-                            } else if (rawDigits.length < 8) {
-                                if (typedDigits.isNotEmpty()) typedDigits = typedDigits.dropLast(1)
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number,
-                            imeAction    = ImeAction.Done
-                        ),
-                        keyboardActions = KeyboardActions(onDone = {
-                            val seconds = parseTimeLimitInput(limitFormatted) ?: 0L
-                            scope.launch {
-                                dataStore.updateConfig(config.copy(timeLimitSeconds = seconds))
-                                focusManager.clearFocus()
-                            }
-                        }),
-                        singleLine  = true,
-                        modifier    = Modifier.width(160.dp),
-                        shape       = RoundedCornerShape(8.dp),
-                        textStyle   = LocalTextStyle.current.copy(
-                            fontFamily = FontFamily.Monospace,
-                            textAlign  = TextAlign.Center,
-                            fontSize   = 18.sp
-                        )
+
+                    Spacer(Modifier.height(16.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Spacer(Modifier.height(16.dp))
+
+                    Text(
+                        text     = "APARÊNCIA",
+                        style    = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Black,
+                        color    = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+
+                    // ── Seletor de Tema ──────
+                    ThemeSelector(
+                        selectedTheme = config.selectedTheme,
+                        onChange      = { theme ->
+                            scope.launch { dataStore.updateConfig(config.copy(selectedTheme = theme)) }
+                        }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    ColorRow(
+                        label   = "Cor de Fundo",
+                        color   = Color(config.backgroundColor).copy(alpha = config.bgOpacity),
+                        onClick = { showBgPicker = true }
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    ColorRow(
+                        label   = "Cor do Texto",
+                        color   = Color(config.textColor).copy(alpha = config.textOpacity),
+                        onClick = { showTextPicker = true }
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    AppearanceSlider(
+                        label    = "Escala do Widget",
+                        value    = config.scale,
+                        minLabel = "0.5x",
+                        maxLabel = "1.5x",
+                        range    = 0.5f..1.5f,
+                        display  = "${String.format("%.1f", config.scale)}x",
+                        onChange = { scope.launch { dataStore.updateConfig(config.copy(scale = it)) } }
+                    )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    AppearanceSlider(
+                        label    = "Arredondamento",
+                        value    = config.cornerRadius,
+                        minLabel = "0dp",
+                        maxLabel = "50dp",
+                        range    = 0f..50f,
+                        display  = "${config.cornerRadius.toInt()}dp",
+                        onChange = { scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) } }
+                    )
+
+                    Spacer(Modifier.height(48.dp))
+                }
+
+                TextButton(
+                    onClick  = { showAboutDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                ) {
+                    Text(
+                        text      = "Sobre o App",
+                        style     = MaterialTheme.typography.labelLarge,
+                        color     = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-                Spacer(Modifier.height(20.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(20.dp))
-
-                Text(
-                    text     = "APARÊNCIA",
-                    style    = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color    = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // ── Seletor de Tema — primeiro item da seção ──────
-                ThemeSelector(
-                    selectedTheme = config.selectedTheme,
-                    onChange      = { theme ->
-                        scope.launch { dataStore.updateConfig(config.copy(selectedTheme = theme)) }
-                    }
-                )
-
-                Spacer(Modifier.height(16.dp))
-
-                ColorRow(
-                    label   = "Cor de Fundo",
-                    color   = Color(config.backgroundColor).copy(alpha = config.bgOpacity),
-                    onClick = { showBgPicker = true }
-                )
-                Spacer(Modifier.height(12.dp))
-                ColorRow(
-                    label   = "Cor do Texto",
-                    color   = Color(config.textColor).copy(alpha = config.textOpacity),
-                    onClick = { showTextPicker = true }
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                AppearanceSlider(
-                    label    = "Escala",
-                    value    = config.scale,
-                    minLabel = "0.5x",
-                    maxLabel = "1.5x",
-                    range    = 0.5f..1.5f,
-                    display  = "${String.format("%.1f", config.scale)}x",
-                    onChange = { scope.launch { dataStore.updateConfig(config.copy(scale = it)) } }
-                )
-
-                AppearanceSlider(
-                    label    = "Cantos",
-                    value    = config.cornerRadius,
-                    minLabel = "0dp",
-                    maxLabel = "50dp",
-                    range    = 0f..50f,
-                    display  = "${config.cornerRadius.toInt()}dp",
-                    onChange = { scope.launch { dataStore.updateConfig(config.copy(cornerRadius = it)) } }
-                )
-
-                Spacer(Modifier.height(32.dp))
             }
-
-            TextButton(
-                onClick  = { showAboutDialog = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text      = "Sobre o App",
-                    textAlign = TextAlign.Center,
-                    color     = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(Modifier.height(32.dp))
         }
 
         // ── Diálogos ──────────────────────────────────────────────

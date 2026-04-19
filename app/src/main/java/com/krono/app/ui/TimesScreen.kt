@@ -1,6 +1,10 @@
 package com.krono.app.ui
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Pause
@@ -32,13 +36,21 @@ fun TimerScreen(
     Scaffold(
         topBar = {
             @OptIn(ExperimentalMaterial3Api::class)
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
                         text = "Krono",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 32.sp,
+                        fontSize = 24.sp,
                     )
+                },
+                actions = {
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Configurações"
+                        )
+                    }
                 }
             )
         }
@@ -52,8 +64,7 @@ fun TimerScreen(
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1/4 superior — espaço acima do cronômetro
-            Spacer(Modifier.fillMaxHeight(0.10f))
+            Spacer(Modifier.weight(1f))
 
             // ── Display do Tempo ──────────────────────────────
             Text(
@@ -61,12 +72,13 @@ fun TimerScreen(
                     showHours = true,
                     showSeconds = true
                 ),
-                fontSize = 70.sp,
+                fontSize = 76.sp,
                 fontWeight = FontWeight.Bold,
                 fontFamily = FontFamily.Monospace,
                 color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
-                softWrap = false
+                softWrap = false,
+                modifier = Modifier.animateContentSize()
             )
 
             if (timerState.isAtLimit) {
@@ -78,74 +90,60 @@ fun TimerScreen(
                 )
             }
 
-            // Empurra os botões para o centro/baixo
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.weight(1f))
 
             // ── Botões de controle ────────────────────────────
             Row(
-                horizontalArrangement = Arrangement.spacedBy(32.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FilledTonalIconButton(
                     onClick = onReset,
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Reset",
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
                 FilledIconButton(
                     onClick = { if (isRunning) onPause() else onStart() },
                     enabled = !timerState.isAtLimit,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        imageVector = if (isRunning) Icons.Default.Pause
-                        else Icons.Default.PlayArrow,
-                        contentDescription = if (isRunning) "Pausar" else "Iniciar",
-                        modifier = Modifier.size(32.dp)
+                    shape = CircleShape,
+                    modifier = Modifier.size(80.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                ) {
+                    Crossfade(
+                        targetState = isRunning, 
+                        animationSpec = tween(durationMillis = 300),
+                        label = "play_pause_anim"
+                    ) { running ->
+                        Icon(
+                            imageVector = if (running) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (running) "Pausar" else "Iniciar",
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
                 }
 
                 FilledTonalIconButton(
                     onClick = onOpenOverlay,
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = "Abrir Overlay",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-
-                FilledTonalIconButton(
-                    onClick = onOpenSettings,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Configurações",
-                        modifier = Modifier.size(25.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
 
-            /*actions = {
-                IconButton(onClick = onOpenSettings) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "Configurações",
-                        modifier = Modifier.size(25.dp)
-                    )
-                }
-            }*/
-
-
-
-            Spacer(Modifier.height(48.dp))
+            Spacer(Modifier.height(64.dp))
         }
     }
 }

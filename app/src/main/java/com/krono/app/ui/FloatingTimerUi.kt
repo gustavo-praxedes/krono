@@ -121,34 +121,30 @@ fun FloatingTimerUi(
             .clip(shape)
             .background(bgColor)
             .pointerInput(Unit) {
-                coroutineScope {
-                    launch {
-                        detectDragGestures(
-                            onDragEnd    = { onDragEnd() },
-                            onDragCancel = { onDragEnd() },
-                            onDrag       = { change, dragAmount ->
-                                change.consume()
-                                onDrag(dragAmount.x, dragAmount.y)
-                                if (menuVisible) resetMenuTimer()
-                            }
-                        )
+                detectDragGestures(
+                    onDragEnd    = { onDragEnd() },
+                    onDragCancel = { onDragEnd() },
+                    onDrag       = { change, dragAmount ->
+                        change.consume()
+                        onDrag(dragAmount.x, dragAmount.y)
+                        if (menuVisible) resetMenuTimer()
                     }
-                    launch {
-                        detectTapGestures(
-                            onTap = {
-                                if (menuVisible) {
-                                    menuVisible = false
-                                } else {
-                                    if (currentIsRunning) currentOnPause() else currentOnStart()
-                                }
-                            },
-                            onDoubleTap = {
-                                menuVisible = false
-                                currentOnReset()
-                            }
-                        )
+                )
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        if (menuVisible) {
+                            menuVisible = false
+                        } else {
+                            if (currentIsRunning) currentOnPause() else currentOnStart()
+                        }
+                    },
+                    onDoubleTap = {
+                        menuVisible = false
+                        currentOnReset()
                     }
-                }
+                )
             }
     ) {
         Column(
@@ -193,7 +189,7 @@ fun FloatingTimerUi(
                         Icon(
                             imageVector        = if (currentIsRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                            tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 1f),
                             modifier           = Modifier.size(iconSizeDp)
                         )
                     }
@@ -334,33 +330,30 @@ fun FloatingTimerUi(
                 contentDescription = "Expandir Menu",
                 tint = txtColor.copy(alpha = 0.4f),
                 modifier = Modifier
-                    .height((20f * scale).dp)
+                    .height((10f * scale).dp)
                     .fillMaxWidth()
                     .pointerInput(Unit) {
-                        coroutineScope {
-                            launch {
-                                detectDragGestures(
-                                    onDragEnd = { onDragEnd() },
-                                    onDragCancel = { onDragEnd() },
-                                    onDrag = { change, dragAmount ->
-                                        change.consume()
-                                        if (dragAmount.y > 1f && !menuVisible) {
-                                            menuVisible = true
-                                        }
-                                        onDrag(dragAmount.x, dragAmount.y)
-                                        if (menuVisible) resetMenuTimer()
-                                    }
-                                )
+                        detectDragGestures(
+                            onDragEnd = { onDragEnd() },
+                            onDragCancel = { onDragEnd() },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                // Sensibilidade aumentada para expandir ao arrastar para baixo
+                                if (dragAmount.y > 2f && !menuVisible) {
+                                    menuVisible = true
+                                }
+                                onDrag(dragAmount.x, dragAmount.y)
+                                if (menuVisible) resetMenuTimer()
                             }
-                            launch {
-                                detectTapGestures(
-                                    onTap = {
-                                        menuVisible = !menuVisible
-                                        if (menuVisible) resetMenuTimer()
-                                    }
-                                )
+                        )
+                    }
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                menuVisible = !menuVisible
+                                if (menuVisible) resetMenuTimer()
                             }
-                        }
+                        )
                     }
             )
             }

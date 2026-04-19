@@ -40,7 +40,6 @@ import androidx.compose.ui.text.SpanStyle
 
 // ── Configurações de doação ───────────────────────────────────
 // Substitua pelos valores reais antes de publicar
-private const val PIX_KEY  = "0c7c1f1c-7bff-43f5-833c-c9688e43f024"
 private const val KOFI_URL = "https://ko-fi.com/gustavopraxedes"
 
 @Composable
@@ -65,12 +64,12 @@ fun DonationDialog(
             modifier       = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight(),
-            shape          = RoundedCornerShape(20.dp),
+            shape          = RoundedCornerShape(28.dp),
             color          = MaterialTheme.colorScheme.surface,
             tonalElevation = 8.dp
         ) {
             Column(
-                modifier            = Modifier.padding(24.dp),
+                modifier            = Modifier.padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
@@ -79,7 +78,7 @@ fun DonationDialog(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text       = "Apoie o Projeto",
-                        style      = MaterialTheme.typography.titleLarge,
+                        style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier   = Modifier.align(Alignment.Center)
                     )
@@ -94,13 +93,13 @@ fun DonationDialog(
                     }
                 }
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Mensagem com tempo formatado ──────────────
                 Text(
                     text = buildAnnotatedString {
                         append("Incrível! Você já utilizou nosso Cronômetro por ")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)) {
                             append(formattedTime)
                         }
                         append(". Este projeto é independente e seu apoio ajuda a mantê-lo gratuito e sem anúncios.")
@@ -110,57 +109,36 @@ fun DonationDialog(
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                HorizontalDivider()
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 // ── Botões de Doação (Chamam onDonate) ─────────
                 Column(
                     modifier            = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Botão 1: Pix
+                    // Botão Unificado: Ko-fi / Cartão
                     Button(
-                        onClick = {
-                            copyPixKey(context)
-                            onDonate() // Notifica sucesso e fecha
-                        },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape    = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(
-                            text       = "Doar via Pix",
-                            fontSize   = 16.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-
-                    // Botão 2: Ko-fi / Cartão
-                    OutlinedButton(
                         onClick = {
                             openKofi(context)
                             onDonate() // Notifica sucesso e fecha
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
-                        shape    = RoundedCornerShape(12.dp)
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        shape    = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     ) {
                         Text(
-                            text       = "Doar com Cartão",
+                            text       = "Apoiar com Cartão / Ko-fi",
                             fontSize   = 16.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
         }
     }
-}
-
-// ── Copia a chave Pix para o clipboard ───────────────────────
-private fun copyPixKey(context: Context) {
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
-            as ClipboardManager
-    val clip = ClipData.newPlainText("Chave Pix", PIX_KEY)
-    clipboard.setPrimaryClip(clip)
-    Toast.makeText(context, "Chave Pix copiada!", Toast.LENGTH_SHORT).show()
 }
 
 // ── Abre o link do Ko-fi no navegador ────────────────────────

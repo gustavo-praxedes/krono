@@ -6,6 +6,11 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.Typography
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 
 // ============================================================
 // KronoTheme.kt — GIT 7
@@ -21,6 +26,17 @@ enum class KronoThemeOption(val label: String) {
     LIGHT_MODERN   ("Light Modern"),
     SOLARIZED_LIGHT("Solarized Light"),
 }
+
+// ── Tipografia Padrão ────────────────────────────────────────
+val AppTypography = Typography(
+    bodyLarge = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    )
+)
 
 // ── Dark Modern ──────────────────────────────────────────────
 private val DarkModernColors = darkColorScheme(
@@ -103,6 +119,7 @@ fun KronoTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
+        typography  = AppTypography,
         content     = content
     )
 }
