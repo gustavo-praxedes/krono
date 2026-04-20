@@ -117,12 +117,26 @@ fun UpdateDialog(
                     }
                 } else {
                     LazyColumn(
-                        modifier            = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        contentPadding      = PaddingValues(vertical = 2.dp)
+                        modifier = Modifier.weight(1f, fill = false),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(changelogItems) { item ->
-                            ChangelogItem(item = item)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // CORREÇÃO: Usando o Emoji como Texto em vez do ícone de Check
+                                Text(
+                                    text = item.type.emoji,
+                                    fontSize = 16.sp,
+                                    modifier = Modifier.padding(end = 8.dp)
+                                )
+                                Text(
+                                    text = item.text,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 ### 🐛 Correções
 
+- Correção de bugs na tela das novidades.
 - Teste
 
 ### 🔧 Manutenção
