@@ -34,6 +34,12 @@ sealed class UpdateResult {
     object NetworkError: UpdateResult()
 }
 
+// Resultado para busca de changelog
+sealed class ChangelogResult {
+    data class Success(val info: UpdateInfo) : ChangelogResult()
+    object NetworkError: ChangelogResult()
+}
+
 // Verifica se há uma nova versão disponível no GitHub.
 // Deve ser chamada dentro de um escopo com Dispatchers.IO.
 suspend fun checkForUpdate(currentVersion: String): UpdateResult =
@@ -94,6 +100,56 @@ suspend fun checkForUpdate(currentVersion: String): UpdateResult =
             UpdateResult.NetworkError
         }
     }
+
+// Busca changelog da última versão no GitHub (sem comparação)
+suspend fun getChangelog(): ChangelogResult = withContext(Dispatchers.IO) {
+    try {
+        val url = URL(GITHUB_API_URL)
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            connectTimeout = TIMEOUT_MS
+            readTimeout = TIMEOUT_MS
+            requestMethod = "GET"
+            setRequestProperty("Accept", "application/vnd.github.v3+json")
+        }
+
+        val responseCode = connection.responseCode
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            return@withContext ChangelogResult.NetworkError
+        }
+
+        val body = connection.inputStream.bufferedReader().readText()
+        connection.disconnect()
+
+        val json = JSONObject(body)
+        val tagName = json.getString("tag_name").removePrefix("v")
+        val releaseUrl = json.getString("html_url")
+        val changelog = json.optString("body", "Nenhuma nota de lançamento disponível.")
+
+        var downloadUrl: String? = null
+        try {
+            val assets = json.getJSONArray("assets")
+            for (i in 0 until assets.length()) {
+                val asset = assets.getJSONObject(i)
+                val name = asset.getString("name")
+                if (name.endsWith(".apk", ignoreCase = true)) {
+                    downloadUrl = asset.getString("browser_download_url")
+                    break
+                }
+            }
+        } catch (_: Exception) { }
+
+        ChangelogResult.Success(
+            UpdateInfo(
+                tagName = tagName,
+                releaseUrl = releaseUrl,
+                downloadUrl = downloadUrl,
+                changelog = changelog
+            )
+        )
+    } catch (_: Exception) {
+        ChangelogResult.NetworkError
+    }
+}
 
 // Compara duas versões no formato "X.Y.Z".
 // Retorna true se remoteVersion for maior que localVersion.

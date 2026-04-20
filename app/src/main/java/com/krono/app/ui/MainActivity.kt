@@ -30,7 +30,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,6 +42,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -81,7 +81,6 @@ import com.krono.app.EXTRA_SHOW_DONATION
 import com.krono.app.KronoApp
 import com.krono.app.data.OverlayConfig
 import com.krono.app.data.OverlayDataStore
-import com.krono.app.data.formatTimeLimitSeconds
 import com.krono.app.data.parseTimeLimitInput
 import com.krono.app.service.MainService
 import com.krono.app.ui.theme.KronoTheme
@@ -90,20 +89,14 @@ import com.krono.app.util.UpdateInfo
 import com.krono.app.util.UpdateResult
 import com.krono.app.util.checkForUpdate
 import com.krono.app.viewmodel.TimerViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private val navigationEvents = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private val navigationEvents = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private lateinit var dataStore: OverlayDataStore
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        if (intent.getBooleanExtra("open_settings", false)) {
-            navigationEvents.tryEmit(AppRoutes.SETTINGS)
-        }
-    }
     private val timerViewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
     private var pendingUpdateInfo: UpdateInfo? = null
@@ -115,6 +108,13 @@ class MainActivity : ComponentActivity() {
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (intent.getBooleanExtra("open_settings", false)) {
+            navigationEvents.tryEmit(AppRoutes.SETTINGS)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,8 +133,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
-
-            // GIT 7: KronoTheme substitui MaterialTheme direto
             KronoTheme(selectedTheme = config.selectedTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -150,18 +148,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // ========================================================
+    // NAVEGAÇÃO
+    // ========================================================
+
     @Composable
     private fun AppContent(showDonationDialog: Boolean = false) {
         val navController = rememberNavController()
         val timerState    by timerViewModel.timerState.collectAsState()
-        val config        by dataStore.configFlow.collectAsState(initial = OverlayConfig())
 
         LaunchedEffect(Unit) {
             launch {
                 navigationEvents.collect { route ->
-                    navController.navigate(route) {
-                        launchSingleTop = true
-                    }
+                    navController.navigate(route) { launchSingleTop = true }
                 }
             }
             val cfg = dataStore.configFlow.first()
@@ -181,19 +180,16 @@ class MainActivity : ComponentActivity() {
                     onStart        = { timerViewModel.start() },
                     onPause        = { timerViewModel.pause() },
                     onReset        = {
-                        val intent = Intent(
-                            this@MainActivity,
-                            MainService::class.java
-                        ).apply { action = ACTION_RESET }
-                        startForegroundService(intent)
+                        startForegroundService(
+                            Intent(this@MainActivity, MainService::class.java)
+                                .apply { action = ACTION_RESET }
+                        )
                     },
                     onOpenOverlay  = {
                         tryStartService { }
                         moveTaskToBack(true)
                     },
-                    onOpenSettings = {
-                        navController.navigate(AppRoutes.SETTINGS)
-                    }
+                    onOpenSettings = { navController.navigate(AppRoutes.SETTINGS) }
                 )
             }
 
@@ -206,22 +202,29 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // ========================================================
+    // TELA DE CONFIGURAÇÕES
+    // ========================================================
+
     @Composable
     private fun SettingsScreen(
-        showDonationDialog : Boolean = false,
-        onBack             : (() -> Unit)? = null
+        showDonationDialog: Boolean = false,
+        onBack            : (() -> Unit)? = null
     ) {
-        val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
-        val scope  = rememberCoroutineScope()
+        val config       = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
+        val scope        = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
 
+        // ── Estados dos diálogos ──────────────────────────────
         var showBgPicker          by remember { mutableStateOf(false) }
         var showTextPicker        by remember { mutableStateOf(false) }
         var showAboutDialog       by remember { mutableStateOf(false) }
         var showDonation          by remember { mutableStateOf(showDonationDialog) }
         var showDonationFromAbout by remember { mutableStateOf(false) }
-        var showUpdateDialog      by remember { mutableStateOf(pendingUpdateInfo != null) }
-        var updateInfo            by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
+
+        // Fluxo: AboutDialog → ChangelogDialog → UpdateDialog
+        var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+        var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
         @OptIn(ExperimentalMaterial3Api::class)
         Scaffold(
@@ -229,16 +232,16 @@ class MainActivity : ComponentActivity() {
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Configurações",
+                            text       = "Configurações",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
+                            fontSize   = 20.sp
                         )
                     },
                     navigationIcon = {
                         if (onBack != null) {
                             IconButton(onClick = onBack) {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "Voltar"
                                 )
                             }
@@ -253,8 +256,9 @@ class MainActivity : ComponentActivity() {
                     .padding(paddingValues)
                     .padding(horizontal = 24.dp)
             ) {
+                // ── Conteúdo rolável ──────────────────────────
                 Column(
-                    modifier = Modifier
+                    modifier            = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -281,10 +285,10 @@ class MainActivity : ComponentActivity() {
                     ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
                         scope.launch { dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled)) }
                         if (isEnabled && isServiceRunning()) {
-                            val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                                action = ACTION_START_FOCUS
-                            }
-                            startForegroundService(intent)
+                            startForegroundService(
+                                Intent(this@MainActivity, MainService::class.java)
+                                    .apply { action = ACTION_START_FOCUS }
+                            )
                         }
                     }
                     ToggleRow("Bipe Ativo", config.isBeepEnabled) {
@@ -296,23 +300,23 @@ class MainActivity : ComponentActivity() {
 
                     Spacer(Modifier.height(16.dp))
 
-                    // ── Tempo Limite ──────────────────────────────────
+                    // ── Tempo Limite ──────────────────────────
                     var typedDigits by remember { mutableStateOf("") }
-                    
+
                     LaunchedEffect(config.timeLimitSeconds) {
                         if (typedDigits.isEmpty() && config.timeLimitSeconds > 0) {
-                            val hrs = config.timeLimitSeconds / 3600
+                            val hrs  = config.timeLimitSeconds / 3600
                             val mins = (config.timeLimitSeconds % 3600) / 60
                             val secs = config.timeLimitSeconds % 60
-                            typedDigits = String.format("%04d%02d%02d", hrs, mins, secs).toLongOrNull()?.toString() ?: ""
+                            typedDigits = String.format("%04d%02d%02d", hrs, mins, secs)
+                                .toLongOrNull()?.toString() ?: ""
                         }
                     }
 
-                    val limitPadded = typedDigits.padStart(8, '0')
+                    val limitPadded    = typedDigits.padStart(8, '0')
                     val limitFormatted = "${limitPadded.substring(0, 4)}:${limitPadded.substring(4, 6)}:${limitPadded.substring(6)}"
-                    
-                    val limitTextFieldValue = androidx.compose.ui.text.input.TextFieldValue(
-                        text = limitFormatted,
+                    val limitTfValue   = androidx.compose.ui.text.input.TextFieldValue(
+                        text      = limitFormatted,
                         selection = androidx.compose.ui.text.TextRange(limitFormatted.length)
                     )
 
@@ -322,7 +326,11 @@ class MainActivity : ComponentActivity() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(text = "Tempo Limite Máximo", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text       = "Tempo Limite Máximo",
+                                style      = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold
+                            )
                             Text(
                                 text  = "HH:MM:SS • 0000:00:00 = ilimitado",
                                 style = MaterialTheme.typography.bodySmall,
@@ -330,18 +338,17 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         OutlinedTextField(
-                            value         = limitTextFieldValue,
+                            value         = limitTfValue,
                             onValueChange = { input ->
                                 val rawDigits = input.text.filter { it.isDigit() }
                                 if (rawDigits.length > 8) {
-                                    val added = rawDigits.last()
-                                    val base = if (typedDigits.length < 8) typedDigits else typedDigits.drop(1)
+                                    val added     = rawDigits.last()
+                                    val base      = if (typedDigits.length < 8) typedDigits else typedDigits.drop(1)
                                     val candidate = base + added
-                                    val candidatePadded = candidate.padStart(8, '0')
-                                    val candidateMins = candidatePadded.substring(4, 6).toIntOrNull() ?: 0
-                                    val candidateSecs = candidatePadded.substring(6, 8).toIntOrNull() ?: 0
-                                    
-                                    if (candidateMins <= 59 && candidateSecs <= 59) {
+                                    val padded    = candidate.padStart(8, '0')
+                                    val cMins     = padded.substring(4, 6).toIntOrNull() ?: 0
+                                    val cSecs     = padded.substring(6, 8).toIntOrNull() ?: 0
+                                    if (cMins <= 59 && cSecs <= 59) {
                                         typedDigits = candidate.toLongOrNull()?.toString() ?: ""
                                     }
                                 } else if (rawDigits.length < 8) {
@@ -359,10 +366,10 @@ class MainActivity : ComponentActivity() {
                                     focusManager.clearFocus()
                                 }
                             }),
-                            singleLine  = true,
-                            modifier    = Modifier.width(160.dp),
-                            shape       = RoundedCornerShape(12.dp),
-                            textStyle   = LocalTextStyle.current.copy(
+                            singleLine = true,
+                            modifier   = Modifier.width(160.dp),
+                            shape      = RoundedCornerShape(12.dp),
+                            textStyle  = LocalTextStyle.current.copy(
                                 fontFamily = FontFamily.Monospace,
                                 textAlign  = TextAlign.Center,
                                 fontSize   = 18.sp
@@ -374,15 +381,15 @@ class MainActivity : ComponentActivity() {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Spacer(Modifier.height(16.dp))
 
+                    // ── Seção APARÊNCIA ───────────────────────
                     Text(
-                        text     = "APARÊNCIA",
-                        style    = MaterialTheme.typography.labelLarge,
+                        text       = "APARÊNCIA",
+                        style      = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Black,
-                        color    = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        color      = MaterialTheme.colorScheme.primary,
+                        modifier   = Modifier.padding(bottom = 12.dp)
                     )
 
-                    // ── Seletor de Tema ──────
                     ThemeSelector(
                         selectedTheme = config.selectedTheme,
                         onChange      = { theme ->
@@ -431,20 +438,21 @@ class MainActivity : ComponentActivity() {
                     Spacer(Modifier.height(48.dp))
                 }
 
+                // ── Rodapé ────────────────────────────────────
                 TextButton(
                     onClick  = { showAboutDialog = true },
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Text(
-                        text      = "Sobre o App",
-                        style     = MaterialTheme.typography.labelLarge,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant
+                        text  = "Sobre o App",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
 
-        // ── Diálogos ──────────────────────────────────────────────
+        // ── Diálogos ──────────────────────────────────────────
 
         if (showBgPicker) {
             ColorPickerDialog(
@@ -463,31 +471,6 @@ class MainActivity : ComponentActivity() {
                     showBgPicker = false
                 },
                 onDismiss = { showBgPicker = false }
-            )
-        }
-
-        if (showDonation) {
-            DonationDialog(
-                onDismiss = {
-                    showDonation = false
-                    if (isServiceRunning()) {
-                        val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                            action = ACTION_SHOW_OVERLAY
-                        }
-                        startForegroundService(intent)
-                    }
-                },
-                onDonate = {
-                    showDonation = false
-                    returnToOverlay()
-                }
-            )
-        }
-
-        if (showDonationFromAbout) {
-            DonationDialog(
-                onDismiss = { showDonationFromAbout = false },
-                onDonate  = { showDonationFromAbout = false }
             )
         }
 
@@ -511,21 +494,64 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        if (showAboutDialog) {
-            AboutDialog(
-                onDismiss      = { showAboutDialog = false },
-                onSupportClick = {
-                    showAboutDialog       = false
-                    showDonationFromAbout = true
+        if (showDonation) {
+            DonationDialog(
+                onDismiss = {
+                    showDonation = false
+                    if (isServiceRunning()) {
+                        startForegroundService(
+                            Intent(this@MainActivity, MainService::class.java)
+                                .apply { action = ACTION_SHOW_OVERLAY }
+                        )
+                    }
+                },
+                onDonate = {
+                    showDonation = false
+                    returnToOverlay()
                 }
             )
         }
 
-        if (showUpdateDialog && updateInfo != null) {
+        if (showDonationFromAbout) {
+            DonationDialog(
+                onDismiss = { showDonationFromAbout = false },
+                onDonate  = { showDonationFromAbout = false }
+            )
+        }
+
+        // ── Fluxo: Sobre → Changelog → Update ─────────────────
+
+        if (showAboutDialog) {
+            AboutDialog(
+                onDismiss       = { showAboutDialog = false },
+                onSupportClick  = {
+                    showAboutDialog       = false
+                    showDonationFromAbout = true
+                },
+                onShowChangelog = { info ->
+                    showAboutDialog = false
+                    changelogInfo   = info
+                }
+            )
+        }
+
+        // ChangelogDialog: exibe versão atual + botão verificar atualizações
+        if (changelogInfo != null) {
+            ChangelogDialog(
+                updateInfo        = changelogInfo!!,
+                onDismiss         = { changelogInfo = null },
+                onUpdateAvailable = { info ->
+                    changelogInfo = null
+                    updateInfo    = info
+                }
+            )
+        }
+
+        // UpdateDialog: nova versão disponível — download + instalação
+        if (updateInfo != null) {
             UpdateDialog(
                 updateInfo = updateInfo!!,
                 onDismiss  = {
-                    showUpdateDialog  = false
                     updateInfo        = null
                     pendingUpdateInfo = null
                 }
@@ -533,12 +559,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ── Seletor de tema com ExposedDropdownMenuBox ────────────
+    // ========================================================
+    // COMPONENTES DE UI REUTILIZÁVEIS
+    // ========================================================
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun ThemeSelector(selectedTheme: String, onChange: (String) -> Unit) {
         var expanded by remember { mutableStateOf(false) }
-        val current = KronoThemeOption.entries.find { it.name == selectedTheme }
+        val current  = KronoThemeOption.entries.find { it.name == selectedTheme }
             ?: KronoThemeOption.AUTO
 
         Row(
@@ -546,26 +575,30 @@ class MainActivity : ComponentActivity() {
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = "Tema", style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(
+                text     = "Tema",
+                style    = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
 
             ExposedDropdownMenuBox(
-                expanded        = expanded,
+                expanded         = expanded,
                 onExpandedChange = { expanded = !expanded },
-                modifier        = Modifier.width(200.dp)
+                modifier         = Modifier.width(200.dp)
             ) {
                 OutlinedTextField(
-                    value            = current.label,
-                    onValueChange    = {},
-                    readOnly         = true,
-                    trailingIcon     = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    shape            = RoundedCornerShape(8.dp),
-                    modifier         = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
-                    textStyle        = MaterialTheme.typography.bodyMedium,
-                    singleLine       = true,
+                    value         = current.label,
+                    onValueChange = {},
+                    readOnly      = true,
+                    trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    shape         = RoundedCornerShape(8.dp),
+                    modifier      = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                    textStyle     = MaterialTheme.typography.bodyMedium,
+                    singleLine    = true,
                 )
 
                 ExposedDropdownMenu(
-                    expanded        = expanded,
+                    expanded         = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
                     KronoThemeOption.entries.forEach { option ->
@@ -589,7 +622,11 @@ class MainActivity : ComponentActivity() {
             verticalAlignment     = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+            Text(
+                text     = label,
+                style    = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
             Switch(checked = checked, onCheckedChange = onChange)
         }
     }
@@ -648,10 +685,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 Slider(
-                    value        = value,
+                    value         = value,
                     onValueChange = onChange,
-                    valueRange   = range,
-                    modifier     = Modifier.weight(1f)
+                    valueRange    = range,
+                    modifier      = Modifier.weight(1f)
                 )
                 Text(
                     text     = maxLabel,
@@ -662,6 +699,10 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    // ========================================================
+    // UTILITÁRIOS
+    // ========================================================
 
     @Suppress("DEPRECATION")
     private fun isServiceRunning(): Boolean {
@@ -685,8 +726,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun returnToOverlay() {
-        val intent = Intent(this, MainService::class.java).apply { action = ACTION_SHOW_OVERLAY }
-        startForegroundService(intent)
+        startForegroundService(
+            Intent(this, MainService::class.java).apply { action = ACTION_SHOW_OVERLAY }
+        )
         finish()
     }
 
