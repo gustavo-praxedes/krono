@@ -47,7 +47,7 @@ O **Krono** é um cronômetro Android de código aberto com widget flutuante. El
 - Permitir personalização completa de cor, opacidade e tamanho
 
 **O Krono não faz:**
-- Coletar dados, exibir anúncios ou requer internet
+- Coletar dados, exibir anúncios ou requerer internet
 - Funcionar como agenda, lembrete ou temporizador regressivo
 - Suportar múltiplos cronômetros simultâneos (por enquanto)
 
