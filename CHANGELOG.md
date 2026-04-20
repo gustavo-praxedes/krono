@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.4.8](https://github.com/gustavo-praxedes/krono/compare/v2.4.7...v2.4.8) (2026-04-20)
+
+
+### 🐛 Correções
+
+* Correção do release.yml. ([6a9a81f](https://github.com/gustavo-praxedes/krono/commit/6a9a81f082689a3b7510864e18518e4a16a6ae42))
+
 ## [2.4.7](https://github.com/gustavo-praxedes/krono/compare/v2.4.6...v2.4.7) (2026-04-20)
 
 ## [2.4.6](https://github.com/gustavo-praxedes/krono/compare/v2.4.5...v2.4.6) (2026-04-20)
