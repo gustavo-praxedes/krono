@@ -107,6 +107,7 @@ class MainService : Service(),
 
     override fun onCreate() {
         super.onCreate()
+        android.util.Log.d("MainService", "onCreate called")
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
 
@@ -170,10 +171,15 @@ class MainService : Service(),
             ACTION_FOCUS_DISMISSED -> {}
 
             else -> {
+                android.util.Log.d("MainService", "onStartCommand: else branch")
                 serviceScope.launch {
                     if (composeView == null) {
+                        android.util.Log.d("MainService", "composeView is null, loading config")
                         currentConfig = dataStore.configFlow.first()
+                        android.util.Log.d("MainService", "Calling showOverlay()")
                         showOverlay()
+                    } else {
+                        android.util.Log.d("MainService", "composeView already exists")
                     }
                     observeConfig()
                     observeScreenState()
@@ -359,8 +365,10 @@ class MainService : Service(),
     // OVERLAY FLUTUANTE
     // ========================================================
 
-    private fun showOverlay() {
+private fun showOverlay() {
         if (composeView != null) return
+
+        android.util.Log.d("MainService", "Creating overlay...")
 
         val savedX = currentConfig.lastX.takeIf { it >= 0 } ?: 100
         val savedY = currentConfig.lastY.takeIf { it >= 0 } ?: 200
@@ -379,58 +387,50 @@ class MainService : Service(),
             y = savedY
         }
 
+        android.util.Log.d("MainService", "Creating ComposeView...")
+
         val view = ComposeView(this).apply {
             setContent {
-                val config     by dataStore.configFlow.collectAsState(initial = OverlayConfig())
-                val timerState by viewModel.timerState.collectAsState()
+                val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
+                val timerState = viewModel.timerState.collectAsState().value
 
                 FloatingTimerUi(
-                    timerState             = timerState,
-                    config                 = config,
-                    onStart                = {
+                    timerState = timerState,
+                    config = config,
+                    onStart = {
                         viewModel.start()
                         triggerFeedback(currentConfig)
                     },
-                    onPause                = {
+                    onPause = {
                         viewModel.pause()
                         triggerFeedback(currentConfig)
                     },
-                    onReset                = { handleReset() },
-                    onDrag                 = { dx, dy -> handleDrag(dx, dy) },
-                    onDragEnd              = { saveOverlayPosition() },
-                    onClose                = { closeAndStop() },
-                    onSettings             = { openMainActivity() },
-                    onToggleFocus          = {
+                    onReset = { handleReset() },
+                    onDrag = { dx, dy -> handleDrag(dx, dy) },
+                    onDragEnd = { saveOverlayPosition() },
+                    onClose = { closeAndStop() },
+                    onSettings = { openMainActivity() },
+                    onToggleFocus = {
                         serviceScope.launch {
-                            dataStore.updateConfig(
-                                currentConfig.copy(focusModeEnabled = !currentConfig.focusModeEnabled)
-                            )
+                            dataStore.updateConfig(currentConfig.copy(focusModeEnabled = !currentConfig.focusModeEnabled))
                         }
                     },
-                    onToggleKeepScreenOn   = {
+                    onToggleKeepScreenOn = {
                         serviceScope.launch {
-                            dataStore.updateConfig(
-                                currentConfig.copy(keepScreenOn = !currentConfig.keepScreenOn)
-                            )
+                            dataStore.updateConfig(currentConfig.copy(keepScreenOn = !currentConfig.keepScreenOn))
                         }
                     },
-                    onToggleAutoLaunch     = {
+                    onToggleAutoLaunch = {
                         serviceScope.launch {
-                            dataStore.updateConfig(
-                                currentConfig.copy(autoLaunch = !currentConfig.autoLaunch)
-                            )
+                            dataStore.updateConfig(currentConfig.copy(autoLaunch = !currentConfig.autoLaunch))
                         }
                     },
-                    onToggleBeep           = {
+                    onToggleBeep = {
                         serviceScope.launch {
-                            dataStore.updateConfig(
-                                currentConfig.copy(isBeepEnabled = !currentConfig.isBeepEnabled)
-                            )
+                            dataStore.updateConfig(currentConfig.copy(isBeepEnabled = !currentConfig.isBeepEnabled))
                         }
                     },
-                    onMenuVisibilityChange = { menuOpen ->
-                        setOverlayFocusable(menuOpen)
-                    }
+                    onMenuVisibilityChange = { menuOpen -> setOverlayFocusable(menuOpen) }
                 )
             }
         }
@@ -440,12 +440,18 @@ class MainService : Service(),
         view.setViewTreeSavedStateRegistryOwner(this)
 
         composeView = view
-        windowManager.addView(view, overlayParams)
-        overlayVisible = true
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        android.util.Log.d("MainService", "About to add view to windowManager")
+        try {
+            windowManager.addView(view, overlayParams)
+            overlayVisible = true
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            android.util.Log.d("MainService", "Overlay added SUCCESSFULLY")
 
-        if (currentConfig.focusModeEnabled) {
-            startFocusMode()
+            if (currentConfig.focusModeEnabled) {
+                startFocusMode()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainService", "Error adding overlay: ${e.message}", e)
         }
     }
 

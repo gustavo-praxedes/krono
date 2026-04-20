@@ -11,31 +11,23 @@
          habilitá-la em Configurações > Apps > Acesso especial.
          Verificar Settings.canDrawOverlays(context) antes de usar. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
     <!-- Permite iniciar um Foreground Service. Concedida
          automaticamente — não requer aprovação do usuário. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-
     <!-- Android 14+: tipo obrigatório para foreground services
          que não se enquadram nos tipos padrão do sistema. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-
     <!-- Permite receber o broadcast de boot completo para
          relançar o serviço após reinicialização do dispositivo. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
     <!-- Permite manter o processador ativo e a tela ligada
          enquanto o cronômetro estiver rodando. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-
     <!-- Android 13+: obrigatória para exibir notificações.
          Deve ser solicitada em runtime pela MainActivity. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-
     <!-- Permição de vibração -->
     <uses-permission android:name="android.permission.VIBRATE" />
-
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.INTERNET" />
 

@@ -30,6 +30,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +44,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -96,6 +100,10 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private val navigationEvents = MutableSharedFlow<String>(extraBufferCapacity = 1)
+
+    // Sinaliza ao Composable para exibir o dialog de permissão de overlay
+    private val overlayPermissionDialogEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     private lateinit var dataStore: OverlayDataStore
     private val timerViewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
@@ -105,9 +113,15 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { }
 
+    // Após retornar das configurações do Android, verifica se a permissão
+    // foi concedida e inicia o serviço automaticamente se sim.
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) { }
+    ) {
+        if (Settings.canDrawOverlays(this)) {
+            startServiceAndMinimize()
+        }
+    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -157,10 +171,18 @@ class MainActivity : ComponentActivity() {
         val navController = rememberNavController()
         val timerState    by timerViewModel.timerState.collectAsState()
 
+        // Controla o dialog de permissão de overlay — acionado pelo Flow
+        var showOverlayPermissionDialog by remember { mutableStateOf(false) }
+
         LaunchedEffect(Unit) {
             launch {
                 navigationEvents.collect { route ->
                     navController.navigate(route) { launchSingleTop = true }
+                }
+            }
+            launch {
+                overlayPermissionDialogEvents.collect {
+                    showOverlayPermissionDialog = true
                 }
             }
             val cfg = dataStore.configFlow.first()
@@ -185,10 +207,7 @@ class MainActivity : ComponentActivity() {
                                 .apply { action = ACTION_RESET }
                         )
                     },
-                    onOpenOverlay  = {
-                        tryStartService { }
-                        moveTaskToBack(true)
-                    },
+                    onOpenOverlay  = { tryStartService { } },
                     onOpenSettings = { navController.navigate(AppRoutes.SETTINGS) }
                 )
             }
@@ -200,6 +219,79 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
+        // ── Dialog de permissão de overlay ────────────────────
+        if (showOverlayPermissionDialog) {
+            OverlayPermissionDialog(
+                onConfirm = {
+                    showOverlayPermissionDialog = false
+                    overlayPermissionLauncher.launch(
+                        Intent(
+                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:$packageName")
+                        )
+                    )
+                },
+                onDismiss = {
+                    showOverlayPermissionDialog = false
+                }
+            )
+        }
+    }
+
+    // ========================================================
+    // DIALOG DE PERMISSÃO DE OVERLAY
+    // ========================================================
+
+    @Composable
+    private fun OverlayPermissionDialog(
+        onConfirm: () -> Unit,
+        onDismiss: () -> Unit
+    ) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            icon = {
+                Icon(
+                    imageVector        = Icons.Default.Layers,
+                    contentDescription = null,
+                    tint               = MaterialTheme.colorScheme.primary,
+                    modifier           = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    text       = "Permissão necessária",
+                    fontWeight = FontWeight.Bold,
+                    textAlign  = TextAlign.Center
+                )
+            },
+            text = {
+                Text(
+                    text  = "Para exibir o cronômetro sobre outros apps, o Krono precisa " +
+                            "da permissão \"Exibir sobre outros apps\".\n\n" +
+                            "Na próxima tela, encontre o Krono e ative a permissão.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = onConfirm,
+                    shape   = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Configurar", fontWeight = FontWeight.SemiBold)
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    shape   = RoundedCornerShape(12.dp)
+                ) {
+                    Text("Agora não")
+                }
+            },
+            shape = RoundedCornerShape(20.dp)
+        )
     }
 
     // ========================================================
@@ -215,14 +307,12 @@ class MainActivity : ComponentActivity() {
         val scope        = rememberCoroutineScope()
         val focusManager = LocalFocusManager.current
 
-        // ── Estados dos diálogos ──────────────────────────────
         var showBgPicker          by remember { mutableStateOf(false) }
         var showTextPicker        by remember { mutableStateOf(false) }
         var showAboutDialog       by remember { mutableStateOf(false) }
         var showDonation          by remember { mutableStateOf(showDonationDialog) }
         var showDonationFromAbout by remember { mutableStateOf(false) }
 
-        // Fluxo: AboutDialog → ChangelogDialog → UpdateDialog
         var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
         var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
@@ -256,7 +346,6 @@ class MainActivity : ComponentActivity() {
                     .padding(paddingValues)
                     .padding(horizontal = 24.dp)
             ) {
-                // ── Conteúdo rolável ──────────────────────────
                 Column(
                     modifier            = Modifier
                         .weight(1f)
@@ -381,7 +470,6 @@ class MainActivity : ComponentActivity() {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Spacer(Modifier.height(16.dp))
 
-                    // ── Seção APARÊNCIA ───────────────────────
                     Text(
                         text       = "APARÊNCIA",
                         style      = MaterialTheme.typography.labelLarge,
@@ -438,16 +526,15 @@ class MainActivity : ComponentActivity() {
                     Spacer(Modifier.height(48.dp))
                 }
 
-                // ── Rodapé ────────────────────────────────────
                 TextButton(
                     onClick  = { showAboutDialog = true },
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
                 ) {
                     Text(
-                        text  = "Sobre o App",
-                        style = MaterialTheme.typography.labelLarge,
+                        text       = "Sobre o App",
+                        style      = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        color      = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -520,8 +607,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // ── Fluxo: Sobre → Changelog → Update ─────────────────
-
         if (showAboutDialog) {
             AboutDialog(
                 onDismiss       = { showAboutDialog = false },
@@ -536,7 +621,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // ChangelogDialog: exibe versão atual + botão verificar atualizações
         if (changelogInfo != null) {
             ChangelogDialog(
                 updateInfo        = changelogInfo!!,
@@ -548,7 +632,6 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // UpdateDialog: nova versão disponível — download + instalação
         if (updateInfo != null) {
             UpdateDialog(
                 updateInfo = updateInfo!!,
@@ -712,17 +795,22 @@ class MainActivity : ComponentActivity() {
             .any { it.service.className == MainService::class.java.name }
     }
 
-    private fun tryStartService(onStarted: () -> Unit) {
-        if (!Settings.canDrawOverlays(this)) {
-            overlayPermissionLauncher.launch(
-                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-            )
-            return
-        }
+    // Inicia o serviço e minimiza o app — chamado após permissão confirmada
+    private fun startServiceAndMinimize() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
         startForegroundService(Intent(this, MainService::class.java))
+        moveTaskToBack(true)
+    }
+
+    private fun tryStartService(onStarted: () -> Unit) {
+        if (!Settings.canDrawOverlays(this)) {
+            // Sem permissão → dispara evento para mostrar o dialog explicativo
+            overlayPermissionDialogEvents.tryEmit(Unit)
+            return
+        }
+        startServiceAndMinimize()
         onStarted()
     }
 

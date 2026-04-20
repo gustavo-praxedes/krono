@@ -27,5 +27,8 @@
   ],
   "commitAll": true,
   "infile": "CHANGELOG.md",
-  "header": "# Changelog\n\nHistórico de mudanças do Krono.\n"
+  "header": "# Changelog\n\nHistórico de mudanças do Krono.\n",
+  "scripts": {
+    "postbump": "npm run update-readme && git add README.md"
+  }
 }

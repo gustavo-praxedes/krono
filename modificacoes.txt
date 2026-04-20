@@ -1,0 +1,123 @@
+================================================================================
+PLANO DE IMPLEMENTAÇÃO - Krono App
+================================================================================
+
+OBJETIVO:
+Adicionar dialog de permissão quando o usuário tenta abrir o overlay sem
+ter a permissão "Sobrepor a outros apps" concedida.
+
+================================================================================
+ARQUIVO: MainActivity.kt
+================================================================================
+
+LOCALIZAÇÃO: app/src/main/java/com/krono/app/ui/MainActivity.kt
+
+================================================================================
+ALTERAÇÃO 1: Adicionar estado de dialog de permissão
+================================================================================
+
+LINHA APROXIMADA: 158-159 (no AppContent)
+
+ADICIONAR DEPOIS DE:
+    val timerState    by timerViewModel.timerState.collectAsState()
+
+NOVA LINHA:
+    var showPermissionDialog by remember { mutableStateOf(false) }
+
+================================================================================
+ALTERAÇÃO 2: Modificar onOpenOverlay para verificar permissão
+================================================================================
+
+LINHA APROXIMADA: 188-191
+
+CÓDIGO ATUAL:
+    onOpenOverlay  = {
+        tryStartService { }
+        moveTaskToBack(true)
+    },
+
+SUBSTITUIR POR:
+    onOpenOverlay = {
+        if (Settings.canDrawOverlays(this)) {
+            tryStartService()
+            moveTaskToBack(true)
+        } else {
+            showPermissionDialog = true
+        }
+    },
+
+================================================================================
+ALTERAÇÃO 3: Adicionar Dialog de Permissão (ANTES do NavHost)
+================================================================================
+
+LINHA APROXIMADA: 172 (antes do NavHost)
+
+ADICIONAR ESSE BLOCO:
+    if (showPermissionDialog) {
+        AlertDialog(
+            onDismissRequest = { showPermissionDialog = false },
+            title = { Text("Permissão Necessária") },
+            text = {
+                Text("O Krono precisa de permissão para exibir o cronômetro " +
+                     "flutuante sobre outros apps. Deseja configurar agora?")
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showPermissionDialog = false
+                    tryStartService()
+                }) { Text("Configurar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPermissionDialog = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+================================================================================
+ALTERAÇÃO 4: Callback ao retornar das configurações
+================================================================================
+
+LINHA APROXIMADA: 108-110
+
+CÓDIGO ATUAL:
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { }
+
+SUBSTITUIR POR:
+    private val overlayPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (Settings.canDrawOverlays(this)) {
+            startForegroundService(Intent(this, MainService::class.java))
+        }
+    }
+
+================================================================================
+RESUMO DO FLUXO APÓS IMPLEMENTAÇÃO:
+================================================================================
+
+| Passo | Ação | Resultado |
+|-------|------|----------|
+| 1 | Usuário está na TimerScreen | - |
+| 2 | Clica no botão para abrir overlay | - |
+| 3 | Verifica: Settings.canDrawOverlays() | - |
+| 4a | SE não tem permissão | mostrar Dialog |
+| 4b | SE tem permissão | iniciar + minimizar |
+| 5 | No Dialog: Clica "Configurar" | abre configurações do Android |
+| 6 | Usuário concede permissão | retorna ao app |
+| 7 | Callback: overlayPermissionLauncher | inicia serviço automaticamente |
+
+================================================================================
+TESTE:
+================================================================================
+
+Após implementar:
+1. Abrir o app Krono
+2. Clicar no botão para abrir overlay (sem permissão)
+3. Deve aparecer o dialog solicitando permissão
+4. Clicar em "Configurar" deve abrir as configurações do Android
+5. Conceder permissão e retornar ao app
+6. Overlay deve abrir automaticamente

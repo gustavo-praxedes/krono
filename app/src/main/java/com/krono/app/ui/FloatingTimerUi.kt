@@ -188,7 +188,7 @@ fun FloatingTimerUi(
                     ) {
                         Icon(
                             imageVector        = if (currentIsRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = null,
+                            contentDescription = if (currentIsRunning) "Pausar cronômetro" else "Iniciar cronômetro",
                             tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 1f),
                             modifier           = Modifier.size(iconSizeDp)
                         )
@@ -201,7 +201,7 @@ fun FloatingTimerUi(
                         },
                         modifier = Modifier.size(btnSize)
                     ) {
-                        Icon(Icons.Default.Refresh, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        Icon(Icons.Default.Refresh, "Reiniciar cronômetro", tint = txtColor, modifier = Modifier.size(iconSizeDp))
                     }
 
                     IconButton(
@@ -211,14 +211,14 @@ fun FloatingTimerUi(
                         },
                         modifier = Modifier.size(btnSize)
                     ) {
-                        Icon(Icons.Default.Settings, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        Icon(Icons.Default.Settings, "Abrir configurações", tint = txtColor, modifier = Modifier.size(iconSizeDp))
                     }
 
                     IconButton(
                         onClick  = onClose,
                         modifier = Modifier.size(btnSize)
                     ) {
-                        Icon(Icons.Default.Close, null, tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        Icon(Icons.Default.Close, "Fechar widget", tint = txtColor, modifier = Modifier.size(iconSizeDp))
                     }
                 }
             }
@@ -258,7 +258,7 @@ fun FloatingTimerUi(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        // 🎯 Toggle Modo Foco
+                        // Toggle Modo Foco
                         IconButton(
                             onClick  = {
                                 resetMenuTimer()
@@ -268,13 +268,13 @@ fun FloatingTimerUi(
                         ) {
                             Icon(
                                 imageVector        = Icons.Default.TrackChanges,
-                                contentDescription = "Modo Foco",
+                                contentDescription = "Ativar modo foco",
                                 tint               = if (config.focusModeEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
                                 modifier           = Modifier.size(quickIconSize)
                             )
                         }
 
-                        // 💡 Toggle Manter Tela Ligada
+                        // Toggle Manter Tela Ligada
                         IconButton(
                             onClick  = {
                                 resetMenuTimer()
@@ -284,13 +284,13 @@ fun FloatingTimerUi(
                         ) {
                             Icon(
                                 imageVector        = Icons.Default.LightMode,
-                                contentDescription = "Manter Tela Ligada",
+                                contentDescription = "Manter tela ligada",
                                 tint               = if (config.keepScreenOn) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
                                 modifier           = Modifier.size(quickIconSize)
                             )
                         }
 
-                        // 🚀 Toggle Abrir Diretamente
+                        // Toggle Abrir Diretamente
                         IconButton(
                             onClick  = {
                                 resetMenuTimer()
@@ -300,13 +300,13 @@ fun FloatingTimerUi(
                         ) {
                             Icon(
                                 imageVector        = Icons.Default.OpenInNew,
-                                contentDescription = "Abrir Diretamente",
+                                contentDescription = "Abrir automaticamente",
                                 tint               = if (config.autoLaunch) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
                                 modifier           = Modifier.size(quickIconSize)
                             )
                         }
 
-                        // 🔔 Toggle Bip
+                        // Toggle Bip
                         IconButton(
                             onClick  = {
                                 resetMenuTimer()
@@ -316,7 +316,7 @@ fun FloatingTimerUi(
                         ) {
                             Icon(
                                 imageVector        = Icons.Default.VolumeUp,
-                                contentDescription = "Bipe Ativo",
+                                contentDescription = "Ativar bip",
                                 tint               = if (config.isBeepEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
                                 modifier           = Modifier.size(quickIconSize)
                             )

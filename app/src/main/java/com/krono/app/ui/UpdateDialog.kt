@@ -1,285 +1,237 @@
 package com.krono.app.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.NewReleases
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.util.ApkInstaller
+import com.krono.app.util.DownloadStatus
 import com.krono.app.util.UpdateInfo
-
-private enum class DownloadState { IDLE, DOWNLOADING, INSTALLING, ERROR }
 
 @Composable
 fun UpdateDialog(
     updateInfo: UpdateInfo,
     onDismiss : () -> Unit
 ) {
-    val context        = LocalContext.current
+    val context = LocalContext.current
     val changelogItems = remember(updateInfo.changelog) { parseChangelog(updateInfo.changelog) }
+    val version = updateInfo.tagName.removePrefix("v")
 
-    var state    by remember { mutableStateOf(DownloadState.IDLE) }
-    var progress by remember { mutableFloatStateOf(0f) }
-    var errorMsg by remember { mutableStateOf("") }
+    var downloadStatus by remember { mutableStateOf(ApkInstaller.getDownloadStatus(context)) }
+    var downloadId by remember { mutableStateOf(-1L) }
+    var showDownloadStartedMsg by remember { mutableStateOf(false) }
 
-    val downloadUrl    = updateInfo.downloadUrl ?: updateInfo.releaseUrl
-    val isDownloading  = state == DownloadState.DOWNLOADING
-    val isInstalling   = state == DownloadState.INSTALLING
-    val isBusy         = isDownloading || isInstalling
+    val isDownloaded = downloadStatus is DownloadStatus.Completed
+    val isDownloading = downloadStatus is DownloadStatus.Downloading
+    val progress = (downloadStatus as? DownloadStatus.Downloading)?.percent?.toFloat()?.div(100f) ?: 0f
+
+    LaunchedEffect(downloadId) {
+        if (downloadId != -1L) {
+            while (true) {
+                kotlinx.coroutines.delay(500)
+                downloadStatus = ApkInstaller.getDownloadStatus(context)
+                if (downloadStatus is DownloadStatus.Completed || downloadStatus is DownloadStatus.Failed) break
+            }
+        }
+    }
+
+    LaunchedEffect(showDownloadStartedMsg) {
+        if (showDownloadStartedMsg) {
+            kotlinx.coroutines.delay(3000)
+            showDownloadStartedMsg = false
+        }
+    }
 
     Dialog(
-        onDismissRequest = { if (!isBusy) onDismiss() },
-        properties       = DialogProperties(usePlatformDefaultWidth = false)
+        onDismissRequest = onDismiss, // Sempre permite fechar ao clicar fora
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true, // Sempre permite fechar com o botão voltar
+            dismissOnClickOutside = true
+        )
     ) {
         Surface(
-            modifier       = Modifier
+            modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.78f),
-            shape          = RoundedCornerShape(24.dp),
-            color          = MaterialTheme.colorScheme.surface,
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(24.dp),
+            color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp)
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // ── Cabeçalho ─────────────────────────────────
                 Row(
-                    modifier          = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector        = Icons.Default.NewReleases,
-                        contentDescription = null,
-                        tint               = MaterialTheme.colorScheme.primary,
-                        modifier           = Modifier.size(28.dp)
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text       = "Nova Versão",
-                            style      = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color      = MaterialTheme.colorScheme.onSurface
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.SystemUpdate,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
+                        Spacer(Modifier.width(12.dp))
                         Text(
-                            text  = "v${updateInfo.tagName} disponível",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            text = "Nova versão",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
-                    if (!isBusy) {
-                        IconButton(
-                            onClick  = onDismiss,
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.Close,
-                                contentDescription = "Fechar",
-                                tint               = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+
+                    // Botão de fechar agora permanece visível mesmo durante o download
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Fechar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
+                Text(
+                    text = "v$version disponível",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 36.dp).align(Alignment.Start)
+                )
+
                 Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                HorizontalDivider()
                 Spacer(Modifier.height(16.dp))
 
-                // ── Changelog da nova versão ──────────────────
-                if (changelogItems.isEmpty()) {
-                    Box(
-                        modifier         = Modifier.weight(1f).fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text      = "Nenhuma nota disponível.",
-                            style     = MaterialTheme.typography.bodyMedium,
-                            color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
+                Box(modifier = Modifier.weight(1f, fill = false)) {
                     LazyColumn(
-                        modifier = Modifier.weight(1f, fill = false),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         items(changelogItems) { item ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                // CORREÇÃO: Usando o Emoji como Texto em vez do ícone de Check
-                                Text(
-                                    text = item.type.emoji,
-                                    fontSize = 16.sp,
-                                    modifier = Modifier.padding(end = 8.dp)
+                            Row(verticalAlignment = Alignment.Top) {
+                                Icon(
+                                    imageVector = item.type.icon,
+                                    contentDescription = null,
+                                    tint = item.type.iconTint,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                                Text(
-                                    text = item.text,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(text = item.text, style = MaterialTheme.typography.bodyMedium)
                             }
                         }
                     }
                 }
 
                 Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
-                Spacer(Modifier.height(16.dp))
 
-                // ── Área de progresso ─────────────────────────
-                when (state) {
-                    DownloadState.DOWNLOADING -> {
+                AnimatedVisibility(
+                    visible = showDownloadStartedMsg,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Row(
-                            modifier          = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text  = "Baixando atualização...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.size(18.dp)
                             )
+                            Spacer(Modifier.width(8.dp))
                             Text(
-                                text       = "${(progress * 100).toInt()}%",
-                                style      = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold,
-                                color      = MaterialTheme.colorScheme.primary
+                                text = "O download continuará em segundo plano!",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         }
-                        Spacer(Modifier.height(8.dp))
+                    }
+                }
+
+                if (isDownloading) {
+                    Spacer(Modifier.height(8.dp))
+                    Column {
                         LinearProgressIndicator(
                             progress = { progress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp),
-                            trackColor    = MaterialTheme.colorScheme.surfaceVariant,
-                            color         = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.fillMaxWidth().height(6.dp),
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                         )
-                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "Baixando: ${(progress * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(top = 4.dp).align(Alignment.End)
+                        )
                     }
-                    DownloadState.INSTALLING -> {
-                        Row(
-                            modifier          = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                modifier    = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color       = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text  = "Abrindo instalador...",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        Spacer(Modifier.height(16.dp))
-                    }
-                    DownloadState.ERROR -> {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                            color    = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
-                            shape    = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(
-                                text     = errorMsg,
-                                style    = MaterialTheme.typography.bodySmall,
-                                color    = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                            )
-                        }
-                    }
-                    DownloadState.IDLE -> { }
                 }
 
-                // ── Botão principal ───────────────────────────
-                Button(
-                    onClick  = {
-                        state    = DownloadState.DOWNLOADING
-                        progress = 0f
-                        ApkInstaller.downloadAndInstall(
-                            context     = context,
-                            downloadUrl = downloadUrl,
-                            version     = updateInfo.tagName,
-                            onProgress  = { p ->
-                                progress = p
-                                if (p >= 1f) state = DownloadState.INSTALLING
-                            },
-                            onError     = { msg ->
-                                errorMsg = msg
-                                state    = DownloadState.ERROR
-                            }
-                        )
-                    },
-                    enabled  = !isBusy,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape    = RoundedCornerShape(14.dp),
-                    colors   = ButtonDefaults.buttonColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContentColor   = MaterialTheme.colorScheme.onSurfaceVariant
+                if (downloadStatus is DownloadStatus.Failed) {
+                    Text(
+                        text = (downloadStatus as DownloadStatus.Failed).error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                Button(
+                    onClick = {
+                        if (isDownloaded) {
+                            ApkInstaller.installApk(context, version) //
+                        } else if (!isDownloading) {
+                            val url = updateInfo.downloadUrl ?: return@Button //
+                            downloadId = ApkInstaller.startDownload(context, url, version) //
+                            showDownloadStartedMsg = true
+                        }
+                    },
+                    enabled = !isDownloading || isDownloaded,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     when {
-                        isBusy -> {
-                            CircularProgressIndicator(
-                                modifier    = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color       = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                        isDownloaded -> {
+                            Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                if (isDownloading) "Baixando ${(progress * 100).toInt()}%..."
-                                else "Instalando...",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Text("Instalar agora", fontWeight = FontWeight.Bold)
                         }
-                        state == DownloadState.ERROR -> {
-                            Icon(
-                                imageVector        = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier           = Modifier.size(18.dp)
+                        isDownloading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Tentar Novamente",
-                                fontSize   = 15.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Text("Baixando...")
                         }
                         else -> {
-                            Icon(
-                                imageVector        = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier           = Modifier.size(18.dp)
-                            )
+                            Icon(Icons.Default.Download, null, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Baixar e Instalar",
-                                fontSize   = 15.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Text("Baixar e instalar", fontWeight = FontWeight.Bold)
                         }
                     }
                 }

@@ -7,55 +7,53 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 // ============================================================
-// UpdateChecker.kt
-// Responsável por consultar a API do GitHub e retornar
-// informações sobre a última release disponível.
-//
-// Usa JSONObject nativo (org.json) — sem dependências extras.
-// Toda a lógica de rede roda em Dispatchers.IO.
+// UpdateChecker.kt - Versão Otimizada
 // ============================================================
 
 private const val GITHUB_API_URL =
     "https://api.github.com/repos/gustavo-praxedes/krono/releases/latest"
 
-private const val TIMEOUT_MS = 10_000 // 10 segundos
+private const val TIMEOUT_MS = 10_000
 
 data class UpdateInfo(
-    val tagName    : String,  // ex: "1.2.0"
-    val releaseUrl : String,  // página da release no GitHub
-    val downloadUrl: String?, // link direto do APK (pode ser null)
-    val changelog  : String   // Notas da release (markdown)
+    val tagName    : String,
+    val releaseUrl : String,
+    val downloadUrl: String?,
+    val changelog  : String
 )
 
-// Resultado selado — evita uso de exceções como controle de fluxo
 sealed class UpdateResult {
     data class UpdateAvailable(val info: UpdateInfo) : UpdateResult()
     object UpToDate    : UpdateResult()
     object NetworkError: UpdateResult()
 }
 
-// Resultado para busca de changelog
 sealed class ChangelogResult {
     data class Success(val info: UpdateInfo) : ChangelogResult()
     object NetworkError: ChangelogResult()
 }
 
-// Verifica se há uma nova versão disponível no GitHub.
-// Deve ser chamada dentro de um escopo com Dispatchers.IO.
+/**
+ * Verifica se há uma nova versão disponível no GitHub.
+ * Adicionado parâmetro de tempo para evitar cache de rede do Android/GitHub.
+ */
 suspend fun checkForUpdate(currentVersion: String): UpdateResult =
     withContext(Dispatchers.IO) {
         try {
-            val url        = URL(GITHUB_API_URL)
+            // Adiciona um timestamp para forçar a busca de um JSON novo
+            val freshUrl = "$GITHUB_API_URL?t=${System.currentTimeMillis()}"
+            val url        = URL(freshUrl)
+
             val connection = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = TIMEOUT_MS
                 readTimeout    = TIMEOUT_MS
                 requestMethod  = "GET"
                 setRequestProperty("Accept", "application/vnd.github.v3+json")
+                // Força a conexão a não usar cache local
+                useCaches = false
             }
 
-            val responseCode = connection.responseCode
-
-            if (responseCode != HttpURLConnection.HTTP_OK) {
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
                 return@withContext UpdateResult.NetworkError
             }
 
@@ -63,48 +61,39 @@ suspend fun checkForUpdate(currentVersion: String): UpdateResult =
             connection.disconnect()
 
             val json       = JSONObject(body)
-            val tagName    = json.getString("tag_name").removePrefix("v")
+            val tagName    = json.getString("tag_name").removePrefix("v").trim()
             val releaseUrl = json.getString("html_url")
             val changelog  = json.optString("body", "Nenhuma nota de lançamento disponível.")
 
-            // Filtra os assets para encontrar especificamente o arquivo .apk
             var downloadUrl: String? = null
             try {
                 val assets = json.getJSONArray("assets")
                 for (i in 0 until assets.length()) {
                     val asset = assets.getJSONObject(i)
-                    val name  = asset.getString("name")
-                    if (name.endsWith(".apk", ignoreCase = true)) {
+                    if (asset.getString("name").endsWith(".apk", ignoreCase = true)) {
                         downloadUrl = asset.getString("browser_download_url")
                         break
                     }
                 }
-            } catch (_: Exception) { /* Fallback para null */ }
+            } catch (_: Exception) {}
 
-            // Compara versões semanticamente (major.minor.patch)
+            // Comparação robusta de versões
             if (isNewerVersion(tagName, currentVersion)) {
                 UpdateResult.UpdateAvailable(
-                    UpdateInfo(
-                        tagName     = tagName,
-                        releaseUrl  = releaseUrl,
-                        downloadUrl = downloadUrl,
-                        changelog   = changelog
-                    )
+                    UpdateInfo(tagName, releaseUrl, downloadUrl, changelog)
                 )
             } else {
                 UpdateResult.UpToDate
             }
 
-        } catch (_: Exception) {
-            // Falha de conexão, timeout, JSON inválido — silencioso
+        } catch (e: Exception) {
             UpdateResult.NetworkError
         }
     }
 
-// Busca changelog da última versão no GitHub (sem comparação)
 suspend fun getChangelog(): ChangelogResult = withContext(Dispatchers.IO) {
     try {
-        val url = URL(GITHUB_API_URL)
+        val url = URL("$GITHUB_API_URL?t=${System.currentTimeMillis()}")
         val connection = (url.openConnection() as HttpURLConnection).apply {
             connectTimeout = TIMEOUT_MS
             readTimeout = TIMEOUT_MS
@@ -112,8 +101,7 @@ suspend fun getChangelog(): ChangelogResult = withContext(Dispatchers.IO) {
             setRequestProperty("Accept", "application/vnd.github.v3+json")
         }
 
-        val responseCode = connection.responseCode
-        if (responseCode != HttpURLConnection.HTTP_OK) {
+        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
             return@withContext ChangelogResult.NetworkError
         }
 
@@ -121,29 +109,26 @@ suspend fun getChangelog(): ChangelogResult = withContext(Dispatchers.IO) {
         connection.disconnect()
 
         val json = JSONObject(body)
-        val tagName = json.getString("tag_name").removePrefix("v")
-        val releaseUrl = json.getString("html_url")
-        val changelog = json.optString("body", "Nenhuma nota de lançamento disponível.")
+        val tagName = json.getString("tag_name").removePrefix("v").trim()
 
         var downloadUrl: String? = null
-        try {
-            val assets = json.getJSONArray("assets")
+        val assets = json.optJSONArray("assets")
+        if (assets != null) {
             for (i in 0 until assets.length()) {
                 val asset = assets.getJSONObject(i)
-                val name = asset.getString("name")
-                if (name.endsWith(".apk", ignoreCase = true)) {
+                if (asset.getString("name").endsWith(".apk", ignoreCase = true)) {
                     downloadUrl = asset.getString("browser_download_url")
                     break
                 }
             }
-        } catch (_: Exception) { }
+        }
 
         ChangelogResult.Success(
             UpdateInfo(
                 tagName = tagName,
-                releaseUrl = releaseUrl,
+                releaseUrl = json.getString("html_url"),
                 downloadUrl = downloadUrl,
-                changelog = changelog
+                changelog = json.optString("body", "")
             )
         )
     } catch (_: Exception) {
@@ -151,16 +136,21 @@ suspend fun getChangelog(): ChangelogResult = withContext(Dispatchers.IO) {
     }
 }
 
-// Compara duas versões no formato "X.Y.Z".
-// Retorna true se remoteVersion for maior que localVersion.
+/**
+ * Compara versões de forma segura, ignorando sufixos como -debug ou -dirty.
+ * Ex: "2.4.1" vs "2.3.2-debug" -> retorna true
+ */
 private fun isNewerVersion(remote: String, local: String): Boolean {
     return try {
-        val r = remote.split(".").map { it.toInt() }
-        val l = local.split(".").map  { it.toInt() }
+        // Extrai apenas os números de cada parte da versão
+        val r = remote.split(".").map { it.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
+        val l = local.split(".").map { it.filter { c -> c.isDigit() }.toIntOrNull() ?: 0 }
+
         val size = maxOf(r.size, l.size)
         for (i in 0 until size) {
             val rv = r.getOrElse(i) { 0 }
             val lv = l.getOrElse(i) { 0 }
+
             if (rv > lv) return true
             if (rv < lv) return false
         }
