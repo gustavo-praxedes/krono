@@ -446,7 +446,8 @@ class MainActivity : ComponentActivity() {
                     Text(
                         text  = "Sobre o App",
                         style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }

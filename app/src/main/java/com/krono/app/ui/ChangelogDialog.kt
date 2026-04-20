@@ -18,32 +18,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.krono.app.BuildConfig
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.UpdateResult
 import com.krono.app.util.checkForUpdate
-import com.krono.app.BuildConfig
 import kotlinx.coroutines.launch
-
-// ============================================================
-// ChangelogDialog.kt
-//
-// Exibe o changelog da versão instalada.
-// Tem botão "Verificar Atualizações" que chama checkForUpdate()
-// e, se houver nova versão, chama onUpdateAvailable(UpdateInfo).
-// ============================================================
 
 @Composable
 fun ChangelogDialog(
     updateInfo        : UpdateInfo,
     onDismiss         : () -> Unit,
-    onUpdateAvailable : (UpdateInfo) -> Unit   // → abre UpdateDialog
+    onUpdateAvailable : (UpdateInfo) -> Unit
 ) {
     val scope          = rememberCoroutineScope()
     val changelogItems = remember(updateInfo.changelog) { parseChangelog(updateInfo.changelog) }
 
-    var checking     by remember { mutableStateOf(false) }
-    var noUpdateMsg  by remember { mutableStateOf(false) }
-    var errorMsg     by remember { mutableStateOf<String?>(null) }
+    var checking    by remember { mutableStateOf(false) }
+    var noUpdateMsg by remember { mutableStateOf(false) }
+    var errorMsg    by remember { mutableStateOf<String?>(null) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -64,7 +56,7 @@ fun ChangelogDialog(
                 // ── Cabeçalho ─────────────────────────────────
                 Box(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text       = "Novidades",
+                        text       = "Novidades da Versão",
                         style      = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier   = Modifier.align(Alignment.Center)
@@ -77,35 +69,24 @@ fun ChangelogDialog(
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
-
-                // ── Badge de versão ───────────────────────────
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text       = "Versão ${updateInfo.tagName}  •  instalada",
-                        style      = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color      = MaterialTheme.colorScheme.primary,
-                        modifier   = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
 
                 Spacer(Modifier.height(16.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(Modifier.height(16.dp))
 
-                // ── Lista de itens do changelog ───────────────
+                // ── Lista de mudanças ─────────────────────────
                 if (changelogItems.isEmpty()) {
-                    Text(
-                        text      = "Nenhuma nota de lançamento disponível.",
-                        style     = MaterialTheme.typography.bodyMedium,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier  = Modifier.padding(vertical = 32.dp)
-                    )
+                    Box(
+                        modifier            = Modifier.weight(1f),
+                        contentAlignment    = Alignment.Center
+                    ) {
+                        Text(
+                            text      = "Nenhuma nota de lançamento disponível.",
+                            style     = MaterialTheme.typography.bodyMedium,
+                            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 } else {
                     LazyColumn(
                         modifier            = Modifier.weight(1f),
@@ -135,7 +116,7 @@ fun ChangelogDialog(
 
                 Spacer(Modifier.height(8.dp))
 
-                // ── Botão: Verificar Atualizações ─────────────
+                // ── Verificar Atualizações ────────────────────
                 OutlinedButton(
                     onClick  = {
                         checking    = true
@@ -151,13 +132,9 @@ fun ChangelogDialog(
                                     checking    = false
                                     noUpdateMsg = true
                                 }
-                                is UpdateResult.NetworkError -> {
+                                else -> {
                                     checking = false
                                     errorMsg  = "Sem conexão. Tente novamente."
-                                }
-                                is UpdateResult.UnknownError -> {
-                                    checking = false
-                                    errorMsg  = "Erro ao verificar. Tente novamente."
                                 }
                             }
                         }
@@ -177,13 +154,16 @@ fun ChangelogDialog(
                             modifier           = Modifier.size(18.dp)
                         )
                         Spacer(Modifier.width(8.dp))
-                        Text("Verificar Atualizações", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Verificar Atualizações",
+                            fontSize   = 15.sp,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
 
                 Spacer(Modifier.height(8.dp))
 
-                // ── Botão: Fechar ─────────────────────────────
                 Button(
                     onClick  = onDismiss,
                     modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -197,7 +177,7 @@ fun ChangelogDialog(
 }
 
 @Composable
-private fun ChangelogItem(item: ChangelogListItem) {
+internal fun ChangelogItem(item: ChangelogListItem) {
     val bgColor = when (item.type) {
         ItemType.FEAT  -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         ItemType.FIX   -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
@@ -239,7 +219,7 @@ private fun ChangelogItem(item: ChangelogListItem) {
     }
 }
 
-// ── Tipos e parser (compartilhado com UpdateDialog) ──────────
+// ── Tipos e parser ────────────────────────────────────────────
 
 enum class ItemType { FEAT, FIX, PERF, DOCS, CHORE, OTHER }
 
@@ -260,6 +240,7 @@ fun parseChangelog(changelog: String): List<ChangelogListItem> {
         if (clean.isBlank()) continue
         if (clean.startsWith("**Full Changelog**")) continue
         if (clean.startsWith("http") || clean.startsWith("[")) continue
+        if (clean.startsWith("#")) continue  // ignora headers markdown
 
         val type = when {
             clean.contains("feat") || clean.contains("✨") -> ItemType.FEAT
@@ -278,5 +259,5 @@ fun parseChangelog(changelog: String): List<ChangelogListItem> {
         if (text.isNotBlank()) items.add(ChangelogListItem(text, type))
     }
 
-    return items.ifEmpty { listOf(ChangelogListItem(changelog, ItemType.OTHER)) }
+    return items.ifEmpty { listOf(ChangelogListItem(changelog.take(300), ItemType.OTHER)) }
 }
