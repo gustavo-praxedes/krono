@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.4.4](https://github.com/gustavo-praxedes/krono/compare/v2.4.3...v2.4.4) (2026-04-20)
+
+
+### 🔧 Manutenção
+
+* Refatoração de vários arquivos. ([6d0ae32](https://github.com/gustavo-praxedes/krono/commit/6d0ae32037548202aa08dc784e75ec2ca3321612))
+
 ## [2.4.3](https://github.com/gustavo-praxedes/krono/compare/v2.4.2...v2.4.3) (2026-04-20)
 
 ## [2.4.2](https://github.com/gustavo-praxedes/krono/compare/v2.4.1...v2.4.2) (2026-04-20)
