@@ -4,6 +4,10 @@ Histórico de mudanças do Krono.
 
 ## [2.2.2] — 2026-04-20
 
+### 🐛 Correções
+
+- Teste
+
 ### 🔧 Manutenção
 
 - Testando hook
