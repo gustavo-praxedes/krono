@@ -1,6 +1,6 @@
 {
   "name": "krono",
-  "version": "2.2.6",
+  "version": "2.4.0",
   "private": true,
   "scripts": {
     "release": "commit-and-tag-version && npm run update-readme",
