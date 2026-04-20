@@ -8,10 +8,11 @@ Histórico de mudanças do Krono.
 
 - Testando hook
 - Testando hook
+- Testando hook
 - Testando hook novamente
 - Testando hook de changelog
 
-**Comparação completa:** [v2.2.2...v2.2.2](https://github.com/gustavo-praxedes/cronometro-flutuante/compare/v2.2.2...v2.2.2)
+**Comparação completa:** [v2.2.2...v2.2.2](https://github.com/gustavo-praxedes/krono/compare/v2.2.2...v2.2.2)
 
 ## [2.2.0](https://github.com/gustavo-praxedes/krono/compare/v2.1.0...v2.2.0) (2026-04-19)
 
