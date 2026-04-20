@@ -6,6 +6,7 @@ Histórico de mudanças do Krono.
 
 ### 🐛 Correções
 
+- CorreÃ§Ã£o de bugs na tela das novidades.
 - Teste
 
 ### 🔧 Manutenção

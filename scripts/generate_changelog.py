@@ -21,7 +21,7 @@ from pathlib import Path
 
 # ── Configuração ──────────────────────────────────────────────
 CHANGELOG_FILE = Path(__file__).parent.parent / "CHANGELOG.md"
-REPO_URL       = "https://github.com/gustavo-praxedes/cronometro-flutuante"
+REPO_URL       = "https://github.com/gustavo-praxedes/krono"
 
 TYPE_LABELS = {
     "feat"    : "✨ Novidades",
@@ -49,7 +49,7 @@ def get_current_version() -> str:
     gradle = Path(__file__).parent.parent / "app" / "build.gradle.kts"
     if not gradle.exists():
         return "unreleased"
-    for line in gradle.read_text().splitlines():
+    for line in gradle.read_text(encoding="utf-8", errors="ignore").splitlines():
         m = re.search(r'versionName\s*=\s*"([^"]+)"', line)
         if m:
             return m.group(1)

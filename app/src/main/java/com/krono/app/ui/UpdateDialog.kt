@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,15 +21,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.util.ApkInstaller
 import com.krono.app.util.UpdateInfo
-
-// ============================================================
-// UpdateDialog.kt
-//
-// Exibe changelog da nova versão e gerencia o download/instalação.
-//
-// Estados do download:
-//   Idle → Downloading (progress 0..1) → Installing → Done/Error
-// ============================================================
 
 private enum class DownloadState { IDLE, DOWNLOADING, INSTALLING, ERROR }
 
@@ -44,76 +36,90 @@ fun UpdateDialog(
     var progress by remember { mutableFloatStateOf(0f) }
     var errorMsg by remember { mutableStateOf("") }
 
-    val downloadUrl = updateInfo.downloadUrl ?: updateInfo.releaseUrl
+    val downloadUrl    = updateInfo.downloadUrl ?: updateInfo.releaseUrl
+    val isDownloading  = state == DownloadState.DOWNLOADING
+    val isInstalling   = state == DownloadState.INSTALLING
+    val isBusy         = isDownloading || isInstalling
 
     Dialog(
-        onDismissRequest = { if (state != DownloadState.DOWNLOADING) onDismiss() },
+        onDismissRequest = { if (!isBusy) onDismiss() },
         properties       = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
             modifier       = Modifier
                 .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.82f),
-            shape          = RoundedCornerShape(28.dp),
+                .fillMaxHeight(0.78f),
+            shape          = RoundedCornerShape(24.dp),
             color          = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
+            tonalElevation = 6.dp
         ) {
             Column(
-                modifier            = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
             ) {
                 // ── Cabeçalho ─────────────────────────────────
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text       = "Atualização Disponível",
-                        style      = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier   = Modifier.align(Alignment.Center)
+                Row(
+                    modifier          = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector        = Icons.Default.NewReleases,
+                        contentDescription = null,
+                        tint               = MaterialTheme.colorScheme.primary,
+                        modifier           = Modifier.size(28.dp)
                     )
-                    // X só disponível se não estiver baixando
-                    if (state != DownloadState.DOWNLOADING) {
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text       = "Nova Versão",
+                            style      = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color      = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text  = "v${updateInfo.tagName} disponível",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    if (!isBusy) {
                         IconButton(
                             onClick  = onDismiss,
-                            modifier = Modifier.align(Alignment.CenterEnd)
+                            modifier = Modifier.size(36.dp)
                         ) {
-                            Icon(Icons.Default.Close, contentDescription = "Fechar")
+                            Icon(
+                                imageVector        = Icons.Default.Close,
+                                contentDescription = "Fechar",
+                                tint               = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
-
-                // ── Badge nova versão ─────────────────────────
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text       = "Versão ${updateInfo.tagName}  •  nova",
-                        style      = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color      = MaterialTheme.colorScheme.primary,
-                        modifier   = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                    )
-                }
-
                 Spacer(Modifier.height(16.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(Modifier.height(16.dp))
 
                 // ── Changelog da nova versão ──────────────────
                 if (changelogItems.isEmpty()) {
-                    Text(
-                        text      = "Nenhuma nota disponível.",
-                        style     = MaterialTheme.typography.bodyMedium,
-                        color     = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier  = Modifier.padding(vertical = 16.dp)
-                    )
+                    Box(
+                        modifier         = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text      = "Nenhuma nota disponível.",
+                            style     = MaterialTheme.typography.bodyMedium,
+                            color     = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 } else {
                     LazyColumn(
                         modifier            = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        contentPadding      = PaddingValues(vertical = 2.dp)
                     ) {
                         items(changelogItems) { item ->
                             ChangelogItem(item = item)
@@ -122,39 +128,73 @@ fun UpdateDialog(
                 }
 
                 Spacer(Modifier.height(16.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(Modifier.height(16.dp))
 
-                // ── Área de progresso / erro ──────────────────
+                // ── Área de progresso ─────────────────────────
                 when (state) {
                     DownloadState.DOWNLOADING -> {
-                        Text(
-                            text  = "Baixando... ${(progress * 100).toInt()}%",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            modifier          = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text  = "Baixando atualização...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text       = "${(progress * 100).toInt()}%",
+                                style      = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color      = MaterialTheme.colorScheme.primary
+                            )
+                        }
                         Spacer(Modifier.height(8.dp))
                         LinearProgressIndicator(
                             progress = { progress },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp),
+                            trackColor    = MaterialTheme.colorScheme.surfaceVariant,
+                            color         = MaterialTheme.colorScheme.primary
                         )
                         Spacer(Modifier.height(16.dp))
                     }
                     DownloadState.INSTALLING -> {
-                        Text(
-                            text  = "Instalando...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Row(
+                            modifier          = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier    = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color       = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text  = "Abrindo instalador...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                         Spacer(Modifier.height(16.dp))
                     }
                     DownloadState.ERROR -> {
-                        Text(
-                            text  = errorMsg,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Spacer(Modifier.height(8.dp))
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                            color    = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+                            shape    = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text     = errorMsg,
+                                style    = MaterialTheme.typography.bodySmall,
+                                color    = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+                            )
+                        }
                     }
                     DownloadState.IDLE -> { }
                 }
@@ -178,22 +218,56 @@ fun UpdateDialog(
                             }
                         )
                     },
-                    enabled  = state == DownloadState.IDLE || state == DownloadState.ERROR,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape    = RoundedCornerShape(16.dp)
+                    enabled  = !isBusy,
+                    modifier = Modifier.fillMaxWidth().height(52.dp),
+                    shape    = RoundedCornerShape(14.dp),
+                    colors   = ButtonDefaults.buttonColors(
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContentColor   = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 ) {
-                    Icon(
-                        imageVector        = Icons.Default.Download,
-                        contentDescription = null,
-                        modifier           = Modifier.size(20.dp)
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        text       = if (state == DownloadState.ERROR) "Tentar Novamente"
-                        else "Baixar e Instalar",
-                        fontSize   = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    when {
+                        isBusy -> {
+                            CircularProgressIndicator(
+                                modifier    = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color       = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                if (isDownloading) "Baixando ${(progress * 100).toInt()}%..."
+                                else "Instalando...",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        state == DownloadState.ERROR -> {
+                            Icon(
+                                imageVector        = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier           = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Tentar Novamente",
+                                fontSize   = 15.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        else -> {
+                            Icon(
+                                imageVector        = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier           = Modifier.size(18.dp)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Baixar e Instalar",
+                                fontSize   = 15.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
             }
         }
