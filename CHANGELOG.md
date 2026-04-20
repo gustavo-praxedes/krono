@@ -2,6 +2,24 @@
 
 Histórico de mudanças do Krono.
 
+## [2.2.3](https://github.com/gustavo-praxedes/krono/compare/v2.2.2...v2.2.3) (2026-04-20)
+
+
+### 🐛 Correções
+
+* Correção de bugs na tela das novidades. ([efd7f3e](https://github.com/gustavo-praxedes/krono/commit/efd7f3ebafef80a956f194de215b6d7a8b4a83fc))
+* Teste ([6985c5c](https://github.com/gustavo-praxedes/krono/commit/6985c5cfaf682fa68b10124a2df955327de87ab6))
+* Teste de release. ([32dd203](https://github.com/gustavo-praxedes/krono/commit/32dd203ff66ab66582008abb623f8308ce69f47d))
+
+
+### 🔧 Manutenção
+
+* testando hook ([50d005f](https://github.com/gustavo-praxedes/krono/commit/50d005fa0fb35e7b18e8f64c702dada6ecf88013))
+* testando hook ([bf541ba](https://github.com/gustavo-praxedes/krono/commit/bf541ba1a088106506f4b5fe701012f95925d20a))
+* testando hook ([bc48126](https://github.com/gustavo-praxedes/krono/commit/bc48126a42c0763d312444a8845e7b72f7fd2ce9))
+* testando hook de changelog ([000bcc8](https://github.com/gustavo-praxedes/krono/commit/000bcc88d0fc8e360052c3e295dfddb733b021c4))
+* testando hook novamente ([f7b9efc](https://github.com/gustavo-praxedes/krono/commit/f7b9efc497744b3b9adbbc9794110096eb774c76))
+
 ## [2.2.2] — 2026-04-20
 
 ### 🐛 Correções
