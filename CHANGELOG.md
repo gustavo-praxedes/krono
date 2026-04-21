@@ -2,6 +2,29 @@
 
 Histórico de mudanças do Krono.
 
+## [2.5.1](https://github.com/gustavo-praxedes/krono/compare/v2.5.0...v2.5.1) (2026-04-21)
+
+
+### 🐛 Correções
+
+* Agora baixando também em roaming e não apenas por wi-fi. ([152f51a](https://github.com/gustavo-praxedes/krono/commit/152f51a578abee83989f5b5aa55a7b0607784f1a))
+* Atualização do timer na notificação após o reset. ([c2253b5](https://github.com/gustavo-praxedes/krono/commit/c2253b59c7d1e7fcd17096307ff00934ac34cfd2))
+* Correção do bug na janela de permissões. ([ab1c129](https://github.com/gustavo-praxedes/krono/commit/ab1c129df5b291e7ab245fcb0538b63d6f317fb1))
+* Tema agora aplicado também sobre o overlay. ([30dfe25](https://github.com/gustavo-praxedes/krono/commit/30dfe25f71838829baae8eeadc3a2fb304bad862))
+
+
+### ⚡ Performance
+
+* Ajuste da janela Sobre o App. ([74276e3](https://github.com/gustavo-praxedes/krono/commit/74276e3339da43b88a56035fe952d0c1b78ebb8d))
+* Padronização da janela de changelog e de update. ([f90367a](https://github.com/gustavo-praxedes/krono/commit/f90367a0218d8549d9254f6ffebc0074a3456390))
+* Padronização da janela de doação e da janela de atualizações. ([47aa11d](https://github.com/gustavo-praxedes/krono/commit/47aa11de75a24f2f5e4417ae688623993e1ca29e))
+* Padronização da janela de permissão. ([0c06c45](https://github.com/gustavo-praxedes/krono/commit/0c06c4550ad1ef6a11d65cc5d331f17e255acf80))
+
+
+### 🔧 Manutenção
+
+* Refatoração do modo foco. ([b057251](https://github.com/gustavo-praxedes/krono/commit/b057251f0b5b2bca22684e34720ae3c5e07c846d))
+
 ## [2.4.8](https://github.com/gustavo-praxedes/krono/compare/v2.4.7...v2.4.8) (2026-04-20)
 
 
