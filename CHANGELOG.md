@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.5.11](https://github.com/gustavo-praxedes/krono/compare/v2.5.10...v2.5.11) (2026-04-21)
+
+
+### 🐛 Correções
+
+* Bug números cortados corrigido. ([6adcd45](https://github.com/gustavo-praxedes/krono/commit/6adcd45c86f0e1a2e7dfb84d8628358966c8d514))
+
 ## [2.5.10](https://github.com/gustavo-praxedes/krono/compare/v2.5.9...v2.5.10) (2026-04-21)
 
 
