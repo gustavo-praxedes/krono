@@ -65,39 +65,40 @@ fun AboutDialog(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
+                Box(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
+                    contentAlignment = Alignment.Center // Centraliza o conteúdo principal (o texto)
                 ) {
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Fechar", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = "Krono",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.CenterEnd) // Alinha o botão especificamente à direita
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Fechar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
-                Text(
-                    "Krono",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Spacer(Modifier.height(20.dp))
 
                 Text(
-                    "Cronômetro flutuante",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
-
-                Text(
-                    "Widget que fica sobre qualquer app. " +
-                    "Gratuito, sem anúncios e código aberto.",
+                    "O widget que flutua sobre qualquer app. " +
+                    "Gratuito, sem anúncios e de código aberto.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    lineHeight = 22.sp
+                    lineHeight = 22.sp,
+                    fontSize = 16.sp
                 )
 
                 Spacer(Modifier.height(20.dp))
@@ -127,9 +128,7 @@ fun AboutDialog(
                     Text("Código fonte", fontWeight = FontWeight.Medium)
                 }
 
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(20.dp))
 
                 Row(
                     modifier = Modifier
@@ -137,9 +136,11 @@ fun AboutDialog(
                         .clickable { onShowChangelog(localUpdateInfo) }
                         .padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically // Isso garante que o ícone centralize em relação à Column inteira
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.weight(1f) // Garante que o texto ocupe o espaço e o ícone fique no canto
+                    ) {
                         Text(
                             "Versão ${BuildConfig.VERSION_NAME}",
                             style = MaterialTheme.typography.bodyMedium,
@@ -151,11 +152,12 @@ fun AboutDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+
                     Icon(
-                        Icons.Default.OpenInNew,
+                        imageVector = Icons.Default.OpenInNew,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(28.dp) // Tamanho aumentado conforme solicitado
                     )
                 }
             }
