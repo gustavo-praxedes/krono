@@ -29,7 +29,7 @@ jobs:
       - name: Decode Keystore
         run: |
           # Aqui ele pega a string do segredo e cria o arquivo na pasta app
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > krono-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/krono-key.jks
 
       - name: Build Release APK
         run: ./gradlew assembleRelease

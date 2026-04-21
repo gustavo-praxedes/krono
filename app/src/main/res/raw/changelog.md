@@ -1,5 +1,5 @@
 # 🐛 Correções
-- Coreção de bug na geração da release.
+- Correção do bug no gradle.
 
 # 🔧 Manutenção
-- 2.5.7
+- 2.5.8
