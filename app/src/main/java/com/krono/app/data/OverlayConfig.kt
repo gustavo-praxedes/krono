@@ -21,5 +21,5 @@ data class OverlayConfig(
     val currentCycleMs    : Long    = 0L,
     val lastUpdateCheck   : Long    = 0L,
     val focusModeEnabled  : Boolean = false,
-    val selectedTheme     : String  = "AUTO",   // GIT 7
+    val selectedTheme     : String  = "AUTO",
 )

@@ -4,7 +4,6 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.krono.app.data.OverlayConfig
 import com.krono.app.data.OverlayDataStore
 import com.krono.app.util.UpdateInfo
 import com.krono.app.viewmodel.TimerViewModel

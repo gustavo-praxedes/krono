@@ -11,7 +11,5 @@ data class TimerState(
     val pauseOffset : Long    = 0L,
     val isRunning   : Boolean = false,
     val isAtLimit   : Boolean = false,
-    // Campo real — atualizado a cada 10ms pelo ViewModel.
-    // Não é persistido (recalculado no restore via TimerPreferences).
     val elapsedMs   : Long    = 0L
 )

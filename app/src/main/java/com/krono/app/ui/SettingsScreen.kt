@@ -1,6 +1,5 @@
 package com.krono.app.ui
 
-import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -14,10 +13,8 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.krono.app.ACTION_START_FOCUS
 import com.krono.app.data.OverlayConfig
 import com.krono.app.data.OverlayDataStore
-import com.krono.app.service.MainService
 import com.krono.app.util.UpdateInfo
 import kotlinx.coroutines.launch
 

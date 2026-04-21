@@ -3,7 +3,6 @@ package com.krono.app.util
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Environment
 import android.provider.Settings
 import android.util.Log
