@@ -126,17 +126,12 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [2.5.3](https://github.com/gustavo-praxedes/krono/compare/v2.5.2...v2.5.3) (2026-04-21)
-
-
-### 🐛 Correções
-
-* Bug do script em loop. ([4612ff5](https://github.com/gustavo-praxedes/krono/commit/4612ff579c5e10ab521d5ed712118445b673cd44))
+## [2.5.4](https://github.com/gustavo-praxedes/krono/compare/v2.5.3...v2.5.4) (2026-04-21)
 
 
 ### 🔧 Manutenção
 
-* Ajuste nas permissões de download de apk e instalação. ([6df655a](https://github.com/gustavo-praxedes/krono/commit/6df655a93d8a8ff355daa3a450ab2182cab94baf))
+* Assinatura da release para compilação correta. ([f58489b](https://github.com/gustavo-praxedes/krono/commit/f58489b25bbc96c9b2ba537c12cfaed7b9135d3e))
 
 [//]: # (CHANGELOG_LATEST_END)
 
