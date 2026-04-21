@@ -1,7 +1,13 @@
 import subprocess
 import os
 import json
+import sys
 from datetime import datetime
+
+# Garante que a saída do console aceite UTF-8 para evitar erros com emojis no Windows
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Caminhos dos arquivos
 ANDROID_RAW_CHANGELOG = "app/src/main/res/raw/changelog.md"
@@ -73,6 +79,7 @@ def update_android_raw(categorized):
     # Garante que a pasta existe
     os.makedirs(os.path.dirname(ANDROID_RAW_CHANGELOG), exist_ok=True)
     
+    # Escreve explicitamente em UTF-8
     with open(ANDROID_RAW_CHANGELOG, "w", encoding="utf-8") as f:
         f.write(text.strip())
 
@@ -82,7 +89,7 @@ def main():
     latest_tag = get_latest_tag()
     commits = get_commits_since(latest_tag)
     
-    # Se não houver commits novos, o script apenas garante que o arquivo raw não esteja vazio
+    # Processa os commits
     categorized = categorize_commits(commits)
     
     # Atualiza apenas o arquivo interno do Android

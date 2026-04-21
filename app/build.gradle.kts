@@ -25,20 +25,25 @@ android {
         applicationId = "com.krono.app"
         minSdk        = 26
         targetSdk     = 35
-
-        // ── versionCode: gerado automaticamente ──────────────
-        // Não edite manualmente — cresce a cada build.
-        versionCode = generateVersionCode()
-
-        // ── versionName: gerenciado pelo commit-and-tag-version
-        // Para atualizar, use: npm run release
-        // O script scripts/update-version.js substitui este valor.
-        versionName = "2.5.3"
+        versionCode   = generateVersionCode()
+        versionName   = "2.5.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables { useSupportLibrary = true }
+    }
 
-        vectorDrawables {
-            useSupportLibrary = true
+    // Configuração de assinatura preparada para GitHub Actions ou Local
+    signingConfigs {
+        create("release") {
+            // Se as variáveis de ambiente existirem (GitHub), usa elas. 
+            // Caso contrário, não assina (evita erro de build local)
+            val keystoreFile = System.getenv("KEYSTORE_PATH") ?: ""
+            if (keystoreFile.isNotEmpty()) {
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
         }
     }
 
@@ -46,6 +51,12 @@ android {
         release {
             isMinifyEnabled   = true
             isShrinkResources = true
+            
+            // Só aplica a assinatura se ela foi configurada acima
+            if (System.getenv("KEYSTORE_PATH") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -91,15 +102,12 @@ kotlin {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.material)
-
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-
     implementation(libs.androidx.savedstate)
 
     val composeBom = platform(libs.androidx.compose.bom)

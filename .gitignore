@@ -11,4 +11,9 @@ node_modules/
 .opencode/
 .contexto/
 .kotlin/
-.idea/
+
+# Chaves de assinatura (NUNCA enviar para o GitHub)
+*.jks
+*.keystore
+*.p12
+google-services.json
