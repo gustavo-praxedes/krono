@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.BuildConfig
@@ -104,46 +106,67 @@ fun ChangelogDialog(
                 modifier = Modifier.padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
+                Box(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    contentAlignment = Alignment.Center // Centraliza o conteúdo principal (o texto)
                 ) {
                     Text(
-                        "Versão ${updateInfo.tagName}",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        text = "Novidades da Versão ${updateInfo.tagName}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 22.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 40.dp) // Evita que o texto encoste no ícone
                     )
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(Icons.Default.Close, contentDescription = "Fechar", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.CenterEnd) // Posiciona o "X" no canto direito do Box
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Fechar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.heightIn(max = 300.dp)
+                    modifier = Modifier
+                        .fillMaxWidth() // Garante que a lista use toda a largura
+                        .heightIn(max = 300.dp),
+                    horizontalAlignment = Alignment.Start // Alinha os itens da lista à esquerda
                 ) {
                     items(changelogItems) { item ->
-                        Row(verticalAlignment = Alignment.Top) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(), // Faz a linha ocupar o espaço todo
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.Start // Alinha o conteúdo da linha à esquerda
+                        ) {
                             Icon(
-                                item.type.icon,
+                                imageVector = item.type.icon,
                                 contentDescription = null,
                                 tint = item.type.iconTint,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .padding(top = 2.dp) // Pequeno ajuste para alinhar com a primeira linha do texto
                             )
                             Spacer(Modifier.width(12.dp))
-                            Text(item.text, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = item.text,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f) // Faz o texto ocupar o resto do espaço, evitando empurrar o ícone
+                            )
                         }
                     }
                 }
 
                 Spacer(Modifier.height(20.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(12.dp))
 
                 AnimatedVisibility(
                     visible = !checking,

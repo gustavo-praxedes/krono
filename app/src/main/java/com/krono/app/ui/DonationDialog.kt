@@ -10,11 +10,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Coffee
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -70,18 +72,22 @@ fun DonationDialog(
         ) {
             Column(
                 modifier            = Modifier.padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
-                // ── Cabeçalho com botão X (Apenas fecha) ──────
-                Box(modifier = Modifier.fillMaxWidth()) {
+                // ── Cabeçalho ────────────────────────────────
+                Box(
+                    modifier         = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text       = "Apoie o Projeto",
-                        style      = MaterialTheme.typography.headlineSmall,
+                        text     = "Apoie o Projeto",
+                        style    = MaterialTheme.typography.headlineSmall.copy(
+                            platformStyle = PlatformTextStyle(includeFontPadding = false)
+                        ),
                         fontWeight = FontWeight.Bold,
-                        modifier   = Modifier.align(Alignment.Center)
+                        fontSize   = 22.sp
                     )
+
                     IconButton(
                         onClick  = onDismiss,
                         modifier = Modifier.align(Alignment.CenterEnd)
@@ -93,44 +99,61 @@ fun DonationDialog(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                // Espaço real de 20dp (compensado pela remoção do font padding)
+                Spacer(Modifier.height(20.dp))
 
-                // ── Mensagem com tempo formatado ──────────────
+                // ── Mensagem ─────────────────────────────────
                 Text(
                     text = buildAnnotatedString {
                         append("Incrível! Você já utilizou nosso Cronômetro por ")
-                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)) {
+                        withStyle(
+                            style = SpanStyle(
+                                fontWeight = FontWeight.Bold,
+                                color      = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
                             append(formattedTime)
                         }
                         append(". Este projeto é independente e seu apoio ajuda a mantê-lo gratuito e sem anúncios.")
                     },
-                    style     = MaterialTheme.typography.bodyLarge,
+                    style     = MaterialTheme.typography.bodyLarge.copy(
+                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                    ),
+                    fontSize  = 16.sp,
                     textAlign = TextAlign.Center,
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(Modifier.height(20.dp))
 
                 // ── Botões de Doação (Chamam onDonate) ─────────
                 Column(
                     modifier            = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Botão Unificado: Ko-fi / Cartão
+                    // Botão Unificado: Ko-fi / Cartão com aparência de "Apoiar"
                     Button(
                         onClick = {
                             openKofi(context)
-                            onDonate() // Notifica sucesso e fecha
+                            onDonate()
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape    = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            containerColor = MaterialTheme.colorScheme.primary,    // Cor sólida para destaque
+                            contentColor   = MaterialTheme.colorScheme.onPrimary  // Texto em contraste
                         )
                     ) {
+                        Icon(
+                            imageVector        = Icons.Default.Coffee,
+                            contentDescription = null,
+                            modifier           = Modifier.size(20.dp)
+                        )
+
+                        Spacer(Modifier.width(10.dp)) // Espaçamento entre ícone e texto
+
                         Text(
-                            text       = "Apoiar com Cartão / Ko-fi",
+                            text       = "Pagar um café",
                             fontSize   = 16.sp,
                             fontWeight = FontWeight.Bold
                         )

@@ -73,6 +73,7 @@ fun AboutDialog(
                         text = "Krono",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
+                        fontSize = 22.sp,
                     )
 
                     IconButton(
@@ -110,7 +111,9 @@ fun AboutDialog(
                 ) {
                     Icon(Icons.Default.Favorite, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Apoiar", fontWeight = FontWeight.SemiBold)
+                    Text("Apoiar",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize   = 16.sp,)
                 }
 
                 Spacer(Modifier.height(8.dp))
@@ -125,7 +128,9 @@ fun AboutDialog(
                 ) {
                     Icon(Icons.Default.Code, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Código fonte", fontWeight = FontWeight.Medium)
+                    Text("Código fonte",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize   = 16.sp,)
                 }
 
                 Spacer(Modifier.height(20.dp))
