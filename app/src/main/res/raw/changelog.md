@@ -1,1 +1,2 @@
-- Melhorias de estabilidade e correções internas.
+# 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
