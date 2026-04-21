@@ -32,6 +32,7 @@ import com.krono.app.viewmodel.TimerViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
 
@@ -42,7 +43,7 @@ class MainActivity : ComponentActivity() {
     private val timerViewModel: TimerViewModel
         get() = (application as KronoApp).timerViewModel
 
-    private var pendingUpdateInfo: UpdateInfo? = null
+    private val pendingUpdateInfo = MutableStateFlow<UpdateInfo?>(null)
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -93,7 +94,7 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(
                         dataStore                     = dataStore,
                         timerViewModel                = timerViewModel,
-                        pendingUpdateInfo             = pendingUpdateInfo,
+                        pendingUpdateInfo             = pendingUpdateInfo.collectAsState().value,
                         navigationEvents              = navigationEvents,
                         overlayPermissionDialogEvents = overlayPermissionDialogEvents,
                         isTaskRoot                    = isTaskRoot,
@@ -111,7 +112,7 @@ class MainActivity : ComponentActivity() {
         }
 
         checkForUpdateIfNeeded { info ->
-            pendingUpdateInfo = info
+            pendingUpdateInfo.value = info
         }
     }
 

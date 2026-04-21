@@ -53,7 +53,13 @@ fun SettingsScreen(
 
     // Fluxo: AboutDialog → ChangelogDialog → UpdateDialog
     var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
-    var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
+    var updateInfo by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
+
+    LaunchedEffect(pendingUpdateInfo) {
+        if (pendingUpdateInfo != null && updateInfo == null) {
+            updateInfo = pendingUpdateInfo
+        }
+    }
 
     Scaffold(
         topBar = {
