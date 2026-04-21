@@ -1,5 +1,2 @@
 # 🐛 Correções
-- Bug números cortados corrigido.
-
-# 🔧 Manutenção
-- 2.5.11
+- Bug do overlay no modo foco não sendo recriado corrigido.

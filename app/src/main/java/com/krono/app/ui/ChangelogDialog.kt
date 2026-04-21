@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -39,7 +40,7 @@ enum class ItemType(val icon: ImageVector, val iconTint: androidx.compose.ui.gra
     FEAT(Icons.Default.AutoAwesome, androidx.compose.ui.graphics.Color(0xFF10B981)),
     FIX(Icons.Default.BugReport, androidx.compose.ui.graphics.Color(0xFFEF4444)),
     PERF(Icons.Default.Speed, androidx.compose.ui.graphics.Color(0xFFF59E0B)),
-    DOCS(Icons.Default.Article, androidx.compose.ui.graphics.Color(0xFF8B5CF6)),
+    DOCS(Icons.AutoMirrored.Filled.Article, androidx.compose.ui.graphics.Color(0xFF8B5CF6)),
     CHORE(Icons.Default.Build, androidx.compose.ui.graphics.Color(0xFF6B7280)),
     OTHER(Icons.Default.Check, androidx.compose.ui.graphics.Color(0xFF3B82F6))
 }
