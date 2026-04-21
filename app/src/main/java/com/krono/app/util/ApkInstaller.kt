@@ -30,7 +30,7 @@ object ApkInstaller {
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, fileName)
             setAllowedOverMetered(true)
-            setAllowedOverRoaming(false)
+            setAllowedOverRoaming(true)
         }
 
         val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
