@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.5.8](https://github.com/gustavo-praxedes/krono/compare/v2.5.7...v2.5.8) (2026-04-21)
+
+
+### 🐛 Correções
+
+* Correção do bug no gradle. ([e86826b](https://github.com/gustavo-praxedes/krono/commit/e86826b2a4eae6d976fd0cb8b17164033e88d9e8))
+
 ## [2.5.7](https://github.com/gustavo-praxedes/krono/compare/v2.5.6...v2.5.7) (2026-04-21)
 
 
