@@ -343,19 +343,26 @@ class MainService : Service(),
         notificationJob = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate).launch {
             var lastIsRunning = viewModel.timerState.value.isRunning
             var lastIsAtLimit = viewModel.timerState.value.isAtLimit
+            var lastWasReset  = false
 
             viewModel.timerState.collectLatest { state ->
+                // Detecta reset: elapsedMs zerou enquanto não estava rodando
+                val isReset      = !state.isRunning && state.elapsedMs == 0L && !lastWasReset
                 val stateChanged = state.isRunning != lastIsRunning ||
-                        state.isAtLimit != lastIsAtLimit
+                        state.isAtLimit != lastIsAtLimit ||
+                        isReset
 
                 if (stateChanged) {
                     lastIsRunning = state.isRunning
                     lastIsAtLimit = state.isAtLimit
+                    lastWasReset  = isReset
                     lastNotifiedSecond = state.elapsedMs / 1000L
 
                     val notification = buildNotification(state)
                     (getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager)
                         .notify(NOTIFICATION_ID, notification)
+                } else {
+                    lastWasReset = false
                 }
             }
         }
