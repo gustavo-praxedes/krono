@@ -1,1 +1,1 @@
-- Sem notas para esta versão.
+- Melhorias de estabilidade e correções internas.

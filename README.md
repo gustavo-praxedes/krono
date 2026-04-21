@@ -64,11 +64,6 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 | **Conexão com internet** | Não necessária | — |
 | **Espaço em disco** | ~5 MB | — |
 
-> **Por que a permissão de sobreposição é obrigatória?**
-> O widget flutuante usa a API `WindowManager` do Android para renderizar sobre outros aplicativos.
-> Sem essa permissão, o app não tem como exibir o cronômetro fora da própria tela.
-> Nenhum dado é acessado por meio dessa permissão — ela serve apenas para exibição visual.
-
 ---
 
 ## Instalação
@@ -127,33 +122,11 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 ---
 
-## Tecnologias
-
-| Tecnologia | Badge | Função |
-|:---|:---|:---|
-| **Kotlin** | ![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=flat-square&logo=kotlin&logoColor=white) | Linguagem principal |
-| **Jetpack Compose** | ![Compose](https://img.shields.io/badge/Compose-4285F4?style=flat-square&logo=android&logoColor=white) | Interface declarativa |
-| **Coroutines** | ![Coroutines](https://img.shields.io/badge/Coroutines-1565C0?style=flat-square&logo=kotlin&logoColor=white) | Operações assíncronas |
-| **DataStore** | ![DataStore](https://img.shields.io/badge/DataStore-3DDC84?style=flat-square&logo=android&logoColor=white) | Persistência de preferências |
-
----
-
-## Contribuindo
-
-Contribuições são bem-vindas. Para garantir consistência:
-
-1. Abra uma [issue](https://github.com/gustavo-praxedes/krono/issues) descrevendo o bug ou a funcionalidade antes de enviar um PR.
-2. Siga o padrão de código Kotlin existente no projeto.
-3. Adicione uma entrada no [CHANGELOG.md](CHANGELOG.md) descrevendo sua mudança.
-4. PRs sem contexto ou sem entrada no changelog não serão aceitos.
-
----
-
-## Changelog
-
-Consulte o **[CHANGELOG.md](CHANGELOG.md)** para o histórico completo de versões e mudanças.
+## Changelog Recente
 
 [//]: # (CHANGELOG_LATEST_START)
+Consulte o **[CHANGELOG.md](CHANGELOG.md)** para o histórico completo de versões e mudanças.
+[//]: # (CHANGELOG_LATEST_END)
 
 ---
 

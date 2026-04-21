@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.util.ApkInstaller
@@ -32,10 +33,28 @@ fun UpdateDialog(
     onDismiss : () -> Unit
 ) {
     val context = LocalContext.current
-    val changelogItems = remember(updateInfo.changelog) { parseChangelog(updateInfo.changelog) }
-    val version = updateInfo.tagName.removePrefix("v")
+    val version = remember(updateInfo.tagName) { updateInfo.tagName.removePrefix("v") }
 
-    var downloadStatus by remember { mutableStateOf(ApkInstaller.getDownloadStatus(context)) }
+    // Verifica se o APK desta versão já foi baixado anteriormente
+    var downloadStatus by remember { 
+        val initialStatus = if (ApkInstaller.getDownloadedFile(context, version)?.exists() == true) {
+            DownloadStatus.Completed
+        } else {
+            ApkInstaller.getDownloadStatus(context)
+        }
+        mutableStateOf(initialStatus)
+    }
+
+    // Processa o changelog e garante que nunca fique vazio ou com mensagens de erro genéricas
+    val changelogItems = remember(updateInfo.changelog) {
+        val items = parseChangelog(updateInfo.changelog)
+        if (items.isEmpty() || items.any { it.text.contains("Sem notas", ignoreCase = true) || it.text.contains("Sem novidades", ignoreCase = true) }) {
+            listOf(ChangelogItem("Esta atualização traz melhorias de estabilidade e correções internas para uma melhor experiência.", ItemType.OTHER))
+        } else {
+            items
+        }
+    }
+    
     var downloadId by remember { mutableStateOf(-1L) }
     var showDownloadStartedMsg by remember { mutableStateOf(false) }
 
@@ -61,10 +80,10 @@ fun UpdateDialog(
     }
 
     Dialog(
-        onDismissRequest = onDismiss, // Sempre permite fechar ao clicar fora
+        onDismissRequest = onDismiss,
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
-            dismissOnBackPress = true, // Sempre permite fechar com o botão voltar
+            dismissOnBackPress = true,
             dismissOnClickOutside = true
         )
     ) {
@@ -94,13 +113,12 @@ fun UpdateDialog(
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            text = "Nova versão",
+                            text = "Nova Versão",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
 
-                    // Botão de fechar agora permanece visível mesmo durante o download
                     IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
                         Icon(
                             Icons.Default.Close,
@@ -124,7 +142,7 @@ fun UpdateDialog(
                 ) {
                     LazyColumn(
                         modifier            = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                         horizontalAlignment = Alignment.Start
                     ) {
                         items(changelogItems) { item ->
@@ -137,8 +155,8 @@ fun UpdateDialog(
                                     contentDescription = null,
                                     tint               = item.type.iconTint,
                                     modifier           = Modifier
-                                        .size(20.dp)
-                                        .padding(top = 2.dp) // Alinha visualmente com a primeira linha do texto
+                                        .size(18.dp)
+                                        .padding(top = 2.dp)
                                 )
 
                                 Spacer(Modifier.width(12.dp))
@@ -148,14 +166,14 @@ fun UpdateDialog(
                                     style = MaterialTheme.typography.bodyMedium.copy(
                                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                                     ),
-                                    modifier = Modifier.weight(1f) // Garante que o texto ocupe o espaço e alinhe à esquerda
+                                    modifier = Modifier.weight(1f)
                                 )
                             }
                         }
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(24.dp))
 
                 AnimatedVisibility(
                     visible = showDownloadStartedMsg,
@@ -164,7 +182,7 @@ fun UpdateDialog(
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -187,52 +205,54 @@ fun UpdateDialog(
                 }
 
                 if (isDownloading) {
-                    Spacer(Modifier.height(8.dp))
-                    Column {
+                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                         LinearProgressIndicator(
                             progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(6.dp),
+                            modifier = Modifier.fillMaxWidth().height(8.dp),
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
                         )
-                        Text(
-                            text = "Baixando: ${(progress * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(top = 4.dp).align(Alignment.End)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = "Baixando: ${(progress * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
                 if (downloadStatus is DownloadStatus.Failed) {
                     Text(
-                        text = (downloadStatus as DownloadStatus.Failed).error,
+                        text = "Falha no download. Tente novamente.",
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                 }
-
-                Spacer(Modifier.height(20.dp))
 
                 Button(
                     onClick = {
                         if (isDownloaded) {
-                            ApkInstaller.installApk(context, version) //
+                            ApkInstaller.installApk(context, version)
                         } else if (!isDownloading) {
-                            val url = updateInfo.downloadUrl ?: return@Button //
-                            downloadId = ApkInstaller.startDownload(context, url, version) //
+                            val url = updateInfo.downloadUrl ?: return@Button
+                            downloadId = ApkInstaller.startDownload(context, url, version)
                             showDownloadStartedMsg = true
                         }
                     },
                     enabled = !isDownloading || isDownloaded,
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     when {
                         isDownloaded -> {
                             Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Instalar agora", fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(10.dp))
+                            Text("Instalar agora", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                         isDownloading -> {
                             CircularProgressIndicator(
@@ -240,13 +260,13 @@ fun UpdateDialog(
                                 strokeWidth = 2.dp,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text("Baixando...")
+                            Spacer(Modifier.width(10.dp))
+                            Text("Baixando...", fontSize = 16.sp)
                         }
                         else -> {
                             Icon(Icons.Default.Download, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Baixar e instalar", fontWeight = FontWeight.Bold)
+                            Spacer(Modifier.width(10.dp))
+                            Text("Baixar e instalar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
                 }

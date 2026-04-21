@@ -1,13 +1,14 @@
 package com.krono.app.util
 
 import android.app.DownloadManager
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Environment
+import android.provider.Settings
+import android.util.Log
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import java.io.File
 
 sealed class DownloadStatus {
@@ -19,12 +20,17 @@ sealed class DownloadStatus {
 
 object ApkInstaller {
 
+    private const val TAG = "ApkInstaller"
     private var currentDownloadId: Long = -1
 
     fun startDownload(context: Context, downloadUrl: String, version: String): Long {
         val fileName = "krono_v${version.replace(".", "_")}.apk"
+        
+        // Remove arquivo antigo se existir para evitar conflitos
+        val oldFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
+        if (oldFile.exists()) oldFile.delete()
 
-        val request = DownloadManager.Request(Uri.parse(downloadUrl)).apply {
+        val request = DownloadManager.Request(downloadUrl.toUri()).apply {
             setTitle("Baixando Krono v$version")
             setDescription("Atualização do app Krono")
             setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -46,36 +52,31 @@ object ApkInstaller {
         val query = DownloadManager.Query().setFilterById(currentDownloadId)
 
         return try {
-            downloadManager.query(query).use { cursor ->
+            downloadManager.query(query)?.use { cursor ->
                 if (!cursor.moveToFirst()) {
                     if (getLatestApk(context)?.exists() == true) DownloadStatus.Completed
                     else DownloadStatus.NotDownloaded
                 } else {
-                    val status = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+                    val status = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
                     when (status) {
-                        DownloadManager.STATUS_RUNNING -> {
-                            val bytesDownloaded = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                            val bytesTotal = cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                        DownloadManager.STATUS_RUNNING, DownloadManager.STATUS_PAUSED -> {
+                            val bytesDownloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                            val bytesTotal = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                             val percent = if (bytesTotal > 0) ((bytesDownloaded * 100) / bytesTotal).toInt() else 0
                             DownloadStatus.Downloading(percent)
                         }
                         DownloadManager.STATUS_PENDING -> DownloadStatus.Downloading(0)
-                        DownloadManager.STATUS_PAUSED -> {
-                            val percent = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_REASON))
-                            DownloadStatus.Downloading(percent)
-                        }
                         DownloadManager.STATUS_SUCCESSFUL -> DownloadStatus.Completed
                         DownloadManager.STATUS_FAILED -> {
-                            val reason = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_REASON))
+                            val reason = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_REASON))
                             DownloadStatus.Failed("Erro: $reason")
                         }
                         else -> DownloadStatus.Downloading(0)
                     }
                 }
-            }
-        } catch (_: Exception) {
-            if (getLatestApk(context)?.exists() == true) DownloadStatus.Completed
-            else DownloadStatus.NotDownloaded
+            } ?: if (getLatestApk(context)?.exists() == true) DownloadStatus.Completed else DownloadStatus.NotDownloaded
+        } catch (e: Exception) {
+            DownloadStatus.NotDownloaded
         }
     }
 
@@ -94,16 +95,51 @@ object ApkInstaller {
     }
 
     fun installApk(context: Context, version: String) {
-        val file = getDownloadedFile(context, version) ?: return
-        try {
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "application/vnd.android.package-archive")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val file = getDownloadedFile(context, version)
+        
+        if (file == null || !file.exists()) {
+            Log.e(TAG, "Arquivo APK não encontrado")
+            return
+        }
+
+        if (file.length() < 1024 * 100) { // Menos de 100KB é provável que esteja corrompido
+            Log.e(TAG, "Arquivo APK muito pequeno (${file.length()} bytes), possivelmente corrompido")
+            file.delete()
+            return
+        }
+
+        // Verifica permissão (Android 8.0+)
+        if (!context.packageManager.canRequestPackageInstalls()) {
+            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                data = "package:${context.packageName}".toUri()
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(intent)
-        } catch (_: Exception) { }
+            return
+        }
+
+        try {
+            val uri = FileProvider.getUriForFile(
+                context, 
+                "${context.packageName}.provider", 
+                file
+            )
+            
+            Log.d(TAG, "Iniciando instalação. File: ${file.absolutePath}, URI: $uri")
+
+            val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
+                putExtra(Intent.EXTRA_RETURN_RESULT, true)
+                putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, context.packageName)
+            }
+            
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Erro ao abrir instalador", e)
+        }
     }
 
     fun resetDownload() {
@@ -116,6 +152,8 @@ object ApkInstaller {
             downloadDir?.listFiles()?.forEach {
                 if (it.name.startsWith("krono_v") && it.name.endsWith(".apk")) it.delete()
             }
-        } catch (_: Exception) { }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

@@ -26,8 +26,9 @@ fun AppNavigation(
     overlayPermissionDialogEvents: SharedFlow<Unit>,
     isTaskRoot                   : Boolean,
     showDonationDialog           : Boolean,
+    startInSettings              : Boolean, // <── ADICIONADO AQUI
     onTryStartService            : () -> Unit,
-    onConfirmPermission          : () -> Unit, // Novo parâmetro
+    onConfirmPermission          : () -> Unit,
     onStartFocusMode             : () -> Unit,
     onShowOverlay                : () -> Unit,
     onReset                      : () -> Unit,
@@ -35,7 +36,6 @@ fun AppNavigation(
 ) {
     val navController = rememberNavController()
     val timerState    by timerViewModel.timerState.collectAsState()
-    val scope         = rememberCoroutineScope()
 
     var showOverlayPermissionDialog by remember { mutableStateOf(false) }
 
@@ -58,7 +58,8 @@ fun AppNavigation(
 
     NavHost(
         navController    = navController,
-        startDestination = AppRoutes.TIMER
+        // Define se o app começa no Timer ou direto nas Configurações
+        startDestination = if (startInSettings) AppRoutes.SETTINGS else AppRoutes.TIMER
     ) {
         composable(AppRoutes.TIMER) {
             TimerScreen(
@@ -88,7 +89,7 @@ fun AppNavigation(
         OverlayPermissionDialog(
             onConfirm = {
                 showOverlayPermissionDialog = false
-                onConfirmPermission() // Chama a abertura das configurações
+                onConfirmPermission()
             },
             onDismiss = {
                 showOverlayPermissionDialog = false

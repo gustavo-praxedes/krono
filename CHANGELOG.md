@@ -1,5 +1,999 @@
 # Changelog
 
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
+## [v1.1.0] - 2026-04-21
+
+### 🔧 Manutenção
+- Ajuste nas permissões de download de apk e instalação.
+
+
+
 Histórico de mudanças do Krono.
 
 ## [2.5.2](https://github.com/gustavo-praxedes/krono/compare/v2.5.1...v2.5.2) (2026-04-21)

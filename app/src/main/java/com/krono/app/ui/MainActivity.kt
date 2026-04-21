@@ -72,9 +72,8 @@ class MainActivity : ComponentActivity() {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
 
-        if (intent?.getBooleanExtra("open_settings", false) == true) {
-            navigationEvents.tryEmit(AppRoutes.SETTINGS)
-        }
+        // Identifica se a intenção de abertura é para as configurações
+        val shouldOpenSettings = intent?.getBooleanExtra("open_settings", false) == true
 
         val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
@@ -99,8 +98,9 @@ class MainActivity : ComponentActivity() {
                         overlayPermissionDialogEvents = overlayPermissionDialogEvents,
                         isTaskRoot                    = isTaskRoot,
                         showDonationDialog            = showDonation,
+                        startInSettings               = shouldOpenSettings, // Define o destino inicial
                         onTryStartService             = { tryStartService() },
-                        onConfirmPermission           = { openOverlayPermissionSettings() }, // Função passada aqui
+                        onConfirmPermission           = { openOverlayPermissionSettings() },
                         onStartFocusMode              = { startFocusMode() },
                         onShowOverlay                 = { showOverlay() },
                         onReset                       = { sendResetToService() },

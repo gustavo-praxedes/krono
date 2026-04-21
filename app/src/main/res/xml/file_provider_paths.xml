@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <!-- Caminho para arquivos na pasta de cache -->
     <cache-path name="apk_cache" path="." />
+
+    <!-- Caminho para arquivos na pasta de downloads interna do app (onde o ApkInstaller salva) -->
+    <external-files-path name="external_downloads" path="Download" />
 </paths>
