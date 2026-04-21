@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.5.10](https://github.com/gustavo-praxedes/krono/compare/v2.5.9...v2.5.10) (2026-04-21)
+
+
+### 🔧 Manutenção
+
+* Ajuste no fluxo de atualização. ([4e7183d](https://github.com/gustavo-praxedes/krono/commit/4e7183d4ba10a783c68ac65f7fc4c49129a350ba))
+
 ## [2.5.9](https://github.com/gustavo-praxedes/krono/compare/v2.5.8...v2.5.9) (2026-04-21)
 
 

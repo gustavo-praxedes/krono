@@ -126,12 +126,12 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [2.5.8](https://github.com/gustavo-praxedes/krono/compare/v2.5.7...v2.5.8) (2026-04-21)
+## [2.5.9](https://github.com/gustavo-praxedes/krono/compare/v2.5.8...v2.5.9) (2026-04-21)
 
 
 ### 🐛 Correções
 
-* Correção do bug no gradle. ([e86826b](https://github.com/gustavo-praxedes/krono/commit/e86826b2a4eae6d976fd0cb8b17164033e88d9e8))
+* Correção de bug na criação da release. ([d752b2f](https://github.com/gustavo-praxedes/krono/commit/d752b2f8e2de528b1cba7b4a1bdb5645b3f8b520))
 
 [//]: # (CHANGELOG_LATEST_END)
 
