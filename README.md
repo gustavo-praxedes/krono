@@ -125,7 +125,9 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 ## Changelog Recente
 
 [//]: # (CHANGELOG_LATEST_START)
-Consulte o **[CHANGELOG.md](CHANGELOG.md)** para o histórico completo de versões e mudanças.
+
+## [2.5.2](https://github.com/gustavo-praxedes/krono/compare/v2.5.1...v2.5.2) (2026-04-21)
+
 [//]: # (CHANGELOG_LATEST_END)
 
 ---
