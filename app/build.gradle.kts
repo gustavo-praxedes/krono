@@ -26,7 +26,7 @@ android {
         minSdk        = 26
         targetSdk     = 35
         versionCode   = generateVersionCode()
-        versionName = "2.5.5"
+        versionName = "2.5.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -37,7 +37,7 @@ android {
         create("release") {
             // Se as variáveis de ambiente existirem (GitHub), usa elas. 
             // Caso contrário, não assina (evita erro de build local)
-            val keystoreFile = System.getenv("KEYSTORE_PATH") ?: ""
+            val keystoreFile = (System.getenv("KEYSTORE_PATH") ?: "krono-key.jks")
             if (keystoreFile.isNotEmpty()) {
                 storeFile = file(keystoreFile)
                 storePassword = System.getenv("KEYSTORE_PASSWORD")
