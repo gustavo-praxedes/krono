@@ -67,26 +67,23 @@ fun TimerScreen(
             Spacer(Modifier.weight(1f))
 
             // ── Display do Tempo ──────────────────────────────
-            Text(
-                text = timerState.elapsedMs.toFormattedTime(
-                    showHours = true,
-                    showSeconds = true
-                ),
-                fontSize = 76.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                color = MaterialTheme.colorScheme.onBackground,
-                maxLines = 1,
-                softWrap = false,
-                modifier = Modifier.animateContentSize()
-            )
-
-            if (timerState.isAtLimit) {
-                Spacer(Modifier.height(8.dp))
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                val fontSize = (maxWidth.value * 0.18f).coerceIn(32f, 76f)
                 Text(
-                    text = "LIMITE ATINGIDO",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.error
+                    text = timerState.elapsedMs.toFormattedTime(
+                        showHours = true,
+                        showSeconds = true
+                    ),
+                    fontSize = fontSize.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.animateContentSize()
                 )
             }
 
