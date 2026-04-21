@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -135,33 +136,38 @@ fun ChangelogDialog(
 
                 Spacer(Modifier.height(20.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier
-                        .fillMaxWidth() // Garante que a lista use toda a largura
-                        .heightIn(max = 300.dp),
-                    horizontalAlignment = Alignment.Start // Alinha os itens da lista à esquerda
+                Box(
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    items(changelogItems) { item ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(), // Faz a linha ocupar o espaço todo
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.Start // Alinha o conteúdo da linha à esquerda
-                        ) {
-                            Icon(
-                                imageVector = item.type.icon,
-                                contentDescription = null,
-                                tint = item.type.iconTint,
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .padding(top = 2.dp) // Pequeno ajuste para alinhar com a primeira linha do texto
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(
-                                text = item.text,
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f) // Faz o texto ocupar o resto do espaço, evitando empurrar o ícone
-                            )
+                    LazyColumn(
+                        modifier            = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        items(changelogItems) { item ->
+                            Row(
+                                modifier          = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    imageVector        = item.type.icon,
+                                    contentDescription = null,
+                                    tint               = item.type.iconTint,
+                                    modifier           = Modifier
+                                        .size(20.dp)
+                                        .padding(top = 2.dp)
+                                )
+
+                                Spacer(Modifier.width(12.dp))
+
+                                Text(
+                                    text  = item.text,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }
@@ -170,39 +176,64 @@ fun ChangelogDialog(
 
                 AnimatedVisibility(
                     visible = !checking,
-                    enter = fadeIn(),
-                    exit = fadeOut()
+                    enter   = fadeIn(),
+                    exit    = fadeOut()
                 ) {
-                    val result = lastResult
+                    val result     = lastResult
                     val isUpToDate = result is UpdateResult.UpToDate ||
                             (result is UpdateResult.UpdateAvailable && result.info.tagName == BuildConfig.VERSION_NAME)
 
                     if (isUpToDate) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint               = MaterialTheme.colorScheme.primary,
+                                modifier           = Modifier.size(18.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
-                            Text("Atualizado", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                text  = "Atualizado",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    platformStyle = PlatformTextStyle(includeFontPadding = false)
+                                ),
+                                color = MaterialTheme.colorScheme.primary
+                            )
                         }
                     } else {
                         Button(
                             onClick = {
                                 scope.launch {
-                                    checking = true
+                                    checking   = true
                                     val response = checkForUpdate(BuildConfig.VERSION_NAME)
                                     lastResult = response
-                                    checking = false
+                                    checking   = false
 
                                     if (response is UpdateResult.UpdateAvailable && response.info.tagName != BuildConfig.VERSION_NAME) {
                                         onUpdateAvailable(response.info)
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.fillMaxWidth().height(56.dp), // Altura padronizada para 56.dp
+                            shape    = RoundedCornerShape(16.dp),           // Shape padronizado para 16.dp
+                            colors   = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor   = MaterialTheme.colorScheme.onPrimary
+                            )
                         ) {
-                            Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Verificar atualizações")
+                            Icon(
+                                imageVector        = Icons.Default.Refresh,
+                                contentDescription = null,
+                                modifier           = Modifier.size(20.dp)
+                            )
+
+                            Spacer(Modifier.width(10.dp))
+
+                            Text(
+                                text       = "Verificar Atualizações",
+                                fontSize   = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

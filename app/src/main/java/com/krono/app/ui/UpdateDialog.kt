@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -116,31 +117,45 @@ fun UpdateDialog(
                     modifier = Modifier.padding(start = 36.dp).align(Alignment.Start)
                 )
 
-                Spacer(Modifier.height(16.dp))
-                HorizontalDivider()
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
-                Box(modifier = Modifier.weight(1f, fill = false)) {
+                Box(
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     LazyColumn(
+                        modifier            = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        horizontalAlignment = Alignment.Start
                     ) {
                         items(changelogItems) { item ->
-                            Row(verticalAlignment = Alignment.Top) {
+                            Row(
+                                modifier          = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
                                 Icon(
-                                    imageVector = item.type.icon,
+                                    imageVector        = item.type.icon,
                                     contentDescription = null,
-                                    tint = item.type.iconTint,
-                                    modifier = Modifier.size(20.dp)
+                                    tint               = item.type.iconTint,
+                                    modifier           = Modifier
+                                        .size(20.dp)
+                                        .padding(top = 2.dp) // Alinha visualmente com a primeira linha do texto
                                 )
+
                                 Spacer(Modifier.width(12.dp))
-                                Text(text = item.text, style = MaterialTheme.typography.bodyMedium)
+
+                                Text(
+                                    text  = item.text,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        platformStyle = PlatformTextStyle(includeFontPadding = false)
+                                    ),
+                                    modifier = Modifier.weight(1f) // Garante que o texto ocupe o espaço e alinhe à esquerda
+                                )
                             }
                         }
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
                 AnimatedVisibility(
                     visible = showDownloadStartedMsg,
@@ -197,7 +212,7 @@ fun UpdateDialog(
                     )
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
 
                 Button(
                     onClick = {
