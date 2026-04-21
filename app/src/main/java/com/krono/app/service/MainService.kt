@@ -63,6 +63,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import com.krono.app.ui.theme.KronoTheme
 
 const val ACTION_FOCUS_DISMISSED = "com.krono.app.ACTION_FOCUS_DISMISSED"
 
@@ -396,10 +397,13 @@ private fun showOverlay() {
 
         android.util.Log.d("MainService", "Creating ComposeView...")
 
-        val view = ComposeView(this).apply {
-            setContent {
-                val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
-                val timerState = viewModel.timerState.collectAsState().value
+    val view = ComposeView(this).apply {
+        setContent {
+            val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
+            val timerState by viewModel.timerState.collectAsState()
+
+            // O segredo é abrir as chaves { } após o parêntese para passar o 'content'
+            KronoTheme(selectedTheme = config.selectedTheme) {
 
                 FloatingTimerUi(
                     timerState = timerState,
@@ -441,6 +445,7 @@ private fun showOverlay() {
                 )
             }
         }
+    }
 
         view.setViewTreeLifecycleOwner(this)
         view.setViewTreeViewModelStoreOwner(this)
