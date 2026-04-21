@@ -1,4 +1,5 @@
+# 🐛 Correções
+- Bug números cortados corrigido.
+
 # 🔧 Manutenção
-- 2.5.10
-- Ajuste no fluxo de atualização.
-- Removendo .env do repositório por segurança
+- 2.5.11

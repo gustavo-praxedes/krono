@@ -174,13 +174,17 @@ class MainService : Service(),
             else -> {
                 android.util.Log.d("MainService", "onStartCommand: else branch")
                 serviceScope.launch {
-                    if (composeView == null) {
-                        android.util.Log.d("MainService", "composeView is null, loading config")
+                    if (composeView == null || !overlayVisible) {
+                        android.util.Log.d("MainService", "composeView is null or not visible, loading config")
+                        if (composeView != null) {
+                            // View existe mas não está visível — remove antes de recriar
+                            removeOverlay()
+                        }
                         currentConfig = dataStore.configFlow.first()
                         android.util.Log.d("MainService", "Calling showOverlay()")
                         showOverlay()
                     } else {
-                        android.util.Log.d("MainService", "composeView already exists")
+                        android.util.Log.d("MainService", "composeView already exists and visible")
                     }
                     observeConfig()
                     observeScreenState()
