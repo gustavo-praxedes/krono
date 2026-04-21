@@ -126,7 +126,7 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [2.5.5](https://github.com/gustavo-praxedes/krono/compare/v2.5.4...v2.5.5) (2026-04-21)
+## [2.5.6](https://github.com/gustavo-praxedes/krono/compare/v2.5.5...v2.5.6) (2026-04-21)
 
 [//]: # (CHANGELOG_LATEST_END)
 

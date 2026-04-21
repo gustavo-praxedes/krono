@@ -2,6 +2,13 @@
 
 Histórico de mudanças do Krono.
 
+## [2.5.7](https://github.com/gustavo-praxedes/krono/compare/v2.5.6...v2.5.7) (2026-04-21)
+
+
+### 🐛 Correções
+
+* Coreção de bug na geração da release. ([ac96600](https://github.com/gustavo-praxedes/krono/commit/ac966001e6fb3a475a86e39c82a0bc4e39a4411c))
+
 ## [2.5.6](https://github.com/gustavo-praxedes/krono/compare/v2.5.5...v2.5.6) (2026-04-21)
 
 ## [2.5.5](https://github.com/gustavo-praxedes/krono/compare/v2.5.4...v2.5.5) (2026-04-21)
