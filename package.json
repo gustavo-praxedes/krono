@@ -1,9 +1,9 @@
 {
   "name": "krono",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "private": true,
   "scripts": {
-    "release": "commit-and-tag-version && git push --follow-tags origin main",
+    "release": "python scripts/generate_changelog.py && commit-and-tag-version && git push --follow-tags origin main",
     "update-readme": "node scripts/update-readme.js"
   },
   "devDependencies": {
