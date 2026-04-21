@@ -67,6 +67,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
 
+        // ── NOVO: Pedir permissão de notificação logo ao abrir o app ──
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+
         if (intent?.getBooleanExtra("open_settings", false) == true) {
             navigationEvents.tryEmit(AppRoutes.SETTINGS)
         }
@@ -119,11 +124,24 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startServiceAndMinimize() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        // Usamos o lifecycleScope porque precisamos ler dados do DataStore (assíncrono)
+        lifecycleScope.launch {
+            // Obtém a configuração mais recente
+            val config = dataStore.configFlow.first()
+
+            val intent = Intent(this@MainActivity, MainService::class.java).apply {
+                // Se o Modo Foco estiver ativado nas configurações,
+                // já iniciamos o serviço com essa ação específica.
+                if (config.focusModeEnabled) {
+                    action = com.krono.app.ACTION_START_FOCUS
+                }
+            }
+
+            startForegroundService(intent)
+
+            // Minimiza o app e volta para a Home do Android
+            moveTaskToBack(true)
         }
-        startForegroundService(Intent(this, MainService::class.java))
-        moveTaskToBack(true)
     }
 
     fun openOverlayPermissionSettings() {

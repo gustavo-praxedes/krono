@@ -72,13 +72,13 @@ fun FloatingTimerUi(
     val iconSizeDp    = (24f * scale).dp
     val btnSize       = (24f * scale).dp
     val quickIconSize = (24f * scale).dp
-    val quickBtnSize  = (24f * scale).dp
+    val quickBtnSize  = (28f * scale).dp
     val paddingH      = (12f * scale).dp
     val paddingV      = (12f * scale).dp
-    val btnSpacing    = (4f  * scale).dp
-    val btnTopPadding = (4f  * scale).dp
+    val btnSpacing    = (6f  * scale).dp
+    val btnTopPadding = (6f  * scale).dp
     val limitFontSize = (10f * scale).sp
-    val menuPaddingV  = (4f  * scale).dp
+    val menuPaddingV  = (6f  * scale).dp
     val menuSpacing   = (12f * scale).dp
     val minColWidth   = (144f * scale).dp
 
