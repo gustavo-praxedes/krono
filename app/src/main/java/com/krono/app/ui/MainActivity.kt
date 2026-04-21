@@ -33,28 +33,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-// ============================================================
-// MainActivity.kt
-//
-// Responsabilidades desta classe:
-//   • Ciclo de vida da Activity (onCreate, onNewIntent)
-//   • Registro e callbacks dos launchers de permissão
-//   • setContent com KronoTheme
-//   • Funções utilitárias que dependem do contexto da Activity
-//     (tryStartService, startServiceAndMinimize, returnToOverlay)
-//   • Verificação automática de atualização (checkForUpdateIfNeeded)
-//
-// Tudo relacionado a UI e navegação foi movido para:
-//   • AppNavigation.kt  — NavHost e rotas
-//   • SettingsScreen.kt — tela de configurações
-//   • SettingsComponents.kt — ToggleRow, ColorRow, etc.
-//   • TimeLimitField.kt — campo de tempo limite
-//   • OverlayPermissionDialog.kt — dialog de permissão
-// ============================================================
-
 class MainActivity : ComponentActivity() {
 
-    // ── Flows para comunicação Activity → Composable ──────────
     private val navigationEvents             = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val overlayPermissionDialogEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
@@ -64,14 +44,10 @@ class MainActivity : ComponentActivity() {
 
     private var pendingUpdateInfo: UpdateInfo? = null
 
-    // ── Launchers de permissão ────────────────────────────────
-
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* sem ação necessária */ }
+    ) { }
 
-    // Após retornar das configurações do Android, verifica se a
-    // permissão foi concedida e inicia o serviço automaticamente.
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -79,8 +55,6 @@ class MainActivity : ComponentActivity() {
             startServiceAndMinimize()
         }
     }
-
-    // ── Ciclo de vida ─────────────────────────────────────────
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -121,6 +95,7 @@ class MainActivity : ComponentActivity() {
                         isTaskRoot                    = isTaskRoot,
                         showDonationDialog            = showDonation,
                         onTryStartService             = { tryStartService() },
+                        onConfirmPermission           = { openOverlayPermissionSettings() }, // Função passada aqui
                         onStartFocusMode              = { startFocusMode() },
                         onShowOverlay                 = { showOverlay() },
                         onReset                       = { sendResetToService() },
@@ -135,22 +110,14 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // ── Utilitários da Activity ───────────────────────────────
-
-    // Verifica permissão e decide entre mostrar dialog ou iniciar serviço.
-    // Se não tem permissão: emite evento para o Composable mostrar o dialog.
-    // Se tem permissão: inicia o serviço e minimiza o app.
     private fun tryStartService() {
         if (!Settings.canDrawOverlays(this)) {
-            // Sem permissão → dialog explicativo primeiro, depois configurações do Android
             overlayPermissionDialogEvents.tryEmit(Unit)
             return
         }
         startServiceAndMinimize()
     }
 
-    // Chamado após confirmação no OverlayPermissionDialog (abre config Android)
-    // e também pelo overlayPermissionLauncher quando a permissão é concedida.
     private fun startServiceAndMinimize() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
@@ -159,8 +126,6 @@ class MainActivity : ComponentActivity() {
         moveTaskToBack(true)
     }
 
-    // Usado pelo OverlayPermissionDialog via onConfirm — abre as configurações
-    // do Android. O resultado é tratado pelo overlayPermissionLauncher acima.
     fun openOverlayPermissionSettings() {
         overlayPermissionLauncher.launch(
             Intent(
