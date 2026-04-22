@@ -1,6 +1,9 @@
 package com.krono.app.ui
 
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -18,25 +21,40 @@ object AppRoutes {
 
 @Composable
 fun AppNavigation(
-    dataStore                    : OverlayDataStore,
-    timerViewModel               : TimerViewModel,
-    pendingUpdateInfo            : UpdateInfo?,
-    navigationEvents             : SharedFlow<String>,
-    overlayPermissionDialogEvents: SharedFlow<Unit>,
-    isTaskRoot                   : Boolean,
-    showDonationDialog           : Boolean,
-    startInSettings              : Boolean, // <── ADICIONADO AQUI
-    onTryStartService            : () -> Unit,
-    onConfirmPermission          : () -> Unit,
-    onStartFocusMode             : () -> Unit,
-    onShowOverlay                : () -> Unit,
-    onReset                      : () -> Unit,
-    isServiceRunning             : () -> Boolean
+    dataStore              : OverlayDataStore,
+    timerViewModel         : TimerViewModel,
+    pendingUpdateInfo      : UpdateInfo?,
+    navigationEvents       : SharedFlow<String>,
+    permissionsDialogEvents: SharedFlow<Unit>,
+    isTaskRoot             : Boolean,
+    showDonationDialog     : Boolean,
+    startInSettings        : Boolean,
+    onTryStartService      : () -> Unit,
+    onRequestNotification  : () -> Unit,
+    onRequestOverlay       : () -> Unit,
+    onStartFocusMode       : () -> Unit,
+    onShowOverlay          : () -> Unit,
+    onReset                : () -> Unit,
+    isServiceRunning       : () -> Boolean
 ) {
     val navController = rememberNavController()
     val timerState    by timerViewModel.timerState.collectAsState()
+    val context       = LocalContext.current
 
-    var showOverlayPermissionDialog by remember { mutableStateOf(false) }
+    var showPermissionsDialog by remember { mutableStateOf(false) }
+
+    // Relê o estado das permissões a cada recomposição (volta do Settings do Android)
+    val hasOverlayPermission by remember {
+        derivedStateOf { Settings.canDrawOverlays(context) }
+    }
+    val hasNotificationPermission by remember {
+        derivedStateOf {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+                        android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else true
+        }
+    }
 
     LaunchedEffect(Unit) {
         launch {
@@ -45,8 +63,8 @@ fun AppNavigation(
             }
         }
         launch {
-            overlayPermissionDialogEvents.collect {
-                showOverlayPermissionDialog = true
+            permissionsDialogEvents.collect {
+                showPermissionsDialog = true
             }
         }
         val cfg = dataStore.configFlow.first()
@@ -57,7 +75,6 @@ fun AppNavigation(
 
     NavHost(
         navController    = navController,
-        // Define se o app começa no Timer ou direto nas Configurações
         startDestination = if (startInSettings) AppRoutes.SETTINGS else AppRoutes.TIMER
     ) {
         composable(AppRoutes.TIMER) {
@@ -84,15 +101,13 @@ fun AppNavigation(
         }
     }
 
-    if (showOverlayPermissionDialog) {
-        OverlayPermissionDialog(
-            onConfirm = {
-                showOverlayPermissionDialog = false
-                onConfirmPermission()
-            },
-            onDismiss = {
-                showOverlayPermissionDialog = false
-            }
+    if (showPermissionsDialog) {
+        PermissionsDialog(
+            hasNotificationPermission = hasNotificationPermission,
+            hasOverlayPermission      = hasOverlayPermission,
+            onRequestNotification     = onRequestNotification,
+            onRequestOverlay          = onRequestOverlay,
+            onDismiss                 = { showPermissionsDialog = false }
         )
     }
 }

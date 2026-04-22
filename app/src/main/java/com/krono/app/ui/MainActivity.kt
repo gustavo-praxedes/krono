@@ -30,14 +30,14 @@ import com.krono.app.util.UpdateResult
 import com.krono.app.util.checkForUpdate
 import com.krono.app.viewmodel.TimerViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
 
-    private val navigationEvents             = MutableSharedFlow<String>(extraBufferCapacity = 1)
-    private val overlayPermissionDialogEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val navigationEvents              = MutableSharedFlow<String>(extraBufferCapacity = 1)
+    private val permissionsDialogEvents       = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     private lateinit var dataStore: OverlayDataStore
     private val timerViewModel: TimerViewModel
@@ -45,10 +45,12 @@ class MainActivity : ComponentActivity() {
 
     private val pendingUpdateInfo = MutableStateFlow<UpdateInfo?>(null)
 
+    // Lançador para permissão de notificação (Android 13+)
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { }
+    ) { /* AppNavigation relê o estado via hasNotificationPermission */ }
 
+    // Lançador para permissão de overlay — ao retornar, minimiza se concedida
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -68,15 +70,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
 
-        // ── NOVO: Pedir permissão de notificação logo ao abrir o app ──
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        // Identifica se a intenção de abertura é para as configurações
         val shouldOpenSettings = intent?.getBooleanExtra("open_settings", false) == true
-
-        val showDonation = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
+        val showDonation       = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
         onBackPressedDispatcher.addCallback(this) {
             isEnabled = false
@@ -92,56 +87,61 @@ class MainActivity : ComponentActivity() {
                     color    = MaterialTheme.colorScheme.background
                 ) {
                     AppNavigation(
-                        dataStore                     = dataStore,
-                        timerViewModel                = timerViewModel,
-                        pendingUpdateInfo             = pendingUpdateInfo.collectAsState().value,
-                        navigationEvents              = navigationEvents,
-                        overlayPermissionDialogEvents = overlayPermissionDialogEvents,
-                        isTaskRoot                    = isTaskRoot,
-                        showDonationDialog            = showDonation,
-                        startInSettings               = shouldOpenSettings, // Define o destino inicial
-                        onTryStartService             = { tryStartService() },
-                        onConfirmPermission           = { openOverlayPermissionSettings() },
-                        onStartFocusMode              = { startFocusMode() },
-                        onShowOverlay                 = { showOverlay() },
-                        onReset                       = { sendResetToService() },
-                        isServiceRunning              = { isServiceRunning() }
+                        dataStore                 = dataStore,
+                        timerViewModel            = timerViewModel,
+                        pendingUpdateInfo         = pendingUpdateInfo.collectAsState().value,
+                        navigationEvents          = navigationEvents,
+                        permissionsDialogEvents   = permissionsDialogEvents,
+                        isTaskRoot                = isTaskRoot,
+                        showDonationDialog        = showDonation,
+                        startInSettings           = shouldOpenSettings,
+                        onTryStartService         = { tryStartService() },
+                        onRequestNotification     = { requestNotificationPermission() },
+                        onRequestOverlay          = { openOverlayPermissionSettings() },
+                        onStartFocusMode          = { startFocusMode() },
+                        onShowOverlay             = { showOverlay() },
+                        onReset                   = { sendResetToService() },
+                        isServiceRunning          = { isServiceRunning() }
                     )
                 }
             }
         }
 
-        checkForUpdateIfNeeded { info ->
-            pendingUpdateInfo.value = info
+        // Abre o dialog unificado se faltar qualquer permissão
+        val lacksOverlay       = !Settings.canDrawOverlays(this)
+        val lacksNotification  = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (lacksOverlay || lacksNotification) {
+            permissionsDialogEvents.tryEmit(Unit)
         }
+
+        checkForUpdateIfNeeded { info -> pendingUpdateInfo.value = info }
     }
 
     private fun tryStartService() {
         if (!Settings.canDrawOverlays(this)) {
-            overlayPermissionDialogEvents.tryEmit(Unit)
+            permissionsDialogEvents.tryEmit(Unit)
             return
         }
         startServiceAndMinimize()
     }
 
     private fun startServiceAndMinimize() {
-        // Usamos o lifecycleScope porque precisamos ler dados do DataStore (assíncrono)
         lifecycleScope.launch {
-            // Obtém a configuração mais recente
             val config = dataStore.configFlow.first()
-
             val intent = Intent(this@MainActivity, MainService::class.java).apply {
-                // Se o Modo Foco estiver ativado nas configurações,
-                // já iniciamos o serviço com essa ação específica.
-                if (config.focusModeEnabled) {
-                    action = com.krono.app.ACTION_START_FOCUS
-                }
+                if (config.focusModeEnabled) action = com.krono.app.ACTION_START_FOCUS
             }
-
             startForegroundService(intent)
-
-            // Minimiza o app e volta para a Home do Android
             moveTaskToBack(true)
+        }
+    }
+
+    fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -183,14 +183,10 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val config  = dataStore.configFlow.first()
             val now     = System.currentTimeMillis()
-            val elapsed = now - config.lastUpdateCheck
-            val oneDay  = 24 * 60 * 60 * 1000L
-            if (elapsed < oneDay) return@launch
+            if (now - config.lastUpdateCheck < 24 * 60 * 60 * 1000L) return@launch
             dataStore.saveLastUpdateCheck(now)
             val result = checkForUpdate(BuildConfig.VERSION_NAME)
-            if (result is UpdateResult.UpdateAvailable) {
-                onUpdateAvailable(result.info)
-            }
+            if (result is UpdateResult.UpdateAvailable) onUpdateAvailable(result.info)
         }
     }
 }

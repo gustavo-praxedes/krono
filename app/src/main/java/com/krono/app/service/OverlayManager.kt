@@ -166,27 +166,30 @@ class OverlayManager(
 
     private fun handleDrag(dx: Float, dy: Float) {
         val params = overlayParams ?: return
-        val view = composeView ?: return
+        val view   = composeView   ?: return
 
-        val widgetWidth = view.width.takeIf { it > 0 } ?: return
+        val widgetWidth  = view.width.takeIf  { it > 0 } ?: return
         val widgetHeight = view.height.takeIf { it > 0 } ?: return
 
-        val metrics = context.resources.displayMetrics
-        val screenWidth = metrics.widthPixels
-        val screenHeight = metrics.heightPixels
+        val screenWidth  = context.resources.displayMetrics.widthPixels
+        val screenHeight = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            windowManager.currentWindowMetrics.bounds.height()
+        } else {
+            context.resources.displayMetrics.heightPixels
+        }
 
         var newX = params.x + dx.toInt()
         var newY = params.y + dy.toInt()
 
-        val rightEdge = screenWidth - widgetWidth
+        val rightEdge  = screenWidth  - widgetWidth
         val bottomEdge = screenHeight - widgetHeight
 
         when {
-            newX <= EDGE_SNAP_THRESHOLD && dx <= 0 -> newX = 0
+            newX <= EDGE_SNAP_THRESHOLD && dx <= 0             -> newX = 0
             newX >= rightEdge - EDGE_SNAP_THRESHOLD && dx >= 0 -> newX = rightEdge
         }
         when {
-            newY <= EDGE_SNAP_THRESHOLD && dy <= 0 -> newY = 0
+            newY <= EDGE_SNAP_THRESHOLD && dy <= 0              -> newY = 0
             newY >= bottomEdge - EDGE_SNAP_THRESHOLD && dy >= 0 -> newY = bottomEdge
         }
 
