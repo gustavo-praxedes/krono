@@ -56,11 +56,10 @@ internal fun TimeLimitField(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text       = "Tempo Limite Máximo",
-                style      = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
+                style      = MaterialTheme.typography.bodyLarge
             )
             Text(
-                text  = "HHHH:MM:SS  •  0000:00:00 = ilimitado",
+                text  = "0000:00:00 = ilimitado",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
