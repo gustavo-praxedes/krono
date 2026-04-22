@@ -2,6 +2,23 @@
 
 Histórico de mudanças do Krono.
 
+## [3.0.0](https://github.com/gustavo-praxedes/krono/compare/v2.5.12...v3.0.0) (2026-04-22)
+
+
+### ⚡ Performance
+
+* optimize timer tick to 250ms for battery efficiency ([ede9f2f](https://github.com/gustavo-praxedes/krono/commit/ede9f2f5692ffb7b5c517b98e213e565340265aa))
+
+
+### 🔧 Manutenção
+
+* Construção do apk no github aprimorada. ([99ddfe4](https://github.com/gustavo-praxedes/krono/commit/99ddfe4a61a9edca65dd730137895e8dc0cd5b6f))
+
+
+### 💄 Estilo
+
+* refine time limit field typography and labels ([ba3dec3](https://github.com/gustavo-praxedes/krono/commit/ba3dec3f1254600b460e9461de40a70b11bc39b9))
+
 ## [2.5.12](https://github.com/gustavo-praxedes/krono/compare/v2.5.11...v2.5.12) (2026-04-22)
 
 

@@ -126,12 +126,23 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [2.5.11](https://github.com/gustavo-praxedes/krono/compare/v2.5.10...v2.5.11) (2026-04-21)
+## [2.5.12](https://github.com/gustavo-praxedes/krono/compare/v2.5.11...v2.5.12) (2026-04-22)
 
 
 ### 🐛 Correções
 
-* Bug números cortados corrigido. ([6adcd45](https://github.com/gustavo-praxedes/krono/commit/6adcd45c86f0e1a2e7dfb84d8628358966c8d514))
+* Bug do overlay no modo foco não sendo recriado corrigido. ([dad688e](https://github.com/gustavo-praxedes/krono/commit/dad688e367c3e08b9e88a7280dd6ef9b953c6fe4))
+
+
+### ⚡ Performance
+
+* Ajuste de ícones no ChangelogDialog e AboutDialog. ([8f98d07](https://github.com/gustavo-praxedes/krono/commit/8f98d07d9393b318bbed75f5793d2273fc69d4a8))
+* Padronização de caixas de diálogo e botões. ([7d78fb8](https://github.com/gustavo-praxedes/krono/commit/7d78fb8337d08b51b2a9ce23ce24a99cec045728))
+
+
+### 🔧 Manutenção
+
+* Código mais limpo. ([e2b3018](https://github.com/gustavo-praxedes/krono/commit/e2b30187ca00f8434519ea90ae69ea84817318ec))
 
 [//]: # (CHANGELOG_LATEST_END)
 
