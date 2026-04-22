@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,12 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.krono.app.ui.theme.KronoThemeOption
-
-// ============================================================
-// SettingsComponents.kt
-// Componentes reutilizáveis da tela de configurações.
-// Extraídos da MainActivity para permitir reuso e testabilidade.
-// ============================================================
+import com.krono.app.ui.theme.KronoTokens
 
 @Composable
 internal fun ToggleRow(
@@ -28,7 +22,9 @@ internal fun ToggleRow(
     onChange: (Boolean) -> Unit
 ) {
     Row(
-        modifier              = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier              = Modifier
+            .fillMaxWidth()
+            .padding(vertical = KronoTokens.Spacing.xs + 2.dp),
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -56,9 +52,13 @@ internal fun ColorRow(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(KronoTokens.Shape.badge)
                 .background(color)
-                .border(2.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp))
+                .border(
+                    width = KronoTokens.Stroke.cardBorder,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = KronoTokens.Shape.badge
+                )
                 .clickable(onClick = onClick)
         )
     }
@@ -96,7 +96,7 @@ internal fun AppearanceSlider(
                 text     = minLabel,
                 style    = MaterialTheme.typography.bodySmall,
                 color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(end = 4.dp)
+                modifier = Modifier.padding(end = KronoTokens.Spacing.xs)
             )
             Slider(
                 value         = value,
@@ -108,7 +108,7 @@ internal fun AppearanceSlider(
                 text     = maxLabel,
                 style    = MaterialTheme.typography.bodySmall,
                 color    = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 4.dp)
+                modifier = Modifier.padding(start = KronoTokens.Spacing.xs)
             )
         }
     }
@@ -145,10 +145,10 @@ internal fun ThemeSelector(
                 onValueChange = {},
                 readOnly      = true,
                 trailingIcon  = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                shape         = RoundedCornerShape(8.dp),
+                shape         = KronoTokens.Shape.badge,
                 modifier      = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable),
                 textStyle     = MaterialTheme.typography.bodyMedium,
-                singleLine    = true,
+                singleLine    = true
             )
 
             ExposedDropdownMenu(

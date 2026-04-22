@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Coffee
@@ -14,37 +13,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.data.OverlayDataStore
 import com.krono.app.data.formatLifetimeDetailed
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
+import com.krono.app.ui.theme.KronoTokens
 
-// ============================================================
-// DonationDialog.kt
-// Diálogo de doação exibido após 12h de uso acumulado.
-//
-// Elementos:
-//   • Botão X para fechar no canto superior direito
-//   • Mensagem com tempo total formatado em HHh MMm SSs
-//   • Botão "Doar via Pix" — copia chave e exibe Toast
-//   • Botão "Doar com Cartão / Ko-fi" — abre link no navegador
-// ============================================================
-
-// ── Configurações de doação ───────────────────────────────────
-// Substitua pelos valores reais antes de publicar
 private const val KOFI_URL = "https://ko-fi.com/gustavopraxedes"
 
 @Composable
 fun DonationDialog(
-    onDismiss: () -> Unit, // Acionado pelo botão X
-    onDonate : () -> Unit  // Acionado pelos botões de Pix/Cartão
+    onDismiss: () -> Unit,
+    onDonate : () -> Unit
 ) {
     val context   = LocalContext.current
     val dataStore = remember { OverlayDataStore(context) }
@@ -52,8 +37,7 @@ fun DonationDialog(
         initial = com.krono.app.data.OverlayConfig()
     )
 
-    val totalLifetimeMs = config.totalLifetimeMs
-    val formattedTime   = formatLifetimeDetailed(totalLifetimeMs)
+    val formattedTime = formatLifetimeDetailed(config.totalLifetimeMs)
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -61,14 +45,14 @@ fun DonationDialog(
     ) {
         Surface(
             modifier       = Modifier
-                .fillMaxWidth(0.92f)
+                .fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
                 .wrapContentHeight(),
-            shape          = RoundedCornerShape(28.dp),
+            shape          = KronoTokens.Shape.dialog,
             color          = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
+            tonalElevation = KronoTokens.Elevation.dialog
         ) {
             Column(
-                modifier            = Modifier.padding(32.dp),
+                modifier            = Modifier.padding(KronoTokens.Spacing.dialogPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ── Cabeçalho ────────────────────────────────
@@ -77,27 +61,29 @@ fun DonationDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text     = "Apoie o Projeto",
-                        style    = MaterialTheme.typography.headlineSmall.copy(
+                        text = "Apoie o Projeto",
+                        style = MaterialTheme.typography.headlineSmall.copy(
                             platformStyle = PlatformTextStyle(includeFontPadding = false)
                         ),
                         fontWeight = FontWeight.Bold,
-                        fontSize   = 22.sp
+                        fontSize   = KronoTokens.Typography.dialogTitle
                     )
 
                     IconButton(
                         onClick  = onDismiss,
-                        modifier = Modifier.align(Alignment.CenterEnd)
+                        modifier = Modifier
+                            .size(KronoTokens.Icon.close)
+                            .align(Alignment.CenterEnd)
                     ) {
                         Icon(
                             imageVector        = Icons.Default.Close,
-                            contentDescription = "Fechar"
+                            contentDescription = "Fechar",
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                // Espaço real de 20dp (compensado pela remoção do font padding)
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
                 // ── Mensagem ─────────────────────────────────
                 Text(
@@ -108,62 +94,52 @@ fun DonationDialog(
                                 fontWeight = FontWeight.Bold,
                                 color      = MaterialTheme.colorScheme.primary
                             )
-                        ) {
-                            append(formattedTime)
-                        }
+                        ) { append(formattedTime) }
                         append(". Este projeto é independente e seu apoio ajuda a mantê-lo gratuito e sem anúncios.")
                     },
-                    style     = MaterialTheme.typography.bodyLarge.copy(
+                    style = MaterialTheme.typography.bodyLarge.copy(
                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                     ),
-                    fontSize  = 16.sp,
+                    fontSize = KronoTokens.Typography.bodyText,
                     textAlign = TextAlign.Center,
                     color     = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                // ── Botões de Doação (Chamam onDonate) ─────────
-                Column(
-                    modifier            = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                // ── Botão ─────────────────────────────────────
+                Button(
+                    onClick  = { openKofi(context); onDonate() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(KronoTokens.Button.height),
+                    shape  = KronoTokens.Shape.button,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor   = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
-                    // Botão Unificado: Ko-fi / Cartão com aparência de "Apoiar"
-                    Button(
-                        onClick = {
-                            openKofi(context)
-                            onDonate()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
-                        shape    = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,    // Cor sólida para destaque
-                            contentColor   = MaterialTheme.colorScheme.onPrimary  // Texto em contraste
-                        )
-                    ) {
-                        Icon(
-                            imageVector        = Icons.Default.Coffee,
-                            contentDescription = null,
-                            modifier           = Modifier.size(20.dp)
-                        )
-
-                        Spacer(Modifier.width(10.dp)) // Espaçamento entre ícone e texto
-
-                        Text(
-                            text       = "Pagar um café",
-                            fontSize   = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    Icon(
+                        imageVector        = Icons.Default.Coffee,
+                        contentDescription = null,
+                        modifier           = Modifier.size(KronoTokens.Icon.button)
+                    )
+                    Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                    Text(
+                        text       = "Pagar um café",
+                        fontSize = KronoTokens.Typography.bodyText,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
             }
         }
     }
 }
 
-// ── Abre o link do Ko-fi no navegador ────────────────────────
 private fun openKofi(context: Context) {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(KOFI_URL))
-    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    context.startActivity(intent)
+    context.startActivity(
+        Intent(Intent.ACTION_VIEW, Uri.parse(KOFI_URL)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+    )
 }

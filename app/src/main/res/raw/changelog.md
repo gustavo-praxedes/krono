@@ -3,3 +3,6 @@
 
 # ⚡ Performance
 - Ajuste de ícones no ChangelogDialog e AboutDialog.
+
+# 🔧 Manutenção
+- Código mais limpo.

@@ -1,7 +1,6 @@
 package com.krono.app.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -19,13 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.krono.app.data.parseTimeLimitInput
-
-// ============================================================
-// TimeLimitField.kt
-// Campo de entrada de tempo limite com formatação automática
-// HHHH:MM:SS. Toda a lógica de estado e formatação vive aqui,
-// mantendo a SettingsScreen limpa.
-// ============================================================
+import com.krono.app.ui.theme.KronoTokens
 
 @Composable
 internal fun TimeLimitField(
@@ -36,7 +29,6 @@ internal fun TimeLimitField(
 
     var typedDigits by remember { mutableStateOf("") }
 
-    // Inicializa o campo com o valor salvo, sem sobrescrever digitação ativa
     LaunchedEffect(timeLimitSeconds) {
         if (typedDigits.isEmpty() && timeLimitSeconds > 0) {
             val hrs  = timeLimitSeconds / 3600
@@ -55,7 +47,9 @@ internal fun TimeLimitField(
     )
 
     Row(
-        modifier              = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+        modifier              = Modifier
+            .fillMaxWidth()
+            .padding(vertical = KronoTokens.Spacing.md),
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -78,10 +72,9 @@ internal fun TimeLimitField(
                 val rawDigits = input.text.filter { it.isDigit() }
                 when {
                     rawDigits.length > 8 -> {
-                        // Desloca dígitos: descarta o mais antigo, adiciona o novo no fim
                         val added     = rawDigits.last()
                         val base      = if (typedDigits.length < 8) typedDigits
-                                        else typedDigits.drop(1)
+                        else typedDigits.drop(1)
                         val candidate = base + added
                         val padded    = candidate.padStart(8, '0')
                         val cMins     = padded.substring(4, 6).toIntOrNull() ?: 0
@@ -91,7 +84,6 @@ internal fun TimeLimitField(
                         }
                     }
                     rawDigits.length < 8 -> {
-                        // Backspace: remove o último dígito
                         if (typedDigits.isNotEmpty()) typedDigits = typedDigits.dropLast(1)
                     }
                 }
@@ -107,7 +99,7 @@ internal fun TimeLimitField(
             }),
             singleLine = true,
             modifier   = Modifier.width(160.dp),
-            shape      = RoundedCornerShape(12.dp),
+            shape      = KronoTokens.Shape.input,
             textStyle  = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,
                 textAlign  = TextAlign.Center,

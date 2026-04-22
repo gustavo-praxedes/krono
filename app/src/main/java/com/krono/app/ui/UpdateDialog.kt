@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
@@ -19,10 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.krono.app.ui.theme.KronoTokens
 import com.krono.app.util.ApkInstaller
 import com.krono.app.util.DownloadStatus
 import com.krono.app.util.UpdateInfo
@@ -35,8 +33,7 @@ fun UpdateDialog(
     val context = LocalContext.current
     val version = remember(updateInfo.tagName) { updateInfo.tagName.removePrefix("v") }
 
-    // Verifica se o APK desta versão já foi baixado anteriormente
-    var downloadStatus by remember { 
+    var downloadStatus by remember {
         val initialStatus = if (ApkInstaller.getDownloadedFile(context, version)?.exists() == true) {
             DownloadStatus.Completed
         } else {
@@ -45,22 +42,24 @@ fun UpdateDialog(
         mutableStateOf(initialStatus)
     }
 
-    // Processa o changelog e garante que nunca fique vazio ou com mensagens de erro genéricas
     val changelogItems = remember(updateInfo.changelog) {
         val items = parseChangelog(updateInfo.changelog)
-        if (items.isEmpty() || items.any { it.text.contains("Sem notas", ignoreCase = true) || it.text.contains("Sem novidades", ignoreCase = true) }) {
+        if (items.isEmpty() || items.any {
+                it.text.contains("Sem notas", ignoreCase = true) ||
+                        it.text.contains("Sem novidades", ignoreCase = true)
+            }) {
             listOf(ChangelogItem("Esta atualização traz melhorias de estabilidade e correções internas para uma melhor experiência.", ItemType.OTHER))
         } else {
             items
         }
     }
-    
-    var downloadId by remember { mutableStateOf(-1L) }
+
+    var downloadId             by remember { mutableStateOf(-1L) }
     var showDownloadStartedMsg by remember { mutableStateOf(false) }
 
-    val isDownloaded = downloadStatus is DownloadStatus.Completed
+    val isDownloaded  = downloadStatus is DownloadStatus.Completed
     val isDownloading = downloadStatus is DownloadStatus.Downloading
-    val progress = (downloadStatus as? DownloadStatus.Downloading)?.percent?.toFloat()?.div(100f) ?: 0f
+    val progress      = (downloadStatus as? DownloadStatus.Downloading)?.percent?.toFloat()?.div(100f) ?: 0f
 
     LaunchedEffect(downloadId) {
         if (downloadId != -1L) {
@@ -74,75 +73,81 @@ fun UpdateDialog(
 
     LaunchedEffect(showDownloadStartedMsg) {
         if (showDownloadStartedMsg) {
-            kotlinx.coroutines.delay(3000)
+            kotlinx.coroutines.delay(KronoTokens.Animation.toastDurationMs.toLong())
             showDownloadStartedMsg = false
         }
     }
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
+        properties       = DialogProperties(
             usePlatformDefaultWidth = false,
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true
+            dismissOnBackPress      = true,
+            dismissOnClickOutside   = true
         )
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
+            modifier       = Modifier
+                .fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            shape          = KronoTokens.Shape.dialog,
+            color          = MaterialTheme.colorScheme.surface,
+            tonalElevation = KronoTokens.Elevation.dialog
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier            = Modifier.padding(KronoTokens.Spacing.dialogPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // ── Cabeçalho ────────────────────────────────
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier              = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment     = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.SystemUpdate,
+                            imageVector        = Icons.Default.SystemUpdate,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
+                            tint               = MaterialTheme.colorScheme.primary,
+                            modifier           = Modifier.size(KronoTokens.Icon.dialogHeader)
                         )
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(KronoTokens.Spacing.md))
                         Text(
-                            text = "Nova Versão",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold
+                            text       = "Nova Versão",
+                            style      = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize   = KronoTokens.Typography.dialogTitle
                         )
                     }
 
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    IconButton(
+                        onClick  = onDismiss,
+                        modifier = Modifier.size(KronoTokens.Icon.close)
+                    ) {
                         Icon(
-                            Icons.Default.Close,
+                            imageVector        = Icons.Default.Close,
                             contentDescription = "Fechar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
                 Text(
-                    text = "v$version disponível",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 36.dp).align(Alignment.Start)
+                    text     = "v$version disponível",
+                    style    = MaterialTheme.typography.bodyMedium,
+                    color    = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .padding(start = KronoTokens.Icon.dialogHeader + KronoTokens.Spacing.md)
+                        .align(Alignment.Start)
                 )
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                Box(
-                    modifier = Modifier.weight(1f, fill = false)
-                ) {
+                // ── Lista changelog ───────────────────────────
+                Box(modifier = Modifier.weight(1f, fill = false)) {
                     LazyColumn(
                         modifier            = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.listItemGap),
                         horizontalAlignment = Alignment.Start
                     ) {
                         items(changelogItems) { item ->
@@ -155,15 +160,13 @@ fun UpdateDialog(
                                     contentDescription = null,
                                     tint               = item.type.iconTint,
                                     modifier           = Modifier
-                                        .size(18.dp)
-                                        .padding(top = 2.dp)
+                                        .size(KronoTokens.Icon.listItem)
+                                        .padding(top = KronoTokens.Spacing.xs)
                                 )
-
-                                Spacer(Modifier.width(12.dp))
-
+                                Spacer(Modifier.width(KronoTokens.Spacing.listIconGap))
                                 Text(
-                                    text  = item.text,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                    text     = item.text,
+                                    style    = MaterialTheme.typography.bodyMedium.copy(
                                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                                     ),
                                     modifier = Modifier.weight(1f)
@@ -173,30 +176,35 @@ fun UpdateDialog(
                     }
                 }
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.xxl))
 
+                // ── Toast download iniciado ───────────────────
                 AnimatedVisibility(
                     visible = showDownloadStartedMsg,
-                    enter = fadeIn(),
-                    exit = fadeOut()
+                    enter   = fadeIn(),
+                    exit    = fadeOut()
                 ) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                        colors   = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = KronoTokens.Spacing.md)
                     ) {
                         Row(
-                            modifier = Modifier.padding(12.dp),
+                            modifier          = Modifier.padding(KronoTokens.Spacing.md),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Default.Download,
+                                imageVector        = Icons.Default.Download,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(18.dp)
+                                tint               = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier           = Modifier.size(KronoTokens.Icon.status)
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(KronoTokens.Spacing.sm))
                             Text(
-                                text = "O download continuará em segundo plano!",
+                                text  = "O download continuará em segundo plano!",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
@@ -204,20 +212,29 @@ fun UpdateDialog(
                     }
                 }
 
+                // ── Barra de progresso ────────────────────────
                 if (isDownloading) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = KronoTokens.Spacing.lg)
+                    ) {
                         LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier.fillMaxWidth().height(8.dp),
+                            progress  = { progress },
+                            modifier  = Modifier
+                                .fillMaxWidth()
+                                .height(KronoTokens.Stroke.progressBar),
                             trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                            strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                            strokeCap  = androidx.compose.ui.graphics.StrokeCap.Round
                         )
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            modifier              = Modifier
+                                .fillMaxWidth()
+                                .padding(top = KronoTokens.Spacing.xs),
                             horizontalArrangement = Arrangement.End
                         ) {
                             Text(
-                                text = "Baixando: ${(progress * 100).toInt()}%",
+                                text  = "Baixando: ${(progress * 100).toInt()}%",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -225,15 +242,17 @@ fun UpdateDialog(
                     }
                 }
 
+                // ── Erro de download ──────────────────────────
                 if (downloadStatus is DownloadStatus.Failed) {
                     Text(
-                        text = "Falha no download. Tente novamente.",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        text     = "Falha no download. Tente novamente.",
+                        color    = MaterialTheme.colorScheme.error,
+                        style    = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(bottom = KronoTokens.Spacing.sm)
                     )
                 }
 
+                // ── Botão principal ───────────────────────────
                 Button(
                     onClick = {
                         if (isDownloaded) {
@@ -244,29 +263,50 @@ fun UpdateDialog(
                             showDownloadStartedMsg = true
                         }
                     },
-                    enabled = !isDownloading || isDownloaded,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
-                    shape = RoundedCornerShape(16.dp)
+                    enabled  = !isDownloading || isDownloaded,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(KronoTokens.Button.height),
+                    shape = KronoTokens.Shape.button
                 ) {
                     when {
                         isDownloaded -> {
-                            Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Text("Instalar agora", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Icon(
+                                imageVector        = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                modifier           = Modifier.size(KronoTokens.Icon.button)
+                            )
+                            Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                            Text(
+                                text       = "Instalar agora",
+                                fontWeight = FontWeight.Bold,
+                                fontSize   = KronoTokens.Typography.buttonLabel
+                            )
                         }
                         isDownloading -> {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                modifier    = Modifier.size(KronoTokens.Component.buttonSpinner),
+                                strokeWidth = KronoTokens.Stroke.circularIndicator,
+                                color       = MaterialTheme.colorScheme.onPrimary
                             )
-                            Spacer(Modifier.width(10.dp))
-                            Text("Baixando...", fontSize = 16.sp)
+                            Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                            Text(
+                                text     = "Baixando...",
+                                fontSize = KronoTokens.Typography.buttonLabel
+                            )
                         }
                         else -> {
-                            Icon(Icons.Default.Download, null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(10.dp))
-                            Text("Baixar e instalar", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Icon(
+                                imageVector        = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier           = Modifier.size(KronoTokens.Icon.button)
+                            )
+                            Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                            Text(
+                                text       = "Baixar e instalar",
+                                fontWeight = FontWeight.Bold,
+                                fontSize   = KronoTokens.Typography.buttonLabel
+                            )
                         }
                     }
                 }

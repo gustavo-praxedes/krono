@@ -6,17 +6,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Article
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,23 +24,23 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.BuildConfig
+import com.krono.app.ui.theme.KronoTokens
 import com.krono.app.util.UpdateInfo
 import com.krono.app.util.UpdateResult
 import com.krono.app.util.checkForUpdate
 import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.dp
 
 enum class ItemType(val icon: ImageVector, val iconTint: androidx.compose.ui.graphics.Color) {
-    FEAT(Icons.Default.AutoAwesome, androidx.compose.ui.graphics.Color(0xFF10B981)),
-    FIX(Icons.Default.BugReport, androidx.compose.ui.graphics.Color(0xFFEF4444)),
-    PERF(Icons.Default.Speed, androidx.compose.ui.graphics.Color(0xFFF59E0B)),
-    DOCS(Icons.AutoMirrored.Filled.Article, androidx.compose.ui.graphics.Color(0xFF8B5CF6)),
-    CHORE(Icons.Default.Build, androidx.compose.ui.graphics.Color(0xFF6B7280)),
-    OTHER(Icons.Default.Check, androidx.compose.ui.graphics.Color(0xFF3B82F6))
+    FEAT (Icons.Default.AutoAwesome,          androidx.compose.ui.graphics.Color(0xFF10B981)),
+    FIX  (Icons.Default.BugReport,            androidx.compose.ui.graphics.Color(0xFFEF4444)),
+    PERF (Icons.Default.Speed,                androidx.compose.ui.graphics.Color(0xFFF59E0B)),
+    DOCS (Icons.AutoMirrored.Filled.Article,  androidx.compose.ui.graphics.Color(0xFF8B5CF6)),
+    CHORE(Icons.Default.Build,                androidx.compose.ui.graphics.Color(0xFF6B7280)),
+    OTHER(Icons.Default.Check,                androidx.compose.ui.graphics.Color(0xFF3B82F6))
 }
 
 data class ChangelogItem(val text: String, val type: ItemType)
@@ -57,11 +56,11 @@ fun parseChangelog(changelog: String): List<ChangelogItem> {
 
         if (trimmed.startsWith("#")) {
             currentType = when {
-                trimmed.contains("Novidades") || trimmed.contains("✨") -> ItemType.FEAT
-                trimmed.contains("Correções") || trimmed.contains("🐛") -> ItemType.FIX
-                trimmed.contains("Performance") || trimmed.contains("⚡") -> ItemType.PERF
+                trimmed.contains("Novidades")    || trimmed.contains("✨") -> ItemType.FEAT
+                trimmed.contains("Correções")    || trimmed.contains("🐛") -> ItemType.FIX
+                trimmed.contains("Performance")  || trimmed.contains("⚡") -> ItemType.PERF
                 trimmed.contains("Documentação") || trimmed.contains("📝") -> ItemType.DOCS
-                trimmed.contains("Manutenção") || trimmed.contains("🔧") -> ItemType.CHORE
+                trimmed.contains("Manutenção")   || trimmed.contains("🔧") -> ItemType.CHORE
                 else -> currentType
             }
             return@forEach
@@ -95,53 +94,55 @@ fun ChangelogDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties       = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
-            shape    = RoundedCornerShape(24.dp),
-            color    = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            modifier       = Modifier
+                .fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
+                .wrapContentHeight(),
+            shape          = KronoTokens.Shape.dialog,
+            color          = MaterialTheme.colorScheme.surface,
+            tonalElevation = KronoTokens.Elevation.dialog
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier            = Modifier.padding(KronoTokens.Spacing.dialogPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // ── Cabeçalho ────────────────────────────────
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center // Centraliza o conteúdo principal (o texto)
+                    modifier         = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Novidades da Versão ${updateInfo.tagName}",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text       = "Novidades da Versão ${updateInfo.tagName}",
+                        style      = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 22.sp,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 40.dp) // Evita que o texto encoste no ícone
+                        fontSize   = KronoTokens.Typography.dialogTitle,
+                        textAlign  = TextAlign.Center,
+                        modifier   = Modifier.padding(horizontal = 40.dp)
                     )
 
                     IconButton(
-                        onClick = onDismiss,
+                        onClick  = onDismiss,
                         modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.CenterEnd) // Posiciona o "X" no canto direito do Box
+                            .size(KronoTokens.Icon.close)
+                            .align(Alignment.CenterEnd)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector        = Icons.Default.Close,
                             contentDescription = "Fechar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                Box(
-                    modifier = Modifier.weight(1f, fill = false)
-                ) {
+                // ── Lista de itens ────────────────────────────
+                Box(modifier = Modifier.weight(1f, fill = false)) {
                     LazyColumn(
                         modifier            = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.listItemGap),
                         horizontalAlignment = Alignment.Start
                     ) {
                         items(changelogItems) { item ->
@@ -154,15 +155,15 @@ fun ChangelogDialog(
                                     contentDescription = null,
                                     tint               = item.type.iconTint,
                                     modifier           = Modifier
-                                        .size(20.dp)
-                                        .padding(top = 2.dp)
+                                        .size(KronoTokens.Icon.listItem)
+                                        .padding(top = KronoTokens.Spacing.xs)
                                 )
 
-                                Spacer(Modifier.width(12.dp))
+                                Spacer(Modifier.width(KronoTokens.Spacing.listIconGap))
 
                                 Text(
-                                    text  = item.text,
-                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                    text     = item.text,
+                                    style    = MaterialTheme.typography.bodyMedium.copy(
                                         platformStyle = PlatformTextStyle(includeFontPadding = false)
                                     ),
                                     modifier = Modifier.weight(1f)
@@ -172,8 +173,9 @@ fun ChangelogDialog(
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
+                // ── Botão / Status ────────────────────────────
                 AnimatedVisibility(
                     visible = !checking,
                     enter   = fadeIn(),
@@ -181,17 +183,18 @@ fun ChangelogDialog(
                 ) {
                     val result     = lastResult
                     val isUpToDate = result is UpdateResult.UpToDate ||
-                            (result is UpdateResult.UpdateAvailable && result.info.tagName == BuildConfig.VERSION_NAME)
+                            (result is UpdateResult.UpdateAvailable &&
+                                    result.info.tagName == BuildConfig.VERSION_NAME)
 
                     if (isUpToDate) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
-                                imageVector = Icons.Default.CheckCircle,
+                                imageVector        = Icons.Default.CheckCircle,
                                 contentDescription = null,
                                 tint               = MaterialTheme.colorScheme.primary,
-                                modifier           = Modifier.size(18.dp)
+                                modifier           = Modifier.size(KronoTokens.Icon.status)
                             )
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(KronoTokens.Spacing.sm))
                             Text(
                                 text  = "Atualizado",
                                 style = MaterialTheme.typography.bodyMedium.copy(
@@ -204,19 +207,22 @@ fun ChangelogDialog(
                         Button(
                             onClick = {
                                 scope.launch {
-                                    checking   = true
+                                    checking = true
                                     val response = checkForUpdate(BuildConfig.VERSION_NAME)
                                     lastResult = response
-                                    checking   = false
-
-                                    if (response is UpdateResult.UpdateAvailable && response.info.tagName != BuildConfig.VERSION_NAME) {
+                                    checking = false
+                                    if (response is UpdateResult.UpdateAvailable &&
+                                        response.info.tagName != BuildConfig.VERSION_NAME
+                                    ) {
                                         onUpdateAvailable(response.info)
                                     }
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth().height(56.dp), // Altura padronizada para 56.dp
-                            shape    = RoundedCornerShape(16.dp),           // Shape padronizado para 16.dp
-                            colors   = ButtonDefaults.buttonColors(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(KronoTokens.Button.height),
+                            shape  = KronoTokens.Shape.button,
+                            colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor   = MaterialTheme.colorScheme.onPrimary
                             )
@@ -224,29 +230,34 @@ fun ChangelogDialog(
                             Icon(
                                 imageVector        = Icons.Default.Refresh,
                                 contentDescription = null,
-                                modifier           = Modifier.size(20.dp)
+                                modifier           = Modifier.size(KronoTokens.Icon.button)
                             )
-
-                            Spacer(Modifier.width(10.dp))
-
+                            Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
                             Text(
                                 text       = "Verificar Atualizações",
-                                fontSize   = 16.sp,
+                                fontSize   = KronoTokens.Typography.buttonLabel,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
                 }
 
+                // ── Spinner de verificação ────────────────────
                 if (checking) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier              = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(12.dp))
-                        Text("Verificando...", style = MaterialTheme.typography.bodyMedium)
+                        CircularProgressIndicator(
+                            modifier    = Modifier.size(KronoTokens.Component.inlineSpinner),
+                            strokeWidth = KronoTokens.Stroke.circularIndicator
+                        )
+                        Spacer(Modifier.width(KronoTokens.Spacing.md))
+                        Text(
+                            text  = "Verificando...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }

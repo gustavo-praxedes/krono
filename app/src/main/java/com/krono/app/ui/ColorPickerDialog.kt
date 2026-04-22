@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -23,20 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.krono.app.ui.theme.KronoTokens
 import kotlin.math.roundToInt
-
-// ============================================================
-// ColorPickerDialog.kt
-// Correções:
-//   • Removida variável "updatingFromSlider" — não era lida
-//   • Removidas as atribuições redundantes a ela
-//   • LaunchedEffect simplificado para apenas sincronizar os
-//     campos de texto quando os sliders mudarem
-// ============================================================
 
 @Composable
 fun ColorPickerDialog(
@@ -70,13 +62,11 @@ fun ColorPickerDialog(
     val gFromSliders by remember(previewArgb) { derivedStateOf { (previewArgb shr 8)  and 0xFF } }
     val bFromSliders by remember(previewArgb) { derivedStateOf { previewArgb           and 0xFF } }
 
-    // Estados locais dos campos — independentes dos sliders durante digitação
     var hexText by remember(hexFromSliders) { mutableStateOf(hexFromSliders) }
     var rText   by remember(rFromSliders)   { mutableStateOf(rFromSliders.toString()) }
     var gText   by remember(gFromSliders)   { mutableStateOf(gFromSliders.toString()) }
     var bText   by remember(bFromSliders)   { mutableStateOf(bFromSliders.toString()) }
 
-    // Sincroniza campos de texto quando sliders mudam
     LaunchedEffect(hexFromSliders) {
         hexText = hexFromSliders
         rText   = rFromSliders.toString()
@@ -84,7 +74,6 @@ fun ColorPickerDialog(
         bText   = bFromSliders.toString()
     }
 
-    // Preview em tempo real no overlay
     LaunchedEffect(previewColor) {
         onPreview(Color(previewArgb), opacity)
     }
@@ -116,36 +105,43 @@ fun ColorPickerDialog(
         properties       = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier       = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
-            shape          = RoundedCornerShape(28.dp),
+            modifier       = Modifier
+                .fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
+                .wrapContentHeight(),
+            shape          = KronoTokens.Shape.dialog,
             color          = MaterialTheme.colorScheme.surface,
-            tonalElevation = 8.dp
+            tonalElevation = KronoTokens.Elevation.dialog
         ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(KronoTokens.Spacing.dialogPadding)
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.lg)
             ) {
-
                 Text(
                     text       = title,
                     style      = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    fontSize   = KronoTokens.Typography.dialogTitle
                 )
 
-                // ── Preview + Campos HEX / RGB ────────────────
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
                     verticalAlignment     = Alignment.Top,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.md)
                 ) {
                     Box(
                         modifier = Modifier
                             .size(width = 80.dp, height = 80.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            .clip(KronoTokens.Shape.iconContainer)
+                            .border(
+                                width = KronoTokens.Stroke.cardBorder,
+                                color = MaterialTheme.colorScheme.outline.copy(
+                                    alpha = KronoTokens.Alpha.divider
+                                ),
+                                shape = KronoTokens.Shape.iconContainer
+                            )
                     ) {
                         CheckerboardBackground(Modifier.matchParentSize())
                         Box(modifier = Modifier.matchParentSize().background(previewColor))
@@ -153,9 +149,8 @@ fun ColorPickerDialog(
 
                     Column(
                         modifier            = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.sm)
                     ) {
-                        // Campo HEX
                         OutlinedTextField(
                             value         = hexText,
                             onValueChange = { input ->
@@ -176,7 +171,7 @@ fun ColorPickerDialog(
                                 onDone = { applyHex(hexText) }
                             ),
                             singleLine = true,
-                            shape      = RoundedCornerShape(12.dp),
+                            shape      = KronoTokens.Shape.input,
                             textStyle  = LocalTextStyle.current.copy(
                                 fontFamily = FontFamily.Monospace,
                                 fontSize   = 14.sp
@@ -184,12 +179,10 @@ fun ColorPickerDialog(
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        // Campos R / G / B
                         Row(
                             modifier              = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.xs + 2.dp)
                         ) {
-                            // R
                             RgbField(
                                 label    = "R",
                                 value    = rText,
@@ -197,7 +190,6 @@ fun ColorPickerDialog(
                                 onDone   = { applyRgb(rText, gText, bText) },
                                 modifier = Modifier.weight(1f)
                             )
-                            // G
                             RgbField(
                                 label    = "G",
                                 value    = gText,
@@ -205,7 +197,6 @@ fun ColorPickerDialog(
                                 onDone   = { applyRgb(rText, gText, bText) },
                                 modifier = Modifier.weight(1f)
                             )
-                            // B
                             RgbField(
                                 label    = "B",
                                 value    = bText,
@@ -217,9 +208,13 @@ fun ColorPickerDialog(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                HorizontalDivider(
+                    color     = MaterialTheme.colorScheme.outlineVariant.copy(
+                        alpha = KronoTokens.Alpha.divider
+                    ),
+                    thickness = KronoTokens.Stroke.divider
+                )
 
-                // ── Sliders ──────────────────────────────────
                 val hueGradient = remember {
                     Brush.horizontalGradient(
                         colors = listOf(
@@ -275,7 +270,12 @@ fun ColorPickerDialog(
                     onValueChange = { bri = it }
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                HorizontalDivider(
+                    color     = MaterialTheme.colorScheme.outlineVariant.copy(
+                        alpha = KronoTokens.Alpha.divider
+                    ),
+                    thickness = KronoTokens.Stroke.divider
+                )
 
                 val opacityBrush by remember(previewArgb) {
                     derivedStateOf {
@@ -293,31 +293,43 @@ fun ColorPickerDialog(
                     onValueChange = { opacity = it }
                 )
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sm))
 
-                // ── Botões ───────────────────────────────────
                 Row(
                     modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.md)
                 ) {
                     OutlinedButton(
                         onClick  = onDismiss,
-                        modifier = Modifier.weight(1f).height(56.dp),
-                        shape    = RoundedCornerShape(16.dp)
-                    ) { Text("Cancelar") }
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(KronoTokens.Button.height),
+                        shape = KronoTokens.Shape.button
+                    ) {
+                        Text(
+                            text     = "Cancelar",
+                            fontSize = KronoTokens.Typography.buttonLabel
+                        )
+                    }
 
                     Button(
                         onClick  = { onConfirm(Color(previewArgb), opacity) },
-                        modifier = Modifier.weight(1f).height(56.dp),
-                        shape    = RoundedCornerShape(16.dp)
-                    ) { Text("Confirmar") }
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(KronoTokens.Button.height),
+                        shape = KronoTokens.Shape.button
+                    ) {
+                        Text(
+                            text     = "Confirmar",
+                            fontSize = KronoTokens.Typography.buttonLabel
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-// Componente extraído para evitar lambdas aninhadas em Triple
 @Composable
 private fun RgbField(
     label    : String,
@@ -357,21 +369,23 @@ private fun HsbSliderRow(
 ) {
     Row(
         modifier          = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
             text       = label,
-            modifier   = Modifier.width(72.dp),
+            modifier   = Modifier.width(92.dp), // Largura ajustada para evitar quebra
             style      = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            softWrap   = false // Força o texto em uma única linha
         )
         Box(modifier = Modifier.weight(1f)) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(16.dp)
+                    .height(KronoTokens.Stroke.progressBar + KronoTokens.Stroke.progressBar)
                     .align(Alignment.Center)
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(KronoTokens.Shape.progressBar)
                     .background(trackBrush)
             )
             Slider(
@@ -392,6 +406,7 @@ private fun HsbSliderRow(
             style      = MaterialTheme.typography.bodySmall,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Medium,
+            textAlign  = TextAlign.End,
             color      = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }

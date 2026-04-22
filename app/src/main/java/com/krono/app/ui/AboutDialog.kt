@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Close
@@ -17,12 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.BuildConfig
 import com.krono.app.R
+import com.krono.app.ui.theme.KronoTokens
 import com.krono.app.util.UpdateInfo
 
 private const val GITHUB_URL = "https://github.com/gustavo-praxedes/krono"
@@ -55,113 +54,135 @@ fun AboutDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.92f).wrapContentHeight(),
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp
+            modifier       = Modifier
+                .fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
+                .wrapContentHeight(),
+            shape          = KronoTokens.Shape.dialog,
+            color          = MaterialTheme.colorScheme.surface,
+            tonalElevation = KronoTokens.Elevation.dialog
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier            = Modifier.padding(KronoTokens.Spacing.dialogPadding),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // ── Cabeçalho ────────────────────────────────
                 Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center // Centraliza o conteúdo principal (o texto)
+                    modifier         = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Krono",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text       = "Krono",
+                        style      = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
+                        fontSize   = KronoTokens.Typography.dialogTitle
                     )
 
                     IconButton(
-                        onClick = onDismiss,
+                        onClick  = onDismiss,
                         modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.CenterEnd) // Alinha o botão especificamente à direita
+                            .size(KronoTokens.Icon.close)
+                            .align(Alignment.CenterEnd)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Close,
+                            imageVector        = Icons.Default.Close,
                             contentDescription = "Fechar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint               = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
+                // ── Descrição ─────────────────────────────────
                 Text(
-                    "O widget que flutua sobre qualquer app. " +
-                    "Gratuito, sem anúncios e de código aberto.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    text      = "O widget que flutua sobre qualquer app. Gratuito, sem anúncios e de código aberto.",
+                    style     = MaterialTheme.typography.bodyMedium,
+                    color     = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     lineHeight = 22.sp,
-                    fontSize = 16.sp
+                    fontSize  = KronoTokens.Typography.bodyText
                 )
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
+                // ── Botões ────────────────────────────────────
                 Button(
-                    onClick = onSupportClick,
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    onClick  = onSupportClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(KronoTokens.Button.height),
+                    shape  = KronoTokens.Shape.button
                 ) {
-                    Icon(Icons.Default.Favorite, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Apoiar",
+                    Icon(
+                        imageVector        = Icons.Default.Favorite,
+                        contentDescription = null,
+                        modifier           = Modifier.size(KronoTokens.Icon.button)
+                    )
+                    Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                    Text(
+                        text       = "Apoiar",
                         fontWeight = FontWeight.SemiBold,
-                        fontSize   = 16.sp,)
+                        fontSize   = KronoTokens.Typography.buttonLabel
+                    )
                 }
 
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sm))
 
                 OutlinedButton(
-                    onClick = {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    onClick  = {
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_URL))
+                                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        )
                         onDismiss()
                     },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = RoundedCornerShape(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(KronoTokens.Button.height),
+                    shape = KronoTokens.Shape.button
                 ) {
-                    Icon(Icons.Default.Code, null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text("Código fonte",
+                    Icon(
+                        imageVector        = Icons.Default.Code,
+                        contentDescription = null,
+                        modifier           = Modifier.size(KronoTokens.Icon.button)
+                    )
+                    Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                    Text(
+                        text       = "Código Fonte",
                         fontWeight = FontWeight.SemiBold,
-                        fontSize   = 16.sp,)
+                        fontSize   = KronoTokens.Typography.buttonLabel
+                    )
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
+                // ── Versão / Changelog ────────────────────────
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onShowChangelog(localUpdateInfo) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = KronoTokens.Spacing.sm),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically // Isso garante que o ícone centralize em relação à Column inteira
+                    verticalAlignment     = Alignment.CenterVertically
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f) // Garante que o texto ocupe o espaço e o ícone fique no canto
-                    ) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            "Versão ${BuildConfig.VERSION_NAME}",
-                            style = MaterialTheme.typography.bodyMedium,
+                            text       = "Versão ${BuildConfig.VERSION_NAME}",
+                            style      = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            "Ver novidades",
+                            text  = "Ver Novidades",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
 
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        imageVector        = Icons.AutoMirrored.Filled.OpenInNew,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(28.dp) // Tamanho aumentado conforme solicitado
+                        tint               = MaterialTheme.colorScheme.primary,
+                        modifier           = Modifier.size(KronoTokens.Icon.dialogHeader)
                     )
                 }
             }
