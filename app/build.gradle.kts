@@ -28,7 +28,7 @@ android {
         minSdk        = 26
         targetSdk     = 35
         versionCode   = generateVersionCode()
-        versionName = "3.0.0"
+        versionName   = "3.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
@@ -43,14 +43,15 @@ android {
 
     signingConfigs {
         create("release") {
-            // Prioridade 1: Variáveis de Ambiente (CI/CD)
-            // Prioridade 2: keystore.properties (Local)
-            
+            // Prioridade 1: Variáveis de Ambiente (CI/CD no GitHub)
+            // Prioridade 2: keystore.properties (Desenvolvimento Local no Windows)
+
             val envKeyPath = System.getenv("KEYSTORE_PATH")
-            val propKeyPath = keystoreProperties.getProperty("storeFile")
-            
+            // Modificação pontual: limpa aspas e trata nulos para evitar erros de path no Windows
+            val propKeyPath = keystoreProperties.getProperty("storeFile")?.replace("\"", "")
+
             val storeFilePath = envKeyPath ?: propKeyPath
-            
+
             if (!storeFilePath.isNullOrEmpty()) {
                 storeFile = file(storeFilePath)
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
@@ -64,8 +65,8 @@ android {
         release {
             isMinifyEnabled   = true
             isShrinkResources = true
-            
-            // Aplica a assinatura se o arquivo existir
+
+            // Aplica a assinatura configurada acima
             signingConfig = signingConfigs.getByName("release")
 
             proguardFiles(
@@ -73,6 +74,7 @@ android {
                 "proguard-rules.pro"
             )
         }
+
         debug {
             isMinifyEnabled     = false
             applicationIdSuffix = ".debug"
