@@ -116,14 +116,15 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // ── Loop de Atualização ──────────────────────────────────
-    // Roda a cada 10ms. Atualiza elapsedMs no TimerState,
-    // o que faz o StateFlow emitir novo valor e a UI recompor.
+    // Roda a cada 250ms (otimização de bateria para apps de produtividade).
+    // Atualiza elapsedMs no TimerState, o que faz o StateFlow emitir
+    // um novo valor e a UI recompor.
     private fun startUpdateLoop() {
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
 
             while (true) {
-                delay(100L)
+                delay(250L)
 
                 val current = _timerState.value
                 if (!current.isRunning) break

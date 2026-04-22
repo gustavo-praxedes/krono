@@ -11,7 +11,6 @@
 node_modules/
 .opencode/
 .opencodeignore
-.contexto/
 .kotlin/
 
 # Chaves de assinatura (NUNCA enviar para o GitHub)

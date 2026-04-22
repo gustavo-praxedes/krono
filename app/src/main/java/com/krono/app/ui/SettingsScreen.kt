@@ -10,22 +10,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.krono.app.R
 import com.krono.app.data.OverlayConfig
 import com.krono.app.data.OverlayDataStore
 import com.krono.app.util.UpdateInfo
 import kotlinx.coroutines.launch
-
-// ============================================================
-// SettingsScreen.kt
-// Tela de configurações do Krono.
-//
-// Recebe da MainActivity apenas o que não pode ser resolvido
-// localmente: acesso ao DataStore, callbacks de serviço e
-// a flag de doação pendente.
-// ============================================================
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,14 +34,12 @@ fun SettingsScreen(
     val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
     val scope  = rememberCoroutineScope()
 
-    // ── Estados dos diálogos ──────────────────────────────────
     var showBgPicker          by remember { mutableStateOf(false) }
     var showTextPicker        by remember { mutableStateOf(false) }
     var showAboutDialog       by remember { mutableStateOf(false) }
     var showDonation          by remember { mutableStateOf(showDonationDialog) }
     var showDonationFromAbout by remember { mutableStateOf(false) }
 
-    // Fluxo: AboutDialog → ChangelogDialog → UpdateDialog
     var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var updateInfo by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
@@ -63,7 +54,7 @@ fun SettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text       = "Configurações",
+                        text       = stringResource(R.string.settings_title),
                         fontWeight = FontWeight.Bold,
                         fontSize   = 20.sp
                     )
@@ -72,7 +63,7 @@ fun SettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Voltar"
+                            contentDescription = stringResource(R.string.action_back)
                         )
                     }
                 }
@@ -85,7 +76,6 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 24.dp)
         ) {
-            // ── Conteúdo rolável ──────────────────────────────
             Column(
                 modifier            = Modifier
                     .weight(1f)
@@ -94,38 +84,36 @@ fun SettingsScreen(
             ) {
                 Spacer(Modifier.height(16.dp))
 
-                // ── Toggles ───────────────────────────────────
-                ToggleRow("Abrir Diretamente", config.autoLaunch) {
+                ToggleRow(stringResource(R.string.label_auto_launch), config.autoLaunch) {
                     scope.launch { dataStore.updateConfig(config.copy(autoLaunch = it)) }
                 }
-                ToggleRow("Exibir Horas", config.showHours) {
+                ToggleRow(stringResource(R.string.label_show_hours), config.showHours) {
                     if (!it && !config.showSeconds) return@ToggleRow
                     scope.launch { dataStore.updateConfig(config.copy(showHours = it)) }
                 }
-                ToggleRow("Exibir Segundos", config.showSeconds) {
+                ToggleRow(stringResource(R.string.label_show_seconds), config.showSeconds) {
                     if (!it && !config.showHours) return@ToggleRow
                     scope.launch { dataStore.updateConfig(config.copy(showSeconds = it)) }
                 }
-                ToggleRow("Exibir Botões", config.showButtons) {
+                ToggleRow(stringResource(R.string.label_show_buttons), config.showButtons) {
                     scope.launch { dataStore.updateConfig(config.copy(showButtons = it)) }
                 }
-                ToggleRow("Manter Tela Ligada", config.keepScreenOn) {
+                ToggleRow(stringResource(R.string.label_wake_lock), config.keepScreenOn) {
                     scope.launch { dataStore.updateConfig(config.copy(keepScreenOn = it)) }
                 }
-                ToggleRow("Modo Foco", config.focusModeEnabled) { isEnabled ->
+                ToggleRow(stringResource(R.string.label_focus_mode), config.focusModeEnabled) { isEnabled ->
                     scope.launch { dataStore.updateConfig(config.copy(focusModeEnabled = isEnabled)) }
                     if (isEnabled && isServiceRunning()) onStartFocusMode()
                 }
-                ToggleRow("Bipe Ativo", config.isBeepEnabled) {
+                ToggleRow(stringResource(R.string.label_beep_enabled), config.isBeepEnabled) {
                     scope.launch { dataStore.updateConfig(config.copy(isBeepEnabled = it)) }
                 }
-                ToggleRow("Vibração Ativa", config.isVibrationEnabled) {
+                ToggleRow(stringResource(R.string.label_vibration_enabled), config.isVibrationEnabled) {
                     scope.launch { dataStore.updateConfig(config.copy(isVibrationEnabled = it)) }
                 }
 
                 Spacer(Modifier.height(16.dp))
 
-                // ── Tempo Limite ──────────────────────────────
                 TimeLimitField(
                     timeLimitSeconds = config.timeLimitSeconds,
                     onConfirm        = { seconds ->
@@ -137,9 +125,8 @@ fun SettingsScreen(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(Modifier.height(16.dp))
 
-                // ── Seção APARÊNCIA ───────────────────────────
                 Text(
-                    text       = "APARÊNCIA",
+                    text       = stringResource(R.string.section_appearance),
                     style      = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black,
                     color      = MaterialTheme.colorScheme.primary,
@@ -156,13 +143,13 @@ fun SettingsScreen(
                 Spacer(Modifier.height(12.dp))
 
                 ColorRow(
-                    label   = "Cor de Fundo",
+                    label   = stringResource(R.string.label_background_color),
                     color   = Color(config.backgroundColor).copy(alpha = config.bgOpacity),
                     onClick = { showBgPicker = true }
                 )
                 Spacer(Modifier.height(8.dp))
                 ColorRow(
-                    label   = "Cor do Texto",
+                    label   = stringResource(R.string.label_text_color),
                     color   = Color(config.textColor).copy(alpha = config.textOpacity),
                     onClick = { showTextPicker = true }
                 )
@@ -170,7 +157,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(24.dp))
 
                 AppearanceSlider(
-                    label    = "Escala do Widget",
+                    label    = stringResource(R.string.label_scale),
                     value    = config.scale,
                     minLabel = "0.5x",
                     maxLabel = "1.5x",
@@ -182,7 +169,7 @@ fun SettingsScreen(
                 Spacer(Modifier.height(12.dp))
 
                 AppearanceSlider(
-                    label    = "Arredondamento",
+                    label    = stringResource(R.string.label_corner_radius),
                     value    = config.cornerRadius,
                     minLabel = "0dp",
                     maxLabel = "50dp",
@@ -194,13 +181,12 @@ fun SettingsScreen(
                 Spacer(Modifier.height(48.dp))
             }
 
-            // ── Rodapé ────────────────────────────────────────
             TextButton(
                 onClick  = { showAboutDialog = true },
                 modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
             ) {
                 Text(
-                    text       = "Sobre o App",
+                    text       = stringResource(R.string.label_about),
                     style      = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                     color      = MaterialTheme.colorScheme.primary
@@ -209,11 +195,9 @@ fun SettingsScreen(
         }
     }
 
-    // ── Diálogos ──────────────────────────────────────────────
-
     if (showBgPicker) {
         ColorPickerDialog(
-            title          = "Cor de Fundo",
+            title          = stringResource(R.string.label_background_color),
             initialColor   = Color(config.backgroundColor),
             initialOpacity = config.bgOpacity,
             onPreview      = { color, opacity ->
@@ -233,7 +217,7 @@ fun SettingsScreen(
 
     if (showTextPicker) {
         ColorPickerDialog(
-            title          = "Cor do Texto",
+            title          = stringResource(R.string.label_text_color),
             initialColor   = Color(config.textColor),
             initialOpacity = config.textOpacity,
             onPreview      = { color, opacity ->
@@ -270,8 +254,6 @@ fun SettingsScreen(
             onDonate  = { showDonationFromAbout = false }
         )
     }
-
-    // ── Fluxo: Sobre → Changelog → Update ─────────────────────
 
     if (showAboutDialog) {
         AboutDialog(

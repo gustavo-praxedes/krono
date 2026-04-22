@@ -1,76 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ============================================================
-     strings.xml
-     Centraliza todos os textos do app para facilitar
-     traduções e manutenção.
-     ============================================================ -->
 <resources>
-
-    <!-- Nome do app exibido na gaveta e na barra de título -->
     <string name="app_name">Krono</string>
 
-    <!-- ── Notificação do Foreground Service ───────────────── -->
+    <!-- Notificação -->
     <string name="notification_channel_name">Krono</string>
     <string name="notification_channel_description">Mantém o cronômetro rodando em segundo plano</string>
     <string name="notification_title">Krono Ativo</string>
     <string name="notification_text_running">Krono em execução</string>
     <string name="notification_text_paused">Krono pausado</string>
 
-    <!-- Botões de ação da notificação -->
+    <!-- Ações -->
     <string name="action_play">Iniciar</string>
     <string name="action_pause">Pausar</string>
     <string name="action_reset">Resetar</string>
     <string name="action_stop_service">Fechar</string>
+    <string name="action_back">Voltar</string>
 
-    <!-- ── Tela de configurações (MainActivity) ────────────── -->
+    <!-- Configurações -->
     <string name="settings_title">Configurações</string>
-    <string name="section_appearance">Aparência</string>
-    <string name="section_behavior">Comportamento</string>
-    <string name="section_timer">Krono</string>
-
-    <!-- Cores -->
+    <string name="section_appearance">APARÊNCIA</string>
+    <string name="label_auto_launch">Abrir Diretamente</string>
+    <string name="label_show_hours">Exibir Horas</string>
+    <string name="label_show_seconds">Exibir Segundos</string>
+    <string name="label_show_buttons">Exibir Botões</string>
+    <string name="label_wake_lock">Manter Tela Ligada</string>
+    <string name="label_focus_mode">Modo Foco</string>
+    <string name="label_beep_enabled">Bipe Ativo</string>
+    <string name="label_vibration_enabled">Vibração Ativa</string>
+    <string name="label_theme">Tema</string>
     <string name="label_background_color">Cor de Fundo</string>
     <string name="label_text_color">Cor do Texto</string>
+    <string name="label_scale">Escala do Widget</string>
+    <string name="label_corner_radius">Arredondamento</string>
+    <string name="label_about">Sobre o App</string>
 
-    <!-- Opacidades -->
-    <string name="label_bg_opacity">Opacidade do Fundo</string>
-    <string name="label_text_opacity">Opacidade do Texto</string>
-
-    <!-- Escala -->
-    <string name="label_scale">Tamanho do Widget</string>
-
-    <!-- Corner Radius -->
-    <string name="label_corner_radius">Arredondamento das Bordas</string>
-
-    <!-- Visibilidade de segmentos de tempo -->
-    <string name="label_show_hours">Exibir horas</string>
-    <string name="label_show_seconds">Exibir segundos</string>
-
-    <!-- Modo de interação -->
-    <string name="label_show_buttons">Exibir botões de controle</string>
-    <string name="label_mode_buttons">Modo Botões</string>
-    <string name="label_mode_gestures">Modo Gestos</string>
-
-    <!-- Comportamento -->
-    <string name="label_wake_lock">Manter tela ligada</string>
-    <string name="label_auto_launch">Abrir widget automaticamente</string>
-
-    <!-- Limite de tempo -->
-    <string name="label_time_limit">Limite de tempo (máx. 99h)</string>
-    <string name="label_time_limit_hint">0 = sem limite</string>
-    <string name="label_time_limit_hours">horas</string>
-
-    <!-- Feedback -->
-    <string name="label_beep_enabled">Bip a cada segundo</string>
-    <string name="label_vibration_enabled">Vibração a cada segundo</string>
-
-    <!-- Botão principal -->
-    <string name="btn_start_overlay">Iniciar Cronômetro</string>
-    <string name="btn_stop_overlay">Parar Cronômetro</string>
-    <string name="btn_request_permission">Conceder Permissão de Overlay</string>
-
-    <!-- Avisos e mensagens -->
-    <string name="permission_overlay_rationale">Para exibir o widget flutuante, é necessário conceder permissão de sobreposição nas configurações do sistema.</string>
-    <string name="timer_limit_reached">Limite de tempo atingido</string>
-
+    <string name="label_time_limit">Limite de Tempo</string>
 </resources>
