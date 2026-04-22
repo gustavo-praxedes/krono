@@ -1,6 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Properties
+import java.io.FileInputStream
 
 // ============================================================
 // app/build.gradle.kts  —  MÓDULO DO APP
@@ -32,17 +34,28 @@ android {
         vectorDrawables { useSupportLibrary = true }
     }
 
-    // Configuração de assinatura preparada para GitHub Actions ou Local
+    // Carrega as propriedades do keystore.properties na raiz do projeto
+    val keystorePropertiesFile = rootProject.file("keystore.properties")
+    val keystoreProperties = Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    }
+
     signingConfigs {
         create("release") {
-            // Se as variáveis de ambiente existirem (GitHub), usa elas. 
-            // Caso contrário, não assina (evita erro de build local)
-            val keystoreFile = (System.getenv("KEYSTORE_PATH") ?: "krono-key.jks")
-            if (keystoreFile.isNotEmpty()) {
-                storeFile = file(keystoreFile)
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
+            // Prioridade 1: Variáveis de Ambiente (CI/CD)
+            // Prioridade 2: keystore.properties (Local)
+            
+            val envKeyPath = System.getenv("KEYSTORE_PATH")
+            val propKeyPath = keystoreProperties.getProperty("storeFile")
+            
+            val storeFilePath = envKeyPath ?: propKeyPath
+            
+            if (!storeFilePath.isNullOrEmpty()) {
+                storeFile = file(storeFilePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProperties.getProperty("storePassword")
+                keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
+                keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
             }
         }
     }
@@ -52,10 +65,8 @@ android {
             isMinifyEnabled   = true
             isShrinkResources = true
             
-            // Só aplica a assinatura se ela foi configurada acima
-            if (System.getenv("KEYSTORE_PATH") != null) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            // Aplica a assinatura se o arquivo existir
+            signingConfig = signingConfigs.getByName("release")
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

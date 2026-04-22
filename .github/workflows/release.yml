@@ -26,18 +26,19 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Create Keystore Properties
+        run: |
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > keystore.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> keystore.properties
+          echo "storeFile=krono-key.jks" >> keystore.properties
+
       - name: Decode Keystore
         run: |
-          # Aqui ele pega a string do segredo e cria o arquivo na pasta app
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/krono-key.jks
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > krono-key.jks
 
       - name: Build Release APK
         run: ./gradlew assembleRelease
-        env:
-          KEYSTORE_PATH: krono-key.jks
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

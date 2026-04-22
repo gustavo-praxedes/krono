@@ -18,3 +18,4 @@ node_modules/
 *.keystore
 *.p12
 google-services.json
+keystore.properties
