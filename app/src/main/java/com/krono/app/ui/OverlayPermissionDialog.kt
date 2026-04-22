@@ -25,9 +25,7 @@ fun OverlayPermissionDialog(
 ) {
     BasicAlertDialog(
         onDismissRequest = onDismiss,
-        modifier         = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = KronoTokens.Spacing.lg)
+        modifier         = Modifier.fillMaxWidth(KronoTokens.Spacing.dialogWidthFrac)
     ) {
         Surface(
             modifier       = Modifier.fillMaxWidth(),
