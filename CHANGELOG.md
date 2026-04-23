@@ -2,6 +2,18 @@
 
 Histórico de mudanças do Krono.
 
+## [3.2.0](https://github.com/gustavo-praxedes/krono/compare/v3.1.2...v3.2.0) (2026-04-23)
+
+
+### ✨ Novidades
+
+* Adicionada a janela de BugReport. ([e610160](https://github.com/gustavo-praxedes/krono/commit/e6101603b758576c7381fa27d329343cd3c4863a))
+
+
+### 🔧 Manutenção
+
+* Ajuste do .versionc. ([9ba1cf8](https://github.com/gustavo-praxedes/krono/commit/9ba1cf8fea200a7c5e9bbf5070031ee1dddcf2ac))
+
 ## [3.1.2](https://github.com/gustavo-praxedes/krono/compare/v3.1.1...v3.1.2) (2026-04-23)
 
 
