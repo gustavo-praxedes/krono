@@ -122,7 +122,25 @@ class MainService : Service(),
             }
             ACTION_SHOW_OVERLAY -> overlayManager.showOverlayIfHidden()
             ACTION_HIDE_OVERLAY -> hideOverlay()
-            ACTION_START_FOCUS -> startFocusMode()
+            ACTION_START_FOCUS -> {
+                serviceScope.launch {
+                    if (!overlayManager.overlayVisible) {
+                        // Serviço iniciado com modo foco mas overlay ainda não existe.
+                        // Precisa criar o overlay primeiro — showOverlay() chama
+                        // onFocusModeStarted() automaticamente quando focusModeEnabled=true.
+                        currentConfig = dataStore.configFlow.first()
+                        showOverlay()
+                        observeConfig()
+                        observeScreenState()
+                        observeTimerRunning()
+                        startNotificationUpdater()
+                        observeTimerLimit()
+                    } else {
+                        // Overlay já visível: apenas ativa o modo foco.
+                        startFocusMode()
+                    }
+                }
+            }
             ACTION_FOCUS_DISMISSED -> {}
             else -> {
                 serviceScope.launch {
