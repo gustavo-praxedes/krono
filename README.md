@@ -126,25 +126,25 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [3.0.0] (2026-04-22)
+## [3.1.0] (2026-04-23)
 
 ### ✨ Novidades
 - feat: Persistência do tempo adicionada. O tempo acumulado agora sobrevive ao fechamento do app.
 
 ### 🐛 Correções
-- fix: Correção do overlay fantasma que aparecia no Modo Foco.
-- fix: Ajuste no arraste para permitir que o overlay encoste na borda inferior da tela.
-- fix: Correção do check de permissão que não marcava instantaneamente.
+- fix: Bug do overlay não encostar na borda inferior resolvido.
+- fix: Correção do overlay fantasma no modo foco.
+- fix: Correção da marcação instantânea das permissões no diálogo.
 
 ### ⚡ Performance
-- perf: Otimização do tick do cronômetro para 250ms visando economia de bateria.
-- perf: Redução de recomposições desnecessárias na UI do overlay.
-- perf: Unificação das chamadas de permissão no `AppNavigation`.
+- perf: Overlay agora segue os temas escolhidos pelo usuário instantaneamente.
+- perf: Ajuste estético e otimização da janela de permissão.
+- perf: Padronização visual da janela de atualização (UpdateDialog).
+- perf: Unificação e simplificação dos pedidos de permissão.
 
 ### 🔧 Manutenção
-- chore: Refatoração do `FloatingTimerUi` para uso de tokens de design.
-- chore: Implementação do sistema centralizado de tokens em `KronoTokens`.
-- chore: Configuração do `keystore.properties` e ajustes no CI/CD (GitHub Actions).
+- chore: Refatoração do FloatingTimerUi usando Design Tokens.
+- chore: Sincronização e padronização dos sistemas de Changelog (Local e Remoto).
 
 ---
 

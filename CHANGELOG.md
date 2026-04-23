@@ -2,6 +2,15 @@
 
 Histórico de mudanças do Krono.
 
+## [3.1.1](https://github.com/gustavo-praxedes/krono/compare/v3.1.0...v3.1.1) (2026-04-23)
+
+
+### 🐛 Correções
+
+* Ajuste simples. ([a1fd850](https://github.com/gustavo-praxedes/krono/commit/a1fd85091b881bde25457a6f43398a0d52330017))
+* Corrigido o bug na atualização automática. ([09ae4f5](https://github.com/gustavo-praxedes/krono/commit/09ae4f5bfa908c5b08c9ac25325e453e59fb5a6a))
+* Resolvido o bug na reabertura rápida do overlay. ([681acce](https://github.com/gustavo-praxedes/krono/commit/681acceee3e7317fb7a6a234895fbf9656430f52))
+
 ## [3.1.0] (2026-04-23)
 
 ### ✨ Novidades
