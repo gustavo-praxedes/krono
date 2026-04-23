@@ -133,41 +133,6 @@ fun UpdateDialog(
                     }
                 }
 
-                Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
-
-                // ── Lista de Novidades (Estilo Amigável) ──────
-                Box(modifier = Modifier.weight(1f, fill = false)) {
-                    LazyColumn(
-                        modifier            = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(KronoTokens.Spacing.listItemGap),
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        items(changelogItems) { item ->
-                            Row(
-                                modifier          = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Icon(
-                                    imageVector        = item.type.icon,
-                                    contentDescription = null,
-                                    tint               = item.type.iconTint,
-                                    modifier           = Modifier
-                                        .size(KronoTokens.Icon.listItem)
-                                        .padding(top = KronoTokens.Spacing.xs)
-                                )
-                                Spacer(Modifier.width(KronoTokens.Spacing.listIconGap))
-                                Text(
-                                    text     = item.text,
-                                    style    = MaterialTheme.typography.bodyMedium.copy(
-                                        platformStyle = PlatformTextStyle(includeFontPadding = false)
-                                    ),
-                                    modifier = Modifier.weight(1f)
-                                )
-                            }
-                        }
-                    }
-                }
-
                 Spacer(Modifier.height(KronoTokens.Spacing.xl))
 
                 // ── Notificação de Download Iniciado ──────────
