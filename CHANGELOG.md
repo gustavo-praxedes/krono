@@ -3,6 +3,122 @@
 ## [3.1.1] (2026-04-23)
 
 ### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
 - fix: Ajuste no changelog.md.
 
 ---
