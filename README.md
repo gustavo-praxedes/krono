@@ -126,23 +126,27 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [2.5.12](https://github.com/gustavo-praxedes/krono/compare/v2.5.11...v2.5.12) (2026-04-22)
+## [3.0.0] (2026-04-22)
 
+### ✨ Novidades
+- feat: Persistência do tempo adicionada. O tempo acumulado agora sobrevive ao fechamento do app.
 
 ### 🐛 Correções
-
-* Bug do overlay no modo foco não sendo recriado corrigido. ([dad688e](https://github.com/gustavo-praxedes/krono/commit/dad688e367c3e08b9e88a7280dd6ef9b953c6fe4))
-
+- fix: Correção do overlay fantasma que aparecia no Modo Foco.
+- fix: Ajuste no arraste para permitir que o overlay encoste na borda inferior da tela.
+- fix: Correção do check de permissão que não marcava instantaneamente.
 
 ### ⚡ Performance
-
-* Ajuste de ícones no ChangelogDialog e AboutDialog. ([8f98d07](https://github.com/gustavo-praxedes/krono/commit/8f98d07d9393b318bbed75f5793d2273fc69d4a8))
-* Padronização de caixas de diálogo e botões. ([7d78fb8](https://github.com/gustavo-praxedes/krono/commit/7d78fb8337d08b51b2a9ce23ce24a99cec045728))
-
+- perf: Otimização do tick do cronômetro para 250ms visando economia de bateria.
+- perf: Redução de recomposições desnecessárias na UI do overlay.
+- perf: Unificação das chamadas de permissão no `AppNavigation`.
 
 ### 🔧 Manutenção
+- chore: Refatoração do `FloatingTimerUi` para uso de tokens de design.
+- chore: Implementação do sistema centralizado de tokens em `KronoTokens`.
+- chore: Configuração do `keystore.properties` e ajustes no CI/CD (GitHub Actions).
 
-* Código mais limpo. ([e2b3018](https://github.com/gustavo-praxedes/krono/commit/e2b30187ca00f8434519ea90ae69ea84817318ec))
+---
 
 [//]: # (CHANGELOG_LATEST_END)
 
