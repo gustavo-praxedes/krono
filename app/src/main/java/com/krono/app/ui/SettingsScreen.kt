@@ -22,6 +22,7 @@ import com.krono.app.ui.theme.KronoThemeOption
 import com.krono.app.ui.theme.overlayColorsForTheme
 import com.krono.app.util.UpdateInfo
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,10 +46,10 @@ fun SettingsScreen(
     var showDonationFromAbout by remember { mutableStateOf(false) }
 
     var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
-    var updateInfo by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
+    var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
     LaunchedEffect(pendingUpdateInfo) {
-        if (pendingUpdateInfo != null && updateInfo == null) {
+        if (pendingUpdateInfo != null) {
             updateInfo = pendingUpdateInfo
         }
     }
@@ -177,7 +178,7 @@ fun SettingsScreen(
                     minLabel = "0.5x",
                     maxLabel = "1.5x",
                     range    = 0.5f..1.5f,
-                    display  = "${String.format("%.1f", config.scale)}x",
+                    display  = String.format(Locale.US, "%.1fx", config.scale),
                     onChange = { scope.launch { dataStore.updateConfig(config.copy(scale = it)) } }
                 )
 

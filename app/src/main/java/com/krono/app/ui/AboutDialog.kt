@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Favorite
@@ -33,6 +34,7 @@ fun AboutDialog(
     onShowChangelog: (UpdateInfo) -> Unit
 ) {
     val context = LocalContext.current
+    var showBugReport by remember { mutableStateOf(false) }
 
     val localChangelog = remember {
         try {
@@ -128,6 +130,29 @@ fun AboutDialog(
 
                 Spacer(Modifier.height(KronoTokens.Spacing.sm))
 
+                // ── Botão Relatar Bug ─────────────────────────
+                OutlinedButton(
+                    onClick  = { showBugReport = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(KronoTokens.Button.height),
+                    shape = KronoTokens.Shape.button
+                ) {
+                    Icon(
+                        imageVector        = Icons.Default.BugReport,
+                        contentDescription = null,
+                        modifier           = Modifier.size(KronoTokens.Icon.button)
+                    )
+                    Spacer(Modifier.width(KronoTokens.Button.iconSpacing))
+                    Text(
+                        text       = "Relatar Bug",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize   = KronoTokens.Typography.buttonLabel
+                    )
+                }
+
+                Spacer(Modifier.height(KronoTokens.Spacing.sm))
+
                 OutlinedButton(
                     onClick  = {
                         context.startActivity(
@@ -187,5 +212,9 @@ fun AboutDialog(
                 }
             }
         }
+    }
+
+    if (showBugReport) {
+        BugReportDialog(onDismiss = { showBugReport = false })
     }
 }
