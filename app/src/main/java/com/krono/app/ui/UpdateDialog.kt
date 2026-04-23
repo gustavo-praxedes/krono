@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +34,16 @@ fun UpdateDialog(
     val context = LocalContext.current
     val version = remember(updateInfo.tagName) { updateInfo.tagName.removePrefix("v") }
 
+    // Processa o changelog usando a mesma lógica amigável do ChangelogDialog
+    val changelogItems = remember(updateInfo.changelog) {
+        val items = parseChangelog(updateInfo.changelog)
+        if (items.isEmpty()) {
+            listOf(ChangelogItem("Esta atualização traz melhorias de estabilidade e correções internas.", ItemType.OTHER))
+        } else {
+            items
+        }
+    }
+
     var downloadStatus by remember {
         val initialStatus = if (ApkInstaller.getDownloadedFile(context, version)?.exists() == true) {
             DownloadStatus.Completed
@@ -44,19 +53,7 @@ fun UpdateDialog(
         mutableStateOf(initialStatus)
     }
 
-    val changelogItems = remember(updateInfo.changelog) {
-        val items = parseChangelog(updateInfo.changelog)
-        if (items.isEmpty() || items.any {
-                it.text.contains("Sem notas", ignoreCase = true) ||
-                        it.text.contains("Sem novidades", ignoreCase = true)
-            }) {
-            listOf(ChangelogItem("Esta atualização traz melhorias de estabilidade e correções internas para uma melhor experiência.", ItemType.OTHER))
-        } else {
-            items
-        }
-    }
-
-    var downloadId             by remember { mutableStateOf(-1L) }
+    var downloadId             by remember { mutableLongStateOf(-1L) }
     var showDownloadStartedMsg by remember { mutableStateOf(false) }
 
     val isDownloaded  = downloadStatus is DownloadStatus.Completed
@@ -136,10 +133,9 @@ fun UpdateDialog(
                     }
                 }
 
-
                 Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                // ── Lista changelog ───────────────────────────
+                // ── Lista de Novidades (Estilo Amigável) ──────
                 Box(modifier = Modifier.weight(1f, fill = false)) {
                     LazyColumn(
                         modifier            = Modifier.fillMaxWidth(),
@@ -172,9 +168,9 @@ fun UpdateDialog(
                     }
                 }
 
-                Spacer(Modifier.height(KronoTokens.Spacing.xxl))
+                Spacer(Modifier.height(KronoTokens.Spacing.xl))
 
-                // ── Toast download iniciado ───────────────────
+                // ── Notificação de Download Iniciado ──────────
                 AnimatedVisibility(
                     visible = showDownloadStartedMsg,
                     enter   = fadeIn(),
@@ -208,7 +204,7 @@ fun UpdateDialog(
                     }
                 }
 
-                // ── Barra de progresso ────────────────────────
+                // ── Progresso do Download ─────────────────────
                 if (isDownloading) {
                     Column(
                         modifier = Modifier
@@ -238,7 +234,7 @@ fun UpdateDialog(
                     }
                 }
 
-                // ── Erro de download ──────────────────────────
+                // ── Erro de Download ──────────────────────────
                 if (downloadStatus is DownloadStatus.Failed) {
                     Text(
                         text     = "Falha no download. Tente novamente.",
@@ -248,7 +244,7 @@ fun UpdateDialog(
                     )
                 }
 
-                // ── Botão principal ───────────────────────────
+                // ── Botão de Ação Principal ───────────────────
                 Button(
                     onClick = {
                         if (isDownloaded) {
