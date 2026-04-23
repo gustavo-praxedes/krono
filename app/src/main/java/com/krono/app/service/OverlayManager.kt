@@ -51,7 +51,12 @@ class OverlayManager(
         onSettings: () -> Unit,
         onFocusModeStarted: () -> Unit
     ) {
-        if (composeView != null) return
+        if (composeView != null) {
+            if (!overlayVisible) {
+                showOverlayIfHidden()
+            }
+            return
+        }
 
         val savedX = currentConfig.lastX.takeIf { it >= 0 } ?: 100
         val savedY = currentConfig.lastY.takeIf { it >= 0 } ?: 200

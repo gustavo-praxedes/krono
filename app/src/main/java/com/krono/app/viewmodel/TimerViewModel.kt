@@ -164,21 +164,8 @@ class TimerViewModel(application: Application) : AndroidViewModel(application) {
     // ── Ciclo de Vida ────────────────────────────────────────
     override fun onCleared() {
         super.onCleared()
-        val current = _timerState.value
-        if (current.isRunning) {
-            val now         = System.currentTimeMillis()
-            val accumulated = current.pauseOffset + (now - current.startTime)
-            timerPrefs.saveStateSync(
-                current.copy(
-                    startTime   = -1L,
-                    pauseOffset = accumulated,
-                    isRunning   = false,
-                    elapsedMs   = accumulated
-                )
-            )
-        } else {
-            timerPrefs.saveStateSync(current)
-        }
+        // Salva o estado atual (rodando ou não) para persistência
+        timerPrefs.saveStateSync(_timerState.value)
         stopUpdateLoop()
     }
 }

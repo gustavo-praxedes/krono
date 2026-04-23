@@ -185,7 +185,16 @@ class MainService : Service(),
             onStart = { viewModel.start(); feedbackManager.triggerFeedback(currentConfig) },
             onPause = { viewModel.pause(); feedbackManager.triggerFeedback(currentConfig) },
             onReset = { handleReset() },
-            onClose = { closeAndStop() },
+            onClose = {
+                val state = viewModel.timerState.value
+                if (state.isRunning || state.elapsedMs > 0) {
+                    // Timer ativo ou pausado: apenas esconde o overlay
+                    hideOverlay()
+                } else {
+                    // Timer zerado: encerra tudo
+                    closeAndStop()
+                }
+            },
             onSettings = { openMainActivity() },
             onFocusModeStarted = { startFocusMode() }
         )
@@ -309,7 +318,11 @@ class MainService : Service(),
 
     private fun observeTimerLimit() {
         serviceScope.launch {
-            viewModel.timerState.collect { state -> if (state.isAtLimit) closeAndStop() }
+            viewModel.timerState.collect { state ->
+                if (state.isAtLimit) {
+                    hideOverlay()
+                }
+            }
         }
     }
 
