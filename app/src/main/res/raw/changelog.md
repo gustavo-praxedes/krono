@@ -5,3 +5,6 @@
 # ⚡ Performance
 - Unificação dos pedidos de permissão.
 - Ajuste estético da janela de permissão.
+
+# 🔧 Manutenção
+- Refatoração do FloatingTimerUi.

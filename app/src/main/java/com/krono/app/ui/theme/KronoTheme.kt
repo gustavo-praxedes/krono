@@ -251,3 +251,23 @@ fun KronoTheme(
         content     = content
     )
 }
+
+/**
+ * Retorna as cores do overlay (background, texto) como ARGB Int
+ * para o tema selecionado, respeitando o modo claro/escuro do sistema
+ * quando o tema for AUTO.
+ */
+fun overlayColorsForTheme(option: KronoThemeOption, systemIsDark: Boolean): Pair<Int, Int> {
+    val effective = if (option == KronoThemeOption.AUTO) {
+        if (systemIsDark) KronoThemeOption.DARK_MODERN else KronoThemeOption.LIGHT_MODERN
+    } else option
+
+    return when (effective) {
+        KronoThemeOption.DARK_MODERN     -> Pair(0xFF1E1E2E.toInt(), 0xFFCDD6F4.toInt())
+        KronoThemeOption.SOLARIZED_DARK  -> Pair(0xFF002B36.toInt(), 0xFF839496.toInt())
+        KronoThemeOption.LIGHT_MODERN    -> Pair(0xFFFFFFFF.toInt(), 0xFF1C1B1F.toInt())
+        KronoThemeOption.SOLARIZED_LIGHT -> Pair(0xFFFDF6E3.toInt(), 0xFF657B83.toInt())
+        KronoThemeOption.AUTO            -> Pair(0xFF1E1E2E.toInt(), 0xFFCDD6F4.toInt()) // nunca alcançado
+    }
+}
+

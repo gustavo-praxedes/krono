@@ -1,5 +1,6 @@
 package com.krono.app.ui
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import com.krono.app.R
 import com.krono.app.data.OverlayConfig
 import com.krono.app.data.OverlayDataStore
+import com.krono.app.ui.theme.KronoThemeOption
+import com.krono.app.ui.theme.overlayColorsForTheme
 import com.krono.app.util.UpdateInfo
 import kotlinx.coroutines.launch
 
@@ -31,8 +34,9 @@ fun SettingsScreen(
     onShowOverlay     : () -> Unit,
     onBack            : () -> Unit
 ) {
-    val config = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
-    val scope  = rememberCoroutineScope()
+    val config      = dataStore.configFlow.collectAsState(initial = OverlayConfig()).value
+    val scope        = rememberCoroutineScope()
+    val systemIsDark = isSystemInDarkTheme()
 
     var showBgPicker          by remember { mutableStateOf(false) }
     var showTextPicker        by remember { mutableStateOf(false) }
@@ -136,7 +140,18 @@ fun SettingsScreen(
                 ThemeSelector(
                     selectedTheme = config.selectedTheme,
                     onChange      = { theme ->
-                        scope.launch { dataStore.updateConfig(config.copy(selectedTheme = theme)) }
+                        scope.launch {
+                            val option = KronoThemeOption.entries.find { it.name == theme }
+                                ?: KronoThemeOption.AUTO
+                            val (bgColor, txtColor) = overlayColorsForTheme(option, systemIsDark)
+                            dataStore.updateConfig(
+                                config.copy(
+                                    selectedTheme   = theme,
+                                    backgroundColor = bgColor,
+                                    textColor       = txtColor
+                                )
+                            )
+                        }
                     }
                 )
 
