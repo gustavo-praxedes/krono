@@ -25,7 +25,6 @@ object ApkInstaller {
     fun startDownload(context: Context, downloadUrl: String, version: String): Long {
         val fileName = "krono_v${version.replace(".", "_")}.apk"
         
-        // Remove arquivo antigo se existir para evitar conflitos
         val oldFile = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fileName)
         if (oldFile.exists()) oldFile.delete()
 
@@ -101,13 +100,12 @@ object ApkInstaller {
             return
         }
 
-        if (file.length() < 1024 * 100) { // Menos de 100KB é provável que esteja corrompido
-            Log.e(TAG, "Arquivo APK muito pequeno (${file.length()} bytes), possivelmente corrompido")
+        if (file.length() < 1024 * 100) { 
+            Log.e(TAG, "Arquivo APK possivelmente corrompido")
             file.delete()
             return
         }
 
-        // Verifica permissão (Android 8.0+)
         if (!context.packageManager.canRequestPackageInstalls()) {
             val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                 data = "package:${context.packageName}".toUri()
@@ -124,20 +122,20 @@ object ApkInstaller {
                 file
             )
             
-            Log.d(TAG, "Iniciando instalação. File: ${file.absolutePath}, URI: $uri")
-
-            val intent = Intent(Intent.ACTION_INSTALL_PACKAGE).apply {
+            // Abordagem moderna usando ACTION_VIEW em vez de ACTION_INSTALL_PACKAGE
+            val intent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                // Necessário para algumas versões do Android
                 putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
-                putExtra(Intent.EXTRA_RETURN_RESULT, true)
-                putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, context.packageName)
             }
             
+            Log.d(TAG, "Iniciando instalador nativo via ACTION_VIEW. URI: $uri")
             context.startActivity(intent)
         } catch (e: Exception) {
-            Log.e(TAG, "Erro ao abrir instalador", e)
+            Log.e(TAG, "Erro ao abrir instalador nativo", e)
         }
     }
 
