@@ -1,5 +1,20 @@
 # Changelog
 
+Histórico de mudanças do Krono.
+
+## [3.1.2](https://github.com/gustavo-praxedes/krono/compare/v3.1.1...v3.1.2) (2026-04-23)
+
+
+### 🐛 Correções
+
+* Ajuste no changelog.md. ([006ea04](https://github.com/gustavo-praxedes/krono/commit/006ea04c1fdbfa133d9a5b6586b066f296a3fca8))
+* Correção de loop no script. ([2598175](https://github.com/gustavo-praxedes/krono/commit/2598175e24cd45c3cf196df2fb3cbd5befa3d217))
+
+
+### 💄 Estilo
+
+* Pequeno ajuste. ([7902a46](https://github.com/gustavo-praxedes/krono/commit/7902a461b15fe2b01eb188ad68193d58348f3bd2))
+
 ## [3.1.1] (2026-04-23)
 
 ### 🐛 Correções

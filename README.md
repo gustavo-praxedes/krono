@@ -126,25 +126,11 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [3.1.0] (2026-04-23)
-
-### ✨ Novidades
-- feat: Persistência do tempo adicionada. O tempo acumulado agora sobrevive ao fechamento do app.
+## [3.1.1] (2026-04-23)
 
 ### 🐛 Correções
-- fix: Bug do overlay não encostar na borda inferior resolvido.
-- fix: Correção do overlay fantasma no modo foco.
-- fix: Correção da marcação instantânea das permissões no diálogo.
-
-### ⚡ Performance
-- perf: Overlay agora segue os temas escolhidos pelo usuário instantaneamente.
-- perf: Ajuste estético e otimização da janela de permissão.
-- perf: Padronização visual da janela de atualização (UpdateDialog).
-- perf: Unificação e simplificação dos pedidos de permissão.
-
-### 🔧 Manutenção
-- chore: Refatoração do FloatingTimerUi usando Design Tokens.
-- chore: Sincronização e padronização dos sistemas de Changelog (Local e Remoto).
+- fix: Correção de loop no script.
+- fix: Ajuste no changelog.md.
 
 ---
 
