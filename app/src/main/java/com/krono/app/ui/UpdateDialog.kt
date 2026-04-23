@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.krono.app.ui.theme.KronoTokens
@@ -99,30 +101,32 @@ fun UpdateDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // ── Cabeçalho ────────────────────────────────
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment     = Alignment.CenterVertically
+                Box(
+                    modifier         = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector        = Icons.Default.SystemUpdate,
-                            contentDescription = null,
-                            tint               = MaterialTheme.colorScheme.primary,
-                            modifier           = Modifier.size(KronoTokens.Icon.dialogHeader)
-                        )
-                        Spacer(Modifier.width(KronoTokens.Spacing.md))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text       = "Nova Versão",
-                            style      = MaterialTheme.typography.titleMedium,
+                            text       = "Nova Versão Disponível",
+                            style      = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize   = KronoTokens.Typography.dialogTitle
+                            fontSize   = KronoTokens.Typography.dialogTitle,
+                            textAlign  = TextAlign.Center,
+                            modifier   = Modifier.padding(horizontal = 40.dp)
+                        )
+                        Text(
+                            text     = "Versão v$version",
+                            style    = MaterialTheme.typography.bodyMedium,
+                            color    = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
                         )
                     }
 
                     IconButton(
                         onClick  = onDismiss,
-                        modifier = Modifier.size(KronoTokens.Icon.close)
+                        modifier = Modifier
+                            .size(KronoTokens.Icon.close)
+                            .align(Alignment.TopEnd)
                     ) {
                         Icon(
                             imageVector        = Icons.Default.Close,
@@ -132,14 +136,6 @@ fun UpdateDialog(
                     }
                 }
 
-                Text(
-                    text     = "v$version disponível",
-                    style    = MaterialTheme.typography.bodyMedium,
-                    color    = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(start = KronoTokens.Icon.dialogHeader + KronoTokens.Spacing.md)
-                        .align(Alignment.Start)
-                )
 
                 Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 

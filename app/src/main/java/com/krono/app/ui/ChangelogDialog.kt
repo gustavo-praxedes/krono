@@ -45,36 +45,60 @@ enum class ItemType(val icon: ImageVector, val iconTint: androidx.compose.ui.gra
 
 data class ChangelogItem(val text: String, val type: ItemType)
 
+/**
+ * Converte o markdown do changelog em uma lista de objetos categorizados.
+ * Suporta detecção por cabeçalho (#) ou por prefixo de item (feat:, fix:, etc).
+ */
 fun parseChangelog(changelog: String): List<ChangelogItem> {
     if (changelog.isBlank()) return emptyList()
     val items = mutableListOf<ChangelogItem>()
-    var currentType = ItemType.OTHER
+    var sectionType = ItemType.OTHER
 
     changelog.lines().forEach { line ->
         val trimmed = line.trim()
         if (trimmed.isBlank()) return@forEach
 
+        // 1. Detecção por cabeçalho de seção (Markdown #)
         if (trimmed.startsWith("#")) {
-            currentType = when {
-                trimmed.contains("Novidades")    || trimmed.contains("✨") -> ItemType.FEAT
-                trimmed.contains("Correções")    || trimmed.contains("🐛") -> ItemType.FIX
-                trimmed.contains("Performance")  || trimmed.contains("⚡") -> ItemType.PERF
-                trimmed.contains("Documentação") || trimmed.contains("📝") -> ItemType.DOCS
-                trimmed.contains("Manutenção")   || trimmed.contains("🔧") -> ItemType.CHORE
-                else -> currentType
+            sectionType = when {
+                trimmed.contains("Novidades", true)    || trimmed.contains("✨") -> ItemType.FEAT
+                trimmed.contains("Correções", true)    || trimmed.contains("🐛") -> ItemType.FIX
+                trimmed.contains("Performance", true)  || trimmed.contains("⚡") -> ItemType.PERF
+                trimmed.contains("Documentação", true) || trimmed.contains("📝") -> ItemType.DOCS
+                trimmed.contains("Manutenção", true)   || trimmed.contains("🔧") -> ItemType.CHORE
+                else -> sectionType
             }
             return@forEach
         }
 
+        // 2. Processamento de itens da lista (-, *, •)
         if (trimmed.startsWith("-") || trimmed.startsWith("*") || trimmed.startsWith("•")) {
-            val cleanText = trimmed
-                .removePrefix("-").removePrefix("*").removePrefix("•")
-                .replace(Regex("\\[.*?\\]\\(.*?\\)"), "")
-                .trim()
+            // Remove o marcador de lista
+            val content = trimmed.substring(1).trim()
+                .replace(Regex("\\[.*?\\]\\(.*?\\)"), "") // Remove links markdown
 
-            if (cleanText.isNotBlank() && !cleanText.contains("Comparação completa")) {
-                items.add(ChangelogItem(cleanText, currentType))
+            if (content.isBlank() || content.contains("Comparação completa", true)) return@forEach
+
+            // Detecta o tipo pelo prefixo (feat:, fix:, etc)
+            val itemType = when {
+                content.startsWith("feat",  true) -> ItemType.FEAT
+                content.startsWith("fix",   true) -> ItemType.FIX
+                content.startsWith("perf",  true) -> ItemType.PERF
+                content.startsWith("docs",  true) -> ItemType.DOCS
+                content.startsWith("chore", true) -> ItemType.CHORE
+                content.startsWith("build", true) -> ItemType.CHORE
+                content.startsWith("ci",    true) -> ItemType.CHORE
+                else -> sectionType // Fallback para o tipo da seção atual
             }
+
+            // Limpa o prefixo do texto final (ex: "feat: novo timer" -> "novo timer")
+            val finalText = if (content.contains(":")) {
+                content.substringAfter(":").trim()
+            } else {
+                content
+            }.replaceFirstChar { it.uppercase() }
+
+            items.add(ChangelogItem(finalText, itemType))
         }
     }
     return items

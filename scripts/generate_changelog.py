@@ -1,31 +1,26 @@
 import subprocess
 import os
-import json
 import sys
-from datetime import datetime
 
-# Garante que a saída do console aceite UTF-8 para evitar erros com emojis no Windows
+# Garante que a saída do console aceite UTF-8
 if sys.stdout.encoding != 'utf-8':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 # Caminhos dos arquivos
 ANDROID_RAW_CHANGELOG = "app/src/main/res/raw/changelog.md"
-PACKAGE_JSON = "package.json"
+ROOT_CHANGELOG = "CHANGELOG.md"
 
 def get_latest_tag():
     try:
-        # Pega a última tag de versão
         return subprocess.check_output(["git", "describe", "--tags", "--abbrev=0"], stderr=subprocess.STDOUT).decode("utf-8").strip()
-    except subprocess.CalledProcessError:
+    except:
         return None
 
 def get_commits_since(tag):
     if tag:
-        # Commits desde a última tag até agora
         cmd = ["git", "log", f"{tag}..HEAD", "--pretty=format:%s"]
     else:
-        # Todos os commits se não houver tag
         cmd = ["git", "log", "--pretty=format:%s"]
     
     try:
@@ -45,56 +40,67 @@ def categorize_commits(commits):
     
     for commit in commits:
         commit = commit.strip()
-        if not commit: continue
+        if not commit or commit.startswith("Merge "): continue
         
-        # Lógica de categorização baseada em prefixos comuns
         lower_commit = commit.lower()
+        # Mantemos o prefixo para que o parser do Android identifique o ícone individualmente se necessário
         if lower_commit.startswith("feat"):
-            categories["✨ Novidades"].append(commit.split(":", 1)[-1].strip())
+            categories["✨ Novidades"].append(commit)
         elif lower_commit.startswith("fix"):
-            categories["🐛 Correções"].append(commit.split(":", 1)[-1].strip())
+            categories["🐛 Correções"].append(commit)
         elif lower_commit.startswith("perf"):
-            categories["⚡ Performance"].append(commit.split(":", 1)[-1].strip())
-        elif any(lower_commit.startswith(p) for p in ["chore", "refactor", "style", "build"]):
-            categories["🔧 Manutenção"].append(commit.split(":", 1)[-1].strip())
+            categories["⚡ Performance"].append(commit)
+        elif any(lower_commit.startswith(p) for p in ["chore", "refactor", "style", "build", "ci"]):
+            categories["🔧 Manutenção"].append(commit)
         elif lower_commit.startswith("docs"):
-            categories["📝 Documentação"].append(commit.split(":", 1)[-1].strip())
+            categories["📝 Documentação"].append(commit)
         else:
-            # Commits sem prefixo padrão vão para Manutenção
+            # Sem prefixo vai para manutenção mas sem adicionar prefixo falso
             categories["🔧 Manutenção"].append(commit)
             
     return {k: v for k, v in categories.items() if v}
 
-def update_android_raw(categorized):
+def generate_markdown(categorized):
     text = ""
     for cat, items in categorized.items():
         text += f"# {cat}\n"
         for item in items:
-            text += f"- {item}\n"
+            # Garante que o item comece com hífen
+            line = item.strip()
+            if not line.startswith("-"): line = f"- {line}"
+            text += f"{line}\n"
         text += "\n"
-    
-    if not text:
-        text = "- Melhorias de estabilidade e correções internas."
+    return text.strip() if text else "- Melhorias de estabilidade e correções internas."
 
-    # Garante que a pasta existe
-    os.makedirs(os.path.dirname(ANDROID_RAW_CHANGELOG), exist_ok=True)
-    
-    # Escreve explicitamente em UTF-8
-    with open(ANDROID_RAW_CHANGELOG, "w", encoding="utf-8") as f:
-        f.write(text.strip())
+def update_file(path, content):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
 
 def main():
-    print("🚀 Sincronizando notas de versão para o App...")
+    print("🚀 Gerando Changelogs sincronizados...")
     
     latest_tag = get_latest_tag()
     commits = get_commits_since(latest_tag)
     
-    # Processa os commits
+    if not commits:
+        print("⚠️ Nenhum commit novo encontrado desde a última tag.")
+        return
+
     categorized = categorize_commits(commits)
+    content = generate_markdown(categorized)
     
-    # Atualiza apenas o arquivo interno do Android
-    update_android_raw(categorized)
-    print(f"✅ {ANDROID_RAW_CHANGELOG} atualizado com sucesso.")
+    # Atualiza o arquivo interno do App
+    update_file(ANDROID_RAW_CHANGELOG, content)
+    
+    # Para o CHANGELOG da raiz, vamos apenas imprimir para o usuário anexar ou 
+    # poderíamos fazer um append, mas por segurança de histórico, 
+    # vamos atualizar o raw que é o mais crítico para o app.
+    
+    print(f"✅ {ANDROID_RAW_CHANGELOG} atualizado.")
+    print("\n--- CONTEÚDO GERADO ---\n")
+    print(content)
+    print("\n-----------------------\n")
 
 if __name__ == "__main__":
     main()
