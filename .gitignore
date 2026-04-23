@@ -1,21 +1,28 @@
-*.iml
-.gradle
-/local.properties
-/.idea/
-.idea
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-node_modules/
-.opencode/
-.opencodeignore
+gitignore
+# Build e Arquivos Temporários
+.gradle/
+/build/
+app/build/
 .kotlin/
+node_modules/
+build_log.txt
 
-# Chaves de assinatura (NUNCA enviar para o GitHub)
+# IDE - Android Studio / IntelliJ
+.idea/
+*.iml
+
+# Configurações Locais e SDK
+/local.properties
+
+# Segredos e Assinatura (NUNCA enviar ao repositório)
 *.jks
 *.keystore
 *.p12
 google-services.json
 keystore.properties
+
+# Outros
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
