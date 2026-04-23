@@ -118,16 +118,12 @@ class MainService : Service(),
             ACTION_RESET -> handleReset()
             ACTION_STOP_SERVICE -> {
                 closeAndStop()
-                return START_NOT_STICKY
             }
             ACTION_SHOW_OVERLAY -> overlayManager.showOverlayIfHidden()
             ACTION_HIDE_OVERLAY -> hideOverlay()
             ACTION_START_FOCUS -> {
                 serviceScope.launch {
                     if (!overlayManager.overlayVisible) {
-                        // Serviço iniciado com modo foco mas overlay ainda não existe.
-                        // Precisa criar o overlay primeiro — showOverlay() chama
-                        // onFocusModeStarted() automaticamente quando focusModeEnabled=true.
                         currentConfig = dataStore.configFlow.first()
                         showOverlay()
                         observeConfig()
@@ -136,7 +132,6 @@ class MainService : Service(),
                         startNotificationUpdater()
                         observeTimerLimit()
                     } else {
-                        // Overlay já visível: apenas ativa o modo foco.
                         startFocusMode()
                     }
                 }
@@ -161,7 +156,10 @@ class MainService : Service(),
 
     override fun onDestroy() {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        
+        // Garante que o timer pare se o sistema matar o serviço
         if (viewModel.timerState.value.isRunning) viewModel.pause()
+        
         timerPrefs.setServiceActive(false)
         applyScreenOn(false)
         overlayManager.removeOverlay()
@@ -170,6 +168,7 @@ class MainService : Service(),
         notificationJob?.cancel()
         serviceScope.cancel()
         viewModelStore.clear()
+        
         super.onDestroy()
     }
 
@@ -188,10 +187,8 @@ class MainService : Service(),
             onClose = {
                 val state = viewModel.timerState.value
                 if (state.isRunning || state.elapsedMs > 0) {
-                    // Timer ativo ou pausado: apenas esconde o overlay
                     hideOverlay()
                 } else {
-                    // Timer zerado: encerra tudo
                     closeAndStop()
                 }
             },
@@ -207,11 +204,16 @@ class MainService : Service(),
     }
 
     private fun closeAndStop() {
+        // Para o cronômetro e limpa preferências antes de parar o serviço
         viewModel.reset()
         timerPrefs.clearState()
         timerPrefs.setServiceActive(false)
         applyScreenOn(false)
-        hideOverlay()
+        
+        // Remove o overlay imediatamente
+        overlayManager.removeOverlay()
+        
+        // Para o foreground e o serviço de forma explícita
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
