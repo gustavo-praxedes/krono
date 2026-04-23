@@ -1,5 +1,205 @@
 # Changelog
 
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
+## [3.1.1] (2026-04-23)
+
+### 🐛 Correções
+- fix: Ajuste no changelog.md.
+
+---
+
+
 Histórico de mudanças do Krono.
 
 ## [3.1.1](https://github.com/gustavo-praxedes/krono/compare/v3.1.0...v3.1.1) (2026-04-23)
