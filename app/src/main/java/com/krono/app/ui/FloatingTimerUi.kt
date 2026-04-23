@@ -24,7 +24,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
@@ -34,9 +33,8 @@ import androidx.compose.ui.unit.sp
 import com.krono.app.data.OverlayConfig
 import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
+import com.krono.app.ui.theme.KronoTokens
 import kotlinx.coroutines.delay
-
-private const val QUICK_MENU_TIMEOUT_MS = 4_000L
 
 @Composable
 fun FloatingTimerUi(
@@ -58,24 +56,23 @@ fun FloatingTimerUi(
     val isRunning = timerState.isRunning
     val scale     = config.scale
 
-    val cornerRadius = (config.cornerRadius * scale).coerceAtMost(64f).dp
+    // ── Aplicação dos Tokens com Escala ─────────────────────
+    val cornerRadius = (config.cornerRadius * scale).coerceAtMost(KronoTokens.Overlay.maxCornerRadiusFloat).dp
     val bgColor      = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
     val txtColor     = Color(config.textColor).copy(alpha = config.textOpacity)
     val shape        = RoundedCornerShape(cornerRadius)
 
-    val timeFontSize  = (32f * scale).sp
-    val iconSizeDp    = (24f * scale).dp
-    val btnSize       = (24f * scale).dp
-    val quickIconSize = (24f * scale).dp
-    val quickBtnSize  = (28f * scale).dp
-    val paddingH      = (12f * scale).dp
-    val paddingV      = (12f * scale).dp
-    val btnSpacing    = (6f  * scale).dp
-    val btnTopPadding = (6f  * scale).dp
-    val limitFontSize = (10f * scale).sp
-    val menuPaddingV  = (6f  * scale).dp
-    val menuSpacing   = (12f * scale).dp
-    val minColWidth   = (144f * scale).dp
+    val timeFontSize  = (KronoTokens.Overlay.timerFontSize.value * scale).sp
+    val iconSizeDp    = (KronoTokens.Overlay.iconSize.value * scale).dp
+    val btnSize       = (KronoTokens.Overlay.buttonSize.value * scale).dp
+    val quickIconSize = (KronoTokens.Overlay.quickIconSize.value * scale).dp
+    val quickBtnSize  = (KronoTokens.Overlay.quickBtnSize.value * scale).dp
+    
+    val paddingH      = (KronoTokens.Overlay.paddingH.value * scale).dp
+    val paddingV      = (KronoTokens.Overlay.paddingV.value * scale).dp
+    val btnTopPadding = (KronoTokens.Overlay.btnTopPadding.value * scale).dp
+    val menuPaddingV  = (KronoTokens.Overlay.menuPaddingV.value * scale).dp
+    val minColWidth   = (KronoTokens.Overlay.minWidth.value * scale).dp
 
     val currentOnStart              by rememberUpdatedState(onStart)
     val currentOnPause              by rememberUpdatedState(onPause)
@@ -96,7 +93,7 @@ fun FloatingTimerUi(
     var menuInteractionTick by remember { mutableIntStateOf(0) }
     LaunchedEffect(menuVisible, menuInteractionTick) {
         if (menuVisible) {
-            delay(QUICK_MENU_TIMEOUT_MS)
+            delay(KronoTokens.Overlay.menuTimeoutMs)
             menuVisible = false
         }
     }
@@ -106,13 +103,6 @@ fun FloatingTimerUi(
     Box(
         modifier = Modifier
             .wrapContentSize()
-            .padding((8f * scale).dp) // Reserva espaço da Window pro shadow respirar
-            .shadow(
-                elevation = (6f * scale).dp, 
-                shape = shape,
-                ambientColor = Color.Black.copy(alpha = 0.3f), // Opcional, dá mais volume na sombra
-                spotColor = Color.Black.copy(alpha = 0.8f)
-            )
             .clip(shape)
             .background(bgColor)
             .pointerInput(Unit) {
@@ -153,204 +143,197 @@ fun FloatingTimerUi(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                text       = timerState.elapsedMs.toFormattedTime(
-                    showHours   = config.showHours,
-                    showSeconds = config.showSeconds
-                ),
-                color      = txtColor,
-                fontSize   = timeFontSize,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                maxLines   = 1,
-                softWrap   = false
-            )
+                    text       = timerState.elapsedMs.toFormattedTime(
+                        showHours   = config.showHours,
+                        showSeconds = config.showSeconds
+                    ),
+                    color      = txtColor,
+                    fontSize   = timeFontSize,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    maxLines   = 1,
+                    softWrap   = false
+                )
 
-            val MainButtonRow = @Composable {
-                Row(
-                    modifier              = Modifier
-                        .fillMaxWidth()
-                        .padding(top = btnTopPadding),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment     = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick  = {
-                            if (menuVisible) resetMenuTimer()
-                            if (currentIsRunning) currentOnPause() else currentOnStart()
-                        },
-                        enabled  = !timerState.isAtLimit,
-                        modifier = Modifier.size(btnSize)
+                val MainButtonRow = @Composable {
+                    Row(
+                        modifier              = Modifier
+                            .fillMaxWidth()
+                            .padding(top = btnTopPadding),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector        = if (currentIsRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = if (currentIsRunning) "Pausar cronômetro" else "Iniciar cronômetro",
-                            tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 1f),
-                            modifier           = Modifier.size(iconSizeDp)
-                        )
-                    }
+                        IconButton(
+                            onClick  = {
+                                if (menuVisible) resetMenuTimer()
+                                if (currentIsRunning) currentOnPause() else currentOnStart()
+                            },
+                            enabled  = !timerState.isAtLimit,
+                            modifier = Modifier.size(btnSize)
+                        ) {
+                            Icon(
+                                imageVector        = if (currentIsRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = if (currentIsRunning) "Pausar" else "Iniciar",
+                                tint               = if (currentIsRunning) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 1f),
+                                modifier           = Modifier.size(iconSizeDp)
+                            )
+                        }
 
-                    IconButton(
-                        onClick  = {
-                            if (menuVisible) resetMenuTimer()
-                            currentOnReset()
-                        },
-                        modifier = Modifier.size(btnSize)
-                    ) {
-                        Icon(Icons.Default.Refresh, "Reiniciar cronômetro", tint = txtColor, modifier = Modifier.size(iconSizeDp))
-                    }
+                        IconButton(
+                            onClick  = {
+                                if (menuVisible) resetMenuTimer()
+                                currentOnReset()
+                            },
+                            modifier = Modifier.size(btnSize)
+                        ) {
+                            Icon(Icons.Default.Refresh, "Reset", tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        }
 
-                    IconButton(
-                        onClick  = {
-                            menuVisible = false
-                            currentOnSettings()
-                        },
-                        modifier = Modifier.size(btnSize)
-                    ) {
-                        Icon(Icons.Default.Settings, "Abrir configurações", tint = txtColor, modifier = Modifier.size(iconSizeDp))
-                    }
+                        IconButton(
+                            onClick  = {
+                                menuVisible = false
+                                currentOnSettings()
+                            },
+                            modifier = Modifier.size(btnSize)
+                        ) {
+                            Icon(Icons.Default.Settings, "Config", tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        }
 
-                    IconButton(
-                        onClick  = onClose,
-                        modifier = Modifier.size(btnSize)
-                    ) {
-                        Icon(Icons.Default.Close, "Fechar widget", tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        IconButton(
+                            onClick  = onClose,
+                            modifier = Modifier.size(btnSize)
+                        ) {
+                            Icon(Icons.Default.Close, "Fechar", tint = txtColor, modifier = Modifier.size(iconSizeDp))
+                        }
                     }
                 }
-            }
 
-            if (config.showButtons) {
-                MainButtonRow()
-            } else {
+                if (config.showButtons) {
+                    MainButtonRow()
+                } else {
+                    AnimatedVisibility(
+                        visible = menuVisible,
+                        modifier = Modifier.fillMaxWidth(),
+                        enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
+                    ) {
+                        MainButtonRow()
+                    }
+                }
+
+                // ── Menu de Configurações Rápidas ────────────────────
                 AnimatedVisibility(
                     visible = menuVisible,
                     modifier = Modifier.fillMaxWidth(),
                     enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
                     exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
                 ) {
-                    MainButtonRow()
-                }
-            }
-
-            // ── Menu de Configurações Rápidas ────────────────────
-            AnimatedVisibility(
-                visible = menuVisible,
-                modifier = Modifier.fillMaxWidth(),
-                enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = menuPaddingV),
-                        thickness = 0.5.dp,
-                        color = txtColor.copy(alpha = 0.2f)
-                    )
-                    Row(
-                        modifier              = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = menuPaddingV),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment     = Alignment.CenterVertically
-                    ) {
-                        // Toggle Modo Foco
-                        IconButton(
-                            onClick  = {
-                                resetMenuTimer()
-                                currentOnToggleFocus()
-                            },
-                            modifier = Modifier.size(quickBtnSize)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = menuPaddingV),
+                            thickness = 0.5.dp,
+                            color = txtColor.copy(alpha = 0.2f)
+                        )
+                        Row(
+                            modifier              = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = menuPaddingV),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment     = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector        = Icons.Default.TrackChanges,
-                                contentDescription = "Ativar modo foco",
-                                tint               = if (config.focusModeEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                modifier           = Modifier.size(quickIconSize)
-                            )
-                        }
+                            IconButton(
+                                onClick  = {
+                                    resetMenuTimer()
+                                    currentOnToggleFocus()
+                                },
+                                modifier = Modifier.size(quickBtnSize)
+                            ) {
+                                Icon(
+                                    imageVector        = Icons.Default.TrackChanges,
+                                    contentDescription = "Foco",
+                                    tint               = if (config.focusModeEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                    modifier           = Modifier.size(quickIconSize)
+                                )
+                            }
 
-                        // Toggle Manter Tela Ligada
-                        IconButton(
-                            onClick  = {
-                                resetMenuTimer()
-                                currentOnToggleKeepScreenOn()
-                            },
-                            modifier = Modifier.size(quickBtnSize)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.LightMode,
-                                contentDescription = "Manter tela ligada",
-                                tint               = if (config.keepScreenOn) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                modifier           = Modifier.size(quickIconSize)
-                            )
-                        }
+                            IconButton(
+                                onClick  = {
+                                    resetMenuTimer()
+                                    currentOnToggleKeepScreenOn()
+                                },
+                                modifier = Modifier.size(quickBtnSize)
+                            ) {
+                                Icon(
+                                    imageVector        = Icons.Default.LightMode,
+                                    contentDescription = "Tela Ligada",
+                                    tint               = if (config.keepScreenOn) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                    modifier           = Modifier.size(quickIconSize)
+                                )
+                            }
 
-                        // Toggle Abrir Diretamente
-                        IconButton(
-                            onClick  = {
-                                resetMenuTimer()
-                                currentOnToggleAutoLaunch()
-                            },
-                            modifier = Modifier.size(quickBtnSize)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.OpenInNew,
-                                contentDescription = "Abrir automaticamente",
-                                tint               = if (config.autoLaunch) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                modifier           = Modifier.size(quickIconSize)
-                            )
-                        }
+                            IconButton(
+                                onClick  = {
+                                    resetMenuTimer()
+                                    currentOnToggleAutoLaunch()
+                                },
+                                modifier = Modifier.size(quickBtnSize)
+                            ) {
+                                Icon(
+                                    imageVector        = Icons.Default.OpenInNew,
+                                    contentDescription = "Auto",
+                                    tint               = if (config.autoLaunch) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                    modifier           = Modifier.size(quickIconSize)
+                                )
+                            }
 
-                        // Toggle Bip
-                        IconButton(
-                            onClick  = {
-                                resetMenuTimer()
-                                currentOnToggleBeep()
-                            },
-                            modifier = Modifier.size(quickBtnSize)
-                        ) {
-                            Icon(
-                                imageVector        = Icons.Default.VolumeUp,
-                                contentDescription = "Ativar bip",
-                                tint               = if (config.isBeepEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                modifier           = Modifier.size(quickIconSize)
-                            )
+                            IconButton(
+                                onClick  = {
+                                    resetMenuTimer()
+                                    currentOnToggleBeep()
+                                },
+                                modifier = Modifier.size(quickBtnSize)
+                            ) {
+                                Icon(
+                                    imageVector        = Icons.Default.VolumeUp,
+                                    contentDescription = "Bip",
+                                    tint               = if (config.isBeepEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+                                    modifier           = Modifier.size(quickIconSize)
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Icon(
-                imageVector = Icons.Default.MoreHoriz,
-                contentDescription = "Expandir Menu",
-                tint = txtColor.copy(alpha = 0.4f),
-                modifier = Modifier
-                    .height((10f * scale).dp)
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectDragGestures(
-                            onDragEnd = { onDragEnd() },
-                            onDragCancel = { onDragEnd() },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                // Sensibilidade aumentada para expandir ao arrastar para baixo
-                                if (dragAmount.y > 2f && !menuVisible) {
-                                    menuVisible = true
+                Icon(
+                    imageVector = Icons.Default.MoreHoriz,
+                    contentDescription = "Menu",
+                    tint = txtColor.copy(alpha = 0.4f),
+                    modifier = Modifier
+                        .height((10f * scale).dp)
+                        .fillMaxWidth()
+                        .pointerInput(Unit) {
+                            detectDragGestures(
+                                onDragEnd = { onDragEnd() },
+                                onDragCancel = { onDragEnd() },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    if (dragAmount.y > 2f && !menuVisible) menuVisible = true
+                                    onDrag(dragAmount.x, dragAmount.y)
+                                    if (menuVisible) resetMenuTimer()
                                 }
-                                onDrag(dragAmount.x, dragAmount.y)
-                                if (menuVisible) resetMenuTimer()
-                            }
-                        )
-                    }
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = {
-                                menuVisible = !menuVisible
-                                if (menuVisible) resetMenuTimer()
-                            }
-                        )
-                    }
-            )
+                            )
+                        }
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onTap = {
+                                    menuVisible = !menuVisible
+                                    if (menuVisible) resetMenuTimer()
+                                }
+                            )
+                        }
+                )
             }
         }
     }

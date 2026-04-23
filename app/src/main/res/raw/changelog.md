@@ -1,4 +1,5 @@
 # 🐛 Correções
+- Correção do overlay fantasma no modo foco.
 - Bug do overlay não encostar em baixo resolvido.
 
 # ⚡ Performance
