@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Circle
@@ -15,24 +16,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.krono.app.ui.theme.KronoTokens
+import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PermissionsDialog(
     hasNotificationPermission : Boolean,
     hasOverlayPermission      : Boolean,
+    hasInstallPermission      : Boolean,
     onRequestNotification     : () -> Unit,
     onRequestOverlay          : () -> Unit,
+    onRequestInstall          : () -> Unit,
     onDismiss                 : () -> Unit
 ) {
-    val allGranted = hasNotificationPermission &&
-            (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || hasNotificationPermission) &&
-            hasOverlayPermission
+    // Overlay só libera com notificação + overlay. Install é opcional.
+    val coreGranted = hasOverlayPermission &&
+            (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || hasNotificationPermission)
+
+    // Removido o LaunchedEffect de fechamento automático para o usuário ver o check verde.
 
     BasicAlertDialog(
         onDismissRequest = onDismiss,
@@ -82,7 +89,6 @@ fun PermissionsDialog(
 
                 Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                // ── Descrição ─────────────────────────────────
                 Text(
                     text      = "Ative as permissões abaixo para usar todos os recursos do Krono.",
                     style     = MaterialTheme.typography.bodyMedium.copy(
@@ -95,32 +101,46 @@ fun PermissionsDialog(
 
                 Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                // ── Itens de permissão ────────────────────────
+                // ── Permissão: Notificações (Android 13+) ────
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     PermissionItem(
                         icon        = Icons.Default.Notifications,
                         title       = "Notificações",
                         description = "Exibe o cronômetro na barra de status.",
                         granted     = hasNotificationPermission,
+                        optional    = false,
                         onClick     = onRequestNotification
                     )
-
                     Spacer(Modifier.height(KronoTokens.Spacing.md))
                 }
 
+                // ── Permissão: Overlay ────────────────────────
                 PermissionItem(
                     icon        = Icons.Default.Settings,
                     title       = "Exibir sobre outros apps",
                     description = "Permite flutuar o widget sobre qualquer app.",
                     granted     = hasOverlayPermission,
+                    optional    = false,
                     onClick     = onRequestOverlay
+                )
+
+                Spacer(Modifier.height(KronoTokens.Spacing.md))
+
+                // ── Permissão: Instalar APK (opcional) ───────
+                PermissionItem(
+                    icon        = Icons.Default.Download,
+                    title       = "Instalar atualizações",
+                    description = "Opcional. Permite instalar novas versões direto no app.",
+                    granted     = hasInstallPermission,
+                    optional    = true,
+                    onClick     = onRequestInstall
                 )
 
                 Spacer(Modifier.height(KronoTokens.Spacing.sectionGap))
 
-                // ── Botão Concluir ────────────────────────────
+                // ── Botão Concluir (aparece quando core OK) ───
                 AnimatedVisibility(
-                    visible = allGranted,
+                    visible = coreGranted,
                     enter   = fadeIn(),
                     exit    = fadeOut()
                 ) {
@@ -151,21 +171,24 @@ fun PermissionsDialog(
 
 @Composable
 private fun PermissionItem(
-    icon       : androidx.compose.ui.graphics.vector.ImageVector,
+    icon       : ImageVector,
     title      : String,
     description: String,
     granted    : Boolean,
+    optional   : Boolean,
     onClick    : () -> Unit
 ) {
-    val containerColor = if (granted)
-        MaterialTheme.colorScheme.primaryContainer
-    else
-        MaterialTheme.colorScheme.surfaceVariant
-
+    val containerColor = when {
+        granted  -> MaterialTheme.colorScheme.primaryContainer
+        optional -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        else     -> MaterialTheme.colorScheme.surfaceVariant
+    }
     val contentColor = if (granted)
         MaterialTheme.colorScheme.onPrimaryContainer
     else
         MaterialTheme.colorScheme.onSurfaceVariant
+
+    val checkTint = if (granted) Color(0xFF10B981) else MaterialTheme.colorScheme.outline
 
     Surface(
         onClick        = { if (!granted) onClick() },
@@ -184,19 +207,29 @@ private fun PermissionItem(
             Icon(
                 imageVector        = icon,
                 contentDescription = null,
-                tint               = if (granted) MaterialTheme.colorScheme.primary else contentColor,
+                tint               = if (granted) Color(0xFF10B981) else contentColor,
                 modifier           = Modifier.size(KronoTokens.Icon.dialogHeader)
             )
 
             Spacer(Modifier.width(KronoTokens.Spacing.md))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text       = title,
-                    style      = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color      = MaterialTheme.colorScheme.onSurface
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text       = title,
+                        style      = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = MaterialTheme.colorScheme.onSurface
+                    )
+                    if (optional) {
+                        Spacer(Modifier.width(KronoTokens.Spacing.xs))
+                        Text(
+                            text  = "opcional",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        )
+                    }
+                }
                 Text(
                     text  = description,
                     style = MaterialTheme.typography.bodySmall,
@@ -209,8 +242,7 @@ private fun PermissionItem(
             Icon(
                 imageVector        = if (granted) Icons.Default.CheckCircle else Icons.Outlined.Circle,
                 contentDescription = null,
-                tint               = if (granted) MaterialTheme.colorScheme.primary
-                else MaterialTheme.colorScheme.outline,
+                tint               = checkTint,
                 modifier           = Modifier.size(KronoTokens.Icon.status)
             )
         }

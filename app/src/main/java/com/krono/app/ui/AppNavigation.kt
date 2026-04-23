@@ -21,21 +21,23 @@ object AppRoutes {
 
 @Composable
 fun AppNavigation(
-    dataStore              : OverlayDataStore,
-    timerViewModel         : TimerViewModel,
-    pendingUpdateInfo      : UpdateInfo?,
-    navigationEvents       : SharedFlow<String>,
-    permissionsDialogEvents: SharedFlow<Unit>,
-    isTaskRoot             : Boolean,
-    showDonationDialog     : Boolean,
-    startInSettings        : Boolean,
-    onTryStartService      : () -> Unit,
-    onRequestNotification  : () -> Unit,
-    onRequestOverlay       : () -> Unit,
-    onStartFocusMode       : () -> Unit,
-    onShowOverlay          : () -> Unit,
-    onReset                : () -> Unit,
-    isServiceRunning       : () -> Boolean
+    dataStore                 : OverlayDataStore,
+    timerViewModel            : TimerViewModel,
+    pendingUpdateInfo         : UpdateInfo?,
+    navigationEvents          : SharedFlow<String>,
+    permissionsDialogEvents   : SharedFlow<Unit>,
+    permissionsRefreshTrigger : Int,
+    isTaskRoot                : Boolean,
+    showDonationDialog        : Boolean,
+    startInSettings           : Boolean,
+    onTryStartService         : () -> Unit,
+    onRequestNotification     : () -> Unit,
+    onRequestOverlay          : () -> Unit,
+    onRequestInstall          : () -> Unit,
+    onStartFocusMode          : () -> Unit,
+    onShowOverlay             : () -> Unit,
+    onReset                   : () -> Unit,
+    isServiceRunning          : () -> Boolean
 ) {
     val navController = rememberNavController()
     val timerState    by timerViewModel.timerState.collectAsState()
@@ -43,17 +45,18 @@ fun AppNavigation(
 
     var showPermissionsDialog by remember { mutableStateOf(false) }
 
-    // Relê o estado das permissões a cada recomposição (volta do Settings do Android)
-    val hasOverlayPermission by remember {
-        derivedStateOf { Settings.canDrawOverlays(context) }
+    // Relê ao voltar do Settings — invalidado pelo permissionsRefreshTrigger
+    val hasOverlayPermission = remember(permissionsRefreshTrigger) {
+        Settings.canDrawOverlays(context)
     }
-    val hasNotificationPermission by remember {
-        derivedStateOf {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
-                        android.content.pm.PackageManager.PERMISSION_GRANTED
-            } else true
-        }
+    val hasNotificationPermission = remember(permissionsRefreshTrigger) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else true
+    }
+    val hasInstallPermission = remember(permissionsRefreshTrigger) {
+        context.packageManager.canRequestPackageInstalls()
     }
 
     LaunchedEffect(Unit) {
@@ -102,11 +105,15 @@ fun AppNavigation(
     }
 
     if (showPermissionsDialog) {
+        // Removido o fechamento automático. 
+        // Agora o PermissionsDialog exibe um botão "Concluir" quando as permissões são detectadas.
         PermissionsDialog(
             hasNotificationPermission = hasNotificationPermission,
             hasOverlayPermission      = hasOverlayPermission,
+            hasInstallPermission      = hasInstallPermission,
             onRequestNotification     = onRequestNotification,
             onRequestOverlay          = onRequestOverlay,
+            onRequestInstall          = onRequestInstall,
             onDismiss                 = { showPermissionsDialog = false }
         )
     }

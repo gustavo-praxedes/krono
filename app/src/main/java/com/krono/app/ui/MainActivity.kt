@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
     private val navigationEvents              = MutableSharedFlow<String>(extraBufferCapacity = 1)
     private val permissionsDialogEvents       = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    private val permissionsRefreshTrigger     = MutableStateFlow(0)
 
     private lateinit var dataStore: OverlayDataStore
     private val timerViewModel: TimerViewModel
@@ -45,17 +46,40 @@ class MainActivity : ComponentActivity() {
 
     private val pendingUpdateInfo = MutableStateFlow<UpdateInfo?>(null)
 
-    // Lançador para permissão de notificação (Android 13+)
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* AppNavigation relê o estado via hasNotificationPermission */ }
+    ) { 
+        // Força a atualização do estado visual quando o usuário responde ao diálogo nativo
+        permissionsRefreshTrigger.value++
+    }
 
-    // Lançador para permissão de overlay — ao retornar, minimiza se concedida
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        if (Settings.canDrawOverlays(this)) {
-            startServiceAndMinimize()
+        permissionsRefreshTrigger.value++
+    }
+
+    private val installPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        permissionsRefreshTrigger.value++
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Força a re-checagem toda vez que o app volta para o primeiro plano
+        permissionsRefreshTrigger.value++
+
+        val lacksOverlay      = !Settings.canDrawOverlays(this)
+        val lacksNotification = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        if (lacksOverlay || lacksNotification) {
+            // Usa launch para garantir que o evento seja enviado mesmo que o Flow esteja ocupado
+            lifecycleScope.launch {
+                permissionsDialogEvents.emit(Unit)
+            }
         }
     }
 
@@ -92,12 +116,14 @@ class MainActivity : ComponentActivity() {
                         pendingUpdateInfo         = pendingUpdateInfo.collectAsState().value,
                         navigationEvents          = navigationEvents,
                         permissionsDialogEvents   = permissionsDialogEvents,
+                        permissionsRefreshTrigger = permissionsRefreshTrigger.collectAsState().value,
                         isTaskRoot                = isTaskRoot,
                         showDonationDialog        = showDonation,
                         startInSettings           = shouldOpenSettings,
                         onTryStartService         = { tryStartService() },
                         onRequestNotification     = { requestNotificationPermission() },
                         onRequestOverlay          = { openOverlayPermissionSettings() },
+                        onRequestInstall          = { openInstallPermissionSettings() },
                         onStartFocusMode          = { startFocusMode() },
                         onShowOverlay             = { showOverlay() },
                         onReset                   = { sendResetToService() },
@@ -106,23 +132,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        // Abre o dialog unificado se faltar qualquer permissão
-        val lacksOverlay       = !Settings.canDrawOverlays(this)
-        val lacksNotification  = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
-                android.content.pm.PackageManager.PERMISSION_GRANTED
-
-        if (lacksOverlay || lacksNotification) {
-            permissionsDialogEvents.tryEmit(Unit)
-        }
-
-        checkForUpdateIfNeeded { info -> pendingUpdateInfo.value = info }
     }
 
     private fun tryStartService() {
         if (!Settings.canDrawOverlays(this)) {
-            permissionsDialogEvents.tryEmit(Unit)
+            lifecycleScope.launch {
+                permissionsDialogEvents.emit(Unit)
+            }
             return
         }
         startServiceAndMinimize()
@@ -154,6 +170,25 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    fun openInstallPermissionSettings() {
+        installPermissionLauncher.launch(
+            Intent(
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                Uri.parse("package:$packageName")
+            )
+        )
+    }
+
+    fun requestInstallIfNeeded(onGranted: () -> Unit) {
+        if (packageManager.canRequestPackageInstalls()) {
+            onGranted()
+        } else {
+            lifecycleScope.launch {
+                permissionsDialogEvents.emit(Unit)
+            }
+        }
+    }
+
     private fun sendResetToService() {
         startForegroundService(
             Intent(this, MainService::class.java).apply { action = ACTION_RESET }
@@ -181,8 +216,8 @@ class MainActivity : ComponentActivity() {
 
     private fun checkForUpdateIfNeeded(onUpdateAvailable: (UpdateInfo) -> Unit) {
         lifecycleScope.launch {
-            val config  = dataStore.configFlow.first()
-            val now     = System.currentTimeMillis()
+            val config = dataStore.configFlow.first()
+            val now    = System.currentTimeMillis()
             if (now - config.lastUpdateCheck < 24 * 60 * 60 * 1000L) return@launch
             dataStore.saveLastUpdateCheck(now)
             val result = checkForUpdate(BuildConfig.VERSION_NAME)
