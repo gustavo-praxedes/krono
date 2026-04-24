@@ -3,6 +3,7 @@ package com.krono.app.ui
 import android.app.Activity
 import android.os.Build
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
@@ -87,13 +88,23 @@ fun AppNavigation(
             }
 
             composable(AppRoutes.SETTINGS) {
+                val navigateBack = {
+                    if (!navController.popBackStack()) {
+                        navController.navigate(AppRoutes.TIMER) {
+                            popUpTo(AppRoutes.SETTINGS) { inclusive = true }
+                        }
+                    }
+                }
+
+                BackHandler(onBack = navigateBack)
+
                 SettingsScreen(
                     dataStore          = dataStore,
                     pendingUpdateInfo  = pendingUpdateInfo,
                     isServiceRunning   = isServiceRunning,
                     onStartFocusMode   = onStartFocusMode,
                     onShowOverlay      = onShowOverlay,
-                    onBack             = { navController.popBackStack() }
+                    onBack             = navigateBack
                 )
             }
         }

@@ -41,15 +41,12 @@ fun SettingsScreen(
     var showBgPicker          by remember { mutableStateOf(false) }
     var showTextPicker        by remember { mutableStateOf(false) }
     var showAboutDialog       by remember { mutableStateOf(false) }
-    val context               = androidx.compose.ui.platform.LocalContext.current
 
     var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
 
     LaunchedEffect(pendingUpdateInfo) {
-        if (pendingUpdateInfo != null) {
-            updateInfo = pendingUpdateInfo
-        }
+        if (pendingUpdateInfo != null) updateInfo = pendingUpdateInfo
     }
 
     Scaffold(
@@ -249,16 +246,16 @@ fun SettingsScreen(
         )
     }
 
-
-
     if (showAboutDialog) {
         AboutDialog(
             onDismiss       = { showAboutDialog = false },
             onSupportClick  = {
                 showAboutDialog = false
-                context.startActivity(android.content.Intent(context, com.krono.app.ui.DonationActivity::class.java).apply {
-                    putExtra("manual_trigger", true)
-                })
+                // Simplesmente abre a doação na tela atual
+                scope.launch { 
+                    // Isso ativará o DonationDialog que já está no AppNavigation
+                    dataStore.updateConfig(config.copy(donationPending = true))
+                }
             },
             onShowChangelog = { info ->
                 showAboutDialog = false
