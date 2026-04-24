@@ -2,6 +2,8 @@
 
 Histórico de mudanças do Krono.
 
+## [3.2.3](https://github.com/gustavo-praxedes/krono/compare/v3.2.2...v3.2.3) (2026-04-24)
+
 ## [3.2.2](https://github.com/gustavo-praxedes/krono/compare/v3.2.1...v3.2.2) (2026-04-24)
 
 

@@ -126,30 +126,12 @@ Antes de instalar, verifique se o seu dispositivo atende aos requisitos:
 
 [//]: # (CHANGELOG_LATEST_START)
 
-## [3.2.1](https://github.com/gustavo-praxedes/krono/compare/v3.2.0...v3.2.1) (2026-04-24)
-
-
-### 🐛 Correções
-
-* Bug do voltar na SettingsScree ([de95e21](https://github.com/gustavo-praxedes/krono/commit/de95e21531b8ad36fb18c1a0ff98554e6408197f))
-
-
-### 📝 Documentação
-
-* Atualização dos documentos de contexto ([1288ef5](https://github.com/gustavo-praxedes/krono/commit/1288ef5230c1b3ef3ed0c44ee24b836b4dccceee))
+## [3.2.2](https://github.com/gustavo-praxedes/krono/compare/v3.2.1...v3.2.2) (2026-04-24)
 
 
 ### 🔧 Manutenção
 
-* Adicionado campo de data interno no formulário de bug ([f521a90](https://github.com/gustavo-praxedes/krono/commit/f521a90e2b2446493ae3ac1d0832a1704d871d3c))
-* Refatoração da chamada da janela de doação ([f452cca](https://github.com/gustavo-praxedes/krono/commit/f452cca9fb40fe4e427f662df7bc107281af797c))
-
-
-### 💄 Estilo
-
-* Animação overlay ([93f77fb](https://github.com/gustavo-praxedes/krono/commit/93f77fb71405b2bb2f696363ed254f236585923c))
-* Melhoria na interface do overlay ([dfcd8cb](https://github.com/gustavo-praxedes/krono/commit/dfcd8cb06400f9de10af7e909b769ce5f2f06721))
-* Mudança no ícone ([c4dfe81](https://github.com/gustavo-praxedes/krono/commit/c4dfe81ad7dddc0690774e4111d5554aa1bd35b5))
+* Adicionado o google firebase ([64937ed](https://github.com/gustavo-praxedes/krono/commit/64937ed3f5f63cbd9a0753baaee53aa0454f7ace))
 
 [//]: # (CHANGELOG_LATEST_END)
 
