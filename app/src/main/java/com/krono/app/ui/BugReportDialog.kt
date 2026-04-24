@@ -32,9 +32,13 @@ import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 // ── Configuração do Google Forms ─────────────────────────────
 private const val FORM_ID       = "1FAIpQLSeH4jyM_-SGY_Qsj4NBGSBUhfQIOVjA3L9yhgvtil4QCykyEA"
+private const val ENTRY_DATA    = "entry.1182927844"
 private const val ENTRY_NAME    = "entry.1606415010"
 private const val ENTRY_EMAIL   = "entry.809277435"
 private const val ENTRY_MESSAGE = "entry.1665262073"
@@ -223,11 +227,13 @@ fun BugReportDialog(onDismiss: () -> Unit) {
                     onClick = {
                         scope.launch {
                             submitState = SubmitState.Loading
+                            val timestamp = SimpleDateFormat("yyyyMMddHHmmss", Locale.US).format(Date())
                             submitState = submitToGoogleForms(
                                 name    = name.trim(),
                                 email   = email.trim(),
                                 message = message.trim(),
-                                version = BuildConfig.VERSION_NAME
+                                version = BuildConfig.VERSION_NAME,
+                                date    = timestamp
                             )
                         }
                     },
@@ -260,11 +266,13 @@ private suspend fun submitToGoogleForms(
     name   : String,
     email  : String,
     message: String,
-    version: String
+    version: String,
+    date   : String
 ): SubmitState = withContext(Dispatchers.IO) {
     try {
         val formUrl = "https://docs.google.com/forms/d/e/$FORM_ID/formResponse"
         val params  = buildString {
+            append(URLEncoder.encode(ENTRY_DATA,    "UTF-8")).append("=").append(URLEncoder.encode(date,    "UTF-8")).append("&")
             append(URLEncoder.encode(ENTRY_NAME,    "UTF-8")).append("=").append(URLEncoder.encode(name,    "UTF-8")).append("&")
             append(URLEncoder.encode(ENTRY_EMAIL,   "UTF-8")).append("=").append(URLEncoder.encode(email,   "UTF-8")).append("&")
             append(URLEncoder.encode(ENTRY_MESSAGE, "UTF-8")).append("=").append(URLEncoder.encode(message, "UTF-8")).append("&")
