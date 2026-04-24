@@ -37,7 +37,8 @@ class NotificationHelper(private val context: Context) {
             )
         }
 
-        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+        // Correção do ID do canal e pequenos erros de referência
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.notification_title))
             .setContentIntent(contentPendingIntent)

@@ -12,7 +12,12 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.firebase.crashlytics)
 }
+
+
 
 fun generateVersionCode(): Int {
     val formatter = DateTimeFormatter.ofPattern("yyMMddHH")
@@ -47,7 +52,6 @@ android {
             // Prioridade 2: keystore.properties (Desenvolvimento Local no Windows)
 
             val envKeyPath = System.getenv("KEYSTORE_PATH")
-            // Modificação pontual: limpa aspas e trata nulos para evitar erros de path no Windows
             val propKeyPath = keystoreProperties.getProperty("storeFile")?.replace("\"", "")
 
             val storeFilePath = envKeyPath ?: propKeyPath
@@ -65,10 +69,7 @@ android {
         release {
             isMinifyEnabled   = true
             isShrinkResources = true
-
-            // Aplica a assinatura configurada acima
             signingConfig = signingConfigs.getByName("release")
-
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -77,8 +78,8 @@ android {
 
         debug {
             isMinifyEnabled     = false
-            applicationIdSuffix = ".debug"
-            versionNameSuffix   = "-debug"
+            // Removido temporariamente para alinhar com o google-services.json
+            // applicationIdSuffix = ".debug"
         }
     }
 
@@ -147,4 +148,12 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
     implementation(libs.androidx.navigation.compose)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+
+    // Serialization
+    implementation(libs.kotlinx.serialization.json)
 }
