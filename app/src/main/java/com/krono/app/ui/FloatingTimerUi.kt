@@ -1,9 +1,13 @@
 package com.krono.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.*
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -26,6 +30,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +42,36 @@ import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
 import com.krono.app.ui.theme.KronoTokens
 import kotlinx.coroutines.delay
+
+@Composable
+fun AnimatedIconButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessHigh
+        ),
+        label = "btnScale"
+    )
+
+    IconButton(
+        onClick = onClick,
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        },
+        enabled = enabled,
+        interactionSource = interactionSource,
+        content = content
+    )
+}
 
 @Composable
 fun FloatingTimerUi(
@@ -56,32 +93,41 @@ fun FloatingTimerUi(
     val isRunning = timerState.isRunning
     val scale     = config.scale
 
-    // ── Aplicação dos Tokens com Escala ─────────────────────
-    val cornerRadius = (config.cornerRadius * scale).coerceAtMost(KronoTokens.Overlay.maxCornerRadiusFloat).dp
-    val bgColor      = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
-    val txtColor     = Color(config.textColor).copy(alpha = config.textOpacity)
-    val shape        = RoundedCornerShape(cornerRadius)
+    // ── Animação de Entrada Premium (Overshoot 0.95 -> 1.05 -> 1.0) ─────
+    val entranceScale = remember { Animatable(0.95f) }
+    LaunchedEffect(Unit) {
+        entranceScale.animateTo(
+            targetValue = 1f,
+            animationSpec = spring(
+                dampingRatio = 0.5f, // Permite o overshoot (efeito Apple)
+                stiffness = Spring.StiffnessMediumLow
+            )
+        )
+    }
 
-    val timeFontSize  = (KronoTokens.Overlay.timerFontSize.value * scale).sp
-    val iconSizeDp    = (KronoTokens.Overlay.iconSize.value * scale).dp
-    val btnSize       = (KronoTokens.Overlay.buttonSize.value * scale).dp
-    val quickIconSize = (KronoTokens.Overlay.quickIconSize.value * scale).dp
-    val quickBtnSize  = (KronoTokens.Overlay.quickBtnSize.value * scale).dp
-    
-    val paddingH      = (KronoTokens.Overlay.paddingH.value * scale).dp
-    val paddingV      = (KronoTokens.Overlay.paddingV.value * scale).dp
-    val btnTopPadding = (KronoTokens.Overlay.btnTopPadding.value * scale).dp
-    val menuPaddingV  = (KronoTokens.Overlay.menuPaddingV.value * scale).dp
-    val minColWidth   = (KronoTokens.Overlay.minWidth.value * scale).dp
+    // ── Escalonamento Dinâmico de Tokens ─────────────────────
+    val currentScale  = entranceScale.value
+    val cornerRadius  = (config.cornerRadius * scale * currentScale).coerceAtMost(KronoTokens.Overlay.maxCornerRadiusFloat).dp
+    val bgColor       = Color(config.backgroundColor).copy(alpha = config.bgOpacity)
+    val txtColor      = Color(config.textColor).copy(alpha = config.textOpacity)
+    val shape         = RoundedCornerShape(cornerRadius)
+
+    val timeFontSize  = (KronoTokens.Overlay.timerFontSize.value * scale * currentScale).sp
+    val iconSizeDp    = (KronoTokens.Overlay.iconSize.value * scale * currentScale).dp
+    val btnSize       = (KronoTokens.Overlay.buttonSize.value * scale * currentScale).dp
+    val quickIconSize = (KronoTokens.Overlay.quickIconSize.value * scale * currentScale).dp
+    val quickBtnSize  = (KronoTokens.Overlay.quickBtnSize.value * scale * currentScale).dp
+
+    val paddingH      = (KronoTokens.Overlay.paddingH.value * scale * currentScale).dp
+    val paddingV      = (KronoTokens.Overlay.paddingV.value * scale * currentScale).dp
+    val btnTopPadding = (KronoTokens.Overlay.btnTopPadding.value * scale * currentScale).dp
+    val menuPaddingV  = (KronoTokens.Overlay.menuPaddingV.value * scale * currentScale).dp
+    val minColWidth   = (KronoTokens.Overlay.minWidth.value * scale * currentScale).dp
 
     val currentOnStart              by rememberUpdatedState(onStart)
     val currentOnPause              by rememberUpdatedState(onPause)
     val currentOnReset              by rememberUpdatedState(onReset)
     val currentOnSettings           by rememberUpdatedState(onSettings)
-    val currentOnToggleFocus        by rememberUpdatedState(onToggleFocus)
-    val currentOnToggleKeepScreenOn by rememberUpdatedState(onToggleKeepScreenOn)
-    val currentOnToggleAutoLaunch   by rememberUpdatedState(onToggleAutoLaunch)
-    val currentOnToggleBeep         by rememberUpdatedState(onToggleBeep)
     val currentIsRunning            by rememberUpdatedState(isRunning)
 
     var menuVisible by remember { mutableStateOf(false) }
@@ -103,8 +149,24 @@ fun FloatingTimerUi(
     Box(
         modifier = Modifier
             .wrapContentSize()
-            .clip(shape)
-            .background(bgColor)
+            .graphicsLayer {
+                scaleX = currentScale
+                scaleY = currentScale
+                // Mantemos o fade-in suave para o aspecto premium
+                alpha = ((currentScale - 0.95f) / 0.05f).coerceIn(0f, 1f)
+
+                // REMOVIDO: shadowElevation (Sombra totalmente removida)
+
+                this.shape = shape
+                clip = true // Ativamos o clip aqui para garantir cantos perfeitos na animação
+            }
+            // Aplicamos o background e border usando o mesmo shape para evitar aliasing (bordas pretas)
+            .background(bgColor, shape)
+            .border(
+                width = 0.5.dp,
+                color = txtColor.copy(alpha = 0.15f),
+                shape = shape
+            )
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDragEnd    = { onDragEnd() },
@@ -116,6 +178,23 @@ fun FloatingTimerUi(
                     }
                 )
             }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        if (menuVisible) {
+                            menuVisible = false
+                        } else {
+                            if (currentIsRunning) currentOnPause() else currentOnStart()
+                        }
+                    },
+                    onDoubleTap = {
+                        menuVisible = false
+                        currentOnReset()
+                    }
+                )
+            }
+
+
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -163,7 +242,7 @@ fun FloatingTimerUi(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment     = Alignment.CenterVertically
                     ) {
-                        IconButton(
+                        AnimatedIconButton(
                             onClick  = {
                                 if (menuVisible) resetMenuTimer()
                                 if (currentIsRunning) currentOnPause() else currentOnStart()
@@ -179,7 +258,7 @@ fun FloatingTimerUi(
                             )
                         }
 
-                        IconButton(
+                        AnimatedIconButton(
                             onClick  = {
                                 if (menuVisible) resetMenuTimer()
                                 currentOnReset()
@@ -189,7 +268,7 @@ fun FloatingTimerUi(
                             Icon(Icons.Default.Refresh, "Reset", tint = txtColor, modifier = Modifier.size(iconSizeDp))
                         }
 
-                        IconButton(
+                        AnimatedIconButton(
                             onClick  = {
                                 menuVisible = false
                                 currentOnSettings()
@@ -199,7 +278,7 @@ fun FloatingTimerUi(
                             Icon(Icons.Default.Settings, "Config", tint = txtColor, modifier = Modifier.size(iconSizeDp))
                         }
 
-                        IconButton(
+                        AnimatedIconButton(
                             onClick  = onClose,
                             modifier = Modifier.size(btnSize)
                         ) {
@@ -214,8 +293,8 @@ fun FloatingTimerUi(
                     AnimatedVisibility(
                         visible = menuVisible,
                         modifier = Modifier.fillMaxWidth(),
-                        enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
+                        enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(400)) + fadeIn(),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(300)) + fadeOut()
                     ) {
                         MainButtonRow()
                     }
@@ -225,8 +304,8 @@ fun FloatingTimerUi(
                 AnimatedVisibility(
                     visible = menuVisible,
                     modifier = Modifier.fillMaxWidth(),
-                    enter = expandVertically(expandFrom = Alignment.Top) + androidx.compose.animation.fadeIn(),
-                    exit = shrinkVertically(shrinkTowards = Alignment.Top) + androidx.compose.animation.fadeOut()
+                    enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(400)) + fadeIn(),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(300)) + fadeOut()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         HorizontalDivider(
@@ -243,64 +322,17 @@ fun FloatingTimerUi(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment     = Alignment.CenterVertically
                         ) {
-                            IconButton(
-                                onClick  = {
-                                    resetMenuTimer()
-                                    currentOnToggleFocus()
-                                },
-                                modifier = Modifier.size(quickBtnSize)
-                            ) {
-                                Icon(
-                                    imageVector        = Icons.Default.TrackChanges,
-                                    contentDescription = "Foco",
-                                    tint               = if (config.focusModeEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                    modifier           = Modifier.size(quickIconSize)
-                                )
+                            QuickOptionIcon(Icons.Default.TrackChanges, config.focusModeEnabled, txtColor, quickBtnSize, quickIconSize) {
+                                resetMenuTimer(); onToggleFocus()
                             }
-
-                            IconButton(
-                                onClick  = {
-                                    resetMenuTimer()
-                                    currentOnToggleKeepScreenOn()
-                                },
-                                modifier = Modifier.size(quickBtnSize)
-                            ) {
-                                Icon(
-                                    imageVector        = Icons.Default.LightMode,
-                                    contentDescription = "Tela Ligada",
-                                    tint               = if (config.keepScreenOn) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                    modifier           = Modifier.size(quickIconSize)
-                                )
+                            QuickOptionIcon(Icons.Default.LightMode, config.keepScreenOn, txtColor, quickBtnSize, quickIconSize) {
+                                resetMenuTimer(); onToggleKeepScreenOn()
                             }
-
-                            IconButton(
-                                onClick  = {
-                                    resetMenuTimer()
-                                    currentOnToggleAutoLaunch()
-                                },
-                                modifier = Modifier.size(quickBtnSize)
-                            ) {
-                                Icon(
-                                    imageVector        = Icons.Default.OpenInNew,
-                                    contentDescription = "Auto",
-                                    tint               = if (config.autoLaunch) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                    modifier           = Modifier.size(quickIconSize)
-                                )
+                            QuickOptionIcon(Icons.Default.OpenInNew, config.autoLaunch, txtColor, quickBtnSize, quickIconSize) {
+                                resetMenuTimer(); onToggleAutoLaunch()
                             }
-
-                            IconButton(
-                                onClick  = {
-                                    resetMenuTimer()
-                                    currentOnToggleBeep()
-                                },
-                                modifier = Modifier.size(quickBtnSize)
-                            ) {
-                                Icon(
-                                    imageVector        = Icons.Default.VolumeUp,
-                                    contentDescription = "Bip",
-                                    tint               = if (config.isBeepEnabled) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
-                                    modifier           = Modifier.size(quickIconSize)
-                                )
+                            QuickOptionIcon(Icons.Default.VolumeUp, config.isBeepEnabled, txtColor, quickBtnSize, quickIconSize) {
+                                resetMenuTimer(); onToggleBeep()
                             }
                         }
                     }
@@ -311,7 +343,7 @@ fun FloatingTimerUi(
                     contentDescription = "Menu",
                     tint = txtColor.copy(alpha = 0.4f),
                     modifier = Modifier
-                        .height((10f * scale).dp)
+                        .height((10f * scale * currentScale).dp)
                         .fillMaxWidth()
                         .pointerInput(Unit) {
                             detectDragGestures(
@@ -336,5 +368,27 @@ fun FloatingTimerUi(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun QuickOptionIcon(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isActive: Boolean,
+    txtColor: Color,
+    btnSize: androidx.compose.ui.unit.Dp,
+    iconSize: androidx.compose.ui.unit.Dp,
+    onClick: () -> Unit
+) {
+    AnimatedIconButton(
+        onClick  = onClick,
+        modifier = Modifier.size(btnSize)
+    ) {
+        Icon(
+            imageVector        = icon,
+            contentDescription = null,
+            tint               = if (isActive) MaterialTheme.colorScheme.primary else txtColor.copy(alpha = 0.4f),
+            modifier           = Modifier.size(iconSize)
+        )
     }
 }

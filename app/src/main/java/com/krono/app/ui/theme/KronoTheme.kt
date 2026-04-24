@@ -144,27 +144,32 @@ object KronoTokens {
     }
 
     // ── Overlay (Widget Flutuante) ──────────────────────────
+    // Estética Antigravity: Espacialidade, Glassmorphism e Peso Visual.
+    // ────────────────────────────────────────────────────────
     object Overlay {
         /** Arredondamento máximo permitido (evita deformação) */
-        const val maxCornerRadiusFloat = 64f
-        /** Arredondamento padrão inicial */
-        val defaultCornerRadius = 16.dp
+        const val maxCornerRadiusFloat = 80f
+        /** Arredondamento padrão inicial - Visual orgânico e premium */
+        val defaultCornerRadius = 24.dp
         
-        val minWidth       = 144.dp
-        val paddingH       = 12.dp
-        val paddingV       = 12.dp
-        val btnSpacing     = 6.dp
-        val btnTopPadding  = 6.dp
-        val menuPaddingV   = 6.dp
+        /** Largura mínima aumentada em ~20% para impacto visual */
+        val minWidth       = 172.dp
+        val paddingH       = 16.dp
+        val paddingV       = 16.dp
+        val btnSpacing     = 10.dp
+        val btnTopPadding  = 8.dp
+        val menuPaddingV   = 8.dp
         
-        val timerFontSize  = 32.sp
-        val iconSize       = 24.dp
-        val buttonSize     = 24.dp
+        /** Tipografia Hero: impacto e legibilidade máxima */
+        val timerFontSize  = 40.sp
+        val iconSize       = 28.dp
+        val buttonSize     = 28.dp
         
-        val quickBtnSize   = 28.dp
-        val quickIconSize  = 24.dp
+        /** Quick Menu: Alvos de toque melhorados (UX Pro Max) */
+        val quickBtnSize   = 34.dp
+        val quickIconSize  = 26.dp
         
-        val menuTimeoutMs  = 4000L
+        val menuTimeoutMs  = 5000L
     }
 }
 
