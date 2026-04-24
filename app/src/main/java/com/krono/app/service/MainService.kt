@@ -117,9 +117,8 @@ class MainService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStateRe
                 onPause = { viewModel.pause(); feedbackManager.triggerFeedback(currentConfig) },
                 onReset = { handleReset() },
                 onClose = {
-                    // O X fecha o overlay e para o serviço, mas NÃO deve fechar a activity.
-                    // Para isso, apenas chamamos o encerramento do serviço.
-                    closeAndStop()
+                    // O X agora apenas esconde o overlay, mantendo o serviço e o timer ativos.
+                    hideOverlay()
                 },
                 onSettings = { openMainActivity(openSettings = true) },
                 onFocusModeStarted = { startFocusMode() }

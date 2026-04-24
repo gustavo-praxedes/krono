@@ -1,3 +1,6 @@
+# 🐛 Correções
+- fix: Bug do voltar na SettingsScree
+
 # 🔧 Manutenção
 - style: Animação overlay
 - chore: Refatoração da chamada da janela de doação

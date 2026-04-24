@@ -1,6 +1,7 @@
 package com.krono.app.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
@@ -42,6 +43,7 @@ import com.krono.app.data.TimerState
 import com.krono.app.data.toFormattedTime
 import com.krono.app.ui.theme.KronoTokens
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AnimatedIconButton(
@@ -53,12 +55,17 @@ fun AnimatedIconButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.9f else 1f,
+        targetValue = if (isPressed) 0.85f else 1f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessHigh
+            dampingRatio = 0.6f,
+            stiffness = Spring.StiffnessMedium
         ),
         label = "btnScale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.6f else 1f,
+        animationSpec = tween(150),
+        label = "btnAlpha"
     )
 
     IconButton(
@@ -66,6 +73,7 @@ fun AnimatedIconButton(
         modifier = modifier.graphicsLayer {
             scaleX = scale
             scaleY = scale
+            this.alpha = alpha
         },
         enabled = enabled,
         interactionSource = interactionSource,
@@ -93,16 +101,27 @@ fun FloatingTimerUi(
     val isRunning = timerState.isRunning
     val scale     = config.scale
 
-    // ── Animação de Entrada Premium (Overshoot 0.95 -> 1.05 -> 1.0) ─────
-    val entranceScale = remember { Animatable(0.95f) }
+    // ── Animação de Entrada Premium (Escala + Alpha estável) ──────────
+    val entranceScale = remember { Animatable(0.88f) }
+    val entranceAlpha = remember { Animatable(0f) }
+
     LaunchedEffect(Unit) {
-        entranceScale.animateTo(
-            targetValue = 1f,
-            animationSpec = spring(
-                dampingRatio = 0.5f, // Permite o overshoot (efeito Apple)
-                stiffness = Spring.StiffnessMediumLow
+        // Disparamos ambas em paralelo para um efeito fluido
+        launch {
+            entranceScale.animateTo(
+                targetValue = 1f,
+                animationSpec = spring(
+                    dampingRatio = 0.40f, // Mantém o overshoot elegante
+                    stiffness = Spring.StiffnessLow
+                )
             )
-        )
+        }
+        launch {
+            entranceAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 400, easing = LinearOutSlowInEasing)
+            )
+        }
     }
 
     // ── Escalonamento Dinâmico de Tokens ─────────────────────
@@ -131,6 +150,19 @@ fun FloatingTimerUi(
     val currentIsRunning            by rememberUpdatedState(isRunning)
 
     var menuVisible by remember { mutableStateOf(false) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val dragScale by animateFloatAsState(
+        targetValue = if (isDragging) 0.96f else 1f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessLow),
+        label = "dragScale"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isRunning) MaterialTheme.colorScheme.primary.copy(alpha = 0.5f) else txtColor.copy(alpha = 0.15f),
+        animationSpec = tween(600),
+        label = "borderColor"
+    )
 
     LaunchedEffect(menuVisible) {
         onMenuVisibilityChange(menuVisible)
@@ -150,27 +182,25 @@ fun FloatingTimerUi(
         modifier = Modifier
             .wrapContentSize()
             .graphicsLayer {
-                scaleX = currentScale
-                scaleY = currentScale
-                // Mantemos o fade-in suave para o aspecto premium
-                alpha = ((currentScale - 0.95f) / 0.05f).coerceIn(0f, 1f)
-
-                // REMOVIDO: shadowElevation (Sombra totalmente removida)
-
+                val finalScale = currentScale * dragScale
+                scaleX = finalScale
+                scaleY = finalScale
+                alpha = entranceAlpha.value
                 this.shape = shape
                 clip = true // Ativamos o clip aqui para garantir cantos perfeitos na animação
             }
             // Aplicamos o background e border usando o mesmo shape para evitar aliasing (bordas pretas)
             .background(bgColor, shape)
             .border(
-                width = 0.5.dp,
-                color = txtColor.copy(alpha = 0.15f),
+                width = 0.86.dp,
+                color = borderColor,
                 shape = shape
             )
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragEnd    = { onDragEnd() },
-                    onDragCancel = { onDragEnd() },
+                    onDragStart  = { isDragging = true },
+                    onDragEnd    = { isDragging = false; onDragEnd() },
+                    onDragCancel = { isDragging = false; onDragEnd() },
                     onDrag       = { change, dragAmount ->
                         change.consume()
                         onDrag(dragAmount.x, dragAmount.y)
@@ -178,23 +208,6 @@ fun FloatingTimerUi(
                     }
                 )
             }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = {
-                        if (menuVisible) {
-                            menuVisible = false
-                        } else {
-                            if (currentIsRunning) currentOnPause() else currentOnStart()
-                        }
-                    },
-                    onDoubleTap = {
-                        menuVisible = false
-                        currentOnReset()
-                    }
-                )
-            }
-
-
             .pointerInput(Unit) {
                 detectTapGestures(
                     onTap = {
@@ -293,8 +306,8 @@ fun FloatingTimerUi(
                     AnimatedVisibility(
                         visible = menuVisible,
                         modifier = Modifier.fillMaxWidth(),
-                        enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(400)) + fadeIn(),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(300)) + fadeOut()
+                        enter = expandVertically(expandFrom = Alignment.Top, animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)) + fadeIn(),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium)) + fadeOut()
                     ) {
                         MainButtonRow()
                     }
@@ -304,8 +317,8 @@ fun FloatingTimerUi(
                 AnimatedVisibility(
                     visible = menuVisible,
                     modifier = Modifier.fillMaxWidth(),
-                    enter = expandVertically(expandFrom = Alignment.Top, animationSpec = tween(400)) + fadeIn(),
-                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = tween(300)) + fadeOut()
+                    enter = expandVertically(expandFrom = Alignment.Top, animationSpec = spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessLow)) + fadeIn(),
+                    exit = shrinkVertically(shrinkTowards = Alignment.Top, animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium)) + fadeOut()
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
                         HorizontalDivider(
@@ -347,8 +360,9 @@ fun FloatingTimerUi(
                         .fillMaxWidth()
                         .pointerInput(Unit) {
                             detectDragGestures(
-                                onDragEnd = { onDragEnd() },
-                                onDragCancel = { onDragEnd() },
+                                onDragStart  = { isDragging = true },
+                                onDragEnd = { isDragging = false; onDragEnd() },
+                                onDragCancel = { isDragging = false; onDragEnd() },
                                 onDrag = { change, dragAmount ->
                                     change.consume()
                                     if (dragAmount.y > 2f && !menuVisible) menuVisible = true
