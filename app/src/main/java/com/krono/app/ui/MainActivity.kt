@@ -12,10 +12,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.lifecycleScope
+import com.krono.app.R
 import com.krono.app.ACTION_RESET
 import com.krono.app.ACTION_SHOW_OVERLAY
 import com.krono.app.BuildConfig
@@ -48,26 +49,18 @@ class MainActivity : ComponentActivity() {
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { 
-        // Força a atualização do estado visual quando o usuário responde ao diálogo nativo
-        permissionsRefreshTrigger.value++
-    }
+    ) { permissionsRefreshTrigger.value++ }
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
-        permissionsRefreshTrigger.value++
-    }
+    ) { permissionsRefreshTrigger.value++ }
 
     private val installPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) {
-        permissionsRefreshTrigger.value++
-    }
+    ) { permissionsRefreshTrigger.value++ }
 
     override fun onResume() {
         super.onResume()
-        // Força a re-checagem toda vez que o app volta para o primeiro plano
         permissionsRefreshTrigger.value++
 
         val lacksOverlay      = !Settings.canDrawOverlays(this)
@@ -76,15 +69,13 @@ class MainActivity : ComponentActivity() {
                 android.content.pm.PackageManager.PERMISSION_GRANTED
 
         if (lacksOverlay || lacksNotification) {
-            // Usa launch para garantir que o evento seja enviado mesmo que o Flow esteja ocupado
-            lifecycleScope.launch {
-                permissionsDialogEvents.emit(Unit)
-            }
+            lifecycleScope.launch { permissionsDialogEvents.emit(Unit) }
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         if (intent.getBooleanExtra("open_settings", false)) {
             navigationEvents.tryEmit(AppRoutes.SETTINGS)
         }
@@ -93,9 +84,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         dataStore = OverlayDataStore(this)
-
-        val shouldOpenSettings = intent?.getBooleanExtra("open_settings", false) == true
-        val showDonation       = intent.getBooleanExtra(EXTRA_SHOW_DONATION, false)
 
         onBackPressedDispatcher.addCallback(this) {
             isEnabled = false
@@ -106,9 +94,11 @@ class MainActivity : ComponentActivity() {
             val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
 
             KronoTheme(selectedTheme = config.selectedTheme) {
+                val surfaceColor = MaterialTheme.colorScheme.background
+                
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color    = MaterialTheme.colorScheme.background
+                    color    = surfaceColor
                 ) {
                     AppNavigation(
                         dataStore                 = dataStore,
@@ -118,8 +108,7 @@ class MainActivity : ComponentActivity() {
                         permissionsDialogEvents   = permissionsDialogEvents,
                         permissionsRefreshTrigger = permissionsRefreshTrigger.collectAsState().value,
                         isTaskRoot                = isTaskRoot,
-                        showDonationDialog        = showDonation,
-                        startInSettings           = shouldOpenSettings,
+                        startInSettings           = intent?.getBooleanExtra("open_settings", false) == true,
                         onTryStartService         = { tryStartService() },
                         onRequestNotification     = { requestNotificationPermission() },
                         onRequestOverlay          = { openOverlayPermissionSettings() },
@@ -136,9 +125,7 @@ class MainActivity : ComponentActivity() {
 
     private fun tryStartService() {
         if (!Settings.canDrawOverlays(this)) {
-            lifecycleScope.launch {
-                permissionsDialogEvents.emit(Unit)
-            }
+            lifecycleScope.launch { permissionsDialogEvents.emit(Unit) }
             return
         }
         startServiceAndMinimize()
@@ -162,66 +149,28 @@ class MainActivity : ComponentActivity() {
     }
 
     fun openOverlayPermissionSettings() {
-        overlayPermissionLauncher.launch(
-            Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
-            )
-        )
+        overlayPermissionLauncher.launch(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
     }
 
     fun openInstallPermissionSettings() {
-        installPermissionLauncher.launch(
-            Intent(
-                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                Uri.parse("package:$packageName")
-            )
-        )
-    }
-
-    fun requestInstallIfNeeded(onGranted: () -> Unit) {
-        if (packageManager.canRequestPackageInstalls()) {
-            onGranted()
-        } else {
-            lifecycleScope.launch {
-                permissionsDialogEvents.emit(Unit)
-            }
-        }
+        installPermissionLauncher.launch(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName")))
     }
 
     private fun sendResetToService() {
-        startForegroundService(
-            Intent(this, MainService::class.java).apply { action = ACTION_RESET }
-        )
+        startForegroundService(Intent(this, MainService::class.java).apply { action = ACTION_RESET })
     }
 
     private fun startFocusMode() {
-        startForegroundService(
-            Intent(this, MainService::class.java).apply { action = com.krono.app.ACTION_START_FOCUS }
-        )
+        startForegroundService(Intent(this, MainService::class.java).apply { action = com.krono.app.ACTION_START_FOCUS })
     }
 
     private fun showOverlay() {
-        startForegroundService(
-            Intent(this, MainService::class.java).apply { action = ACTION_SHOW_OVERLAY }
-        )
+        startForegroundService(Intent(this, MainService::class.java).apply { action = ACTION_SHOW_OVERLAY })
     }
 
     @Suppress("DEPRECATION")
     private fun isServiceRunning(): Boolean {
         val manager = getSystemService(ACTIVITY_SERVICE) as android.app.ActivityManager
-        return manager.getRunningServices(Int.MAX_VALUE)
-            .any { it.service.className == MainService::class.java.name }
-    }
-
-    private fun checkForUpdateIfNeeded(onUpdateAvailable: (UpdateInfo) -> Unit) {
-        lifecycleScope.launch {
-            val config = dataStore.configFlow.first()
-            val now    = System.currentTimeMillis()
-            if (now - config.lastUpdateCheck < 24 * 60 * 60 * 1000L) return@launch
-            dataStore.saveLastUpdateCheck(now)
-            val result = checkForUpdate(BuildConfig.VERSION_NAME)
-            if (result is UpdateResult.UpdateAvailable) onUpdateAvailable(result.info)
-        }
+        return manager.getRunningServices(Int.MAX_VALUE).any { it.service.className == MainService::class.java.name }
     }
 }

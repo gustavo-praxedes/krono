@@ -1,28 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- ============================================================
-     themes.xml
-     Tema base da Activity. O Compose assume o controle da UI
-     logo após o setContent{}, mas o tema XML é necessário para
-     definir a aparência da janela antes disso (evita flash branco).
-     Requer: com.google.android.material:material (em build.gradle)
-     ============================================================ -->
 <resources>
-
+    <!-- Base application theme. -->
     <style name="Theme.Krono" parent="Theme.Material3.DayNight.NoActionBar">
-
-        <!-- Fundo escuro enquanto o Compose carrega -->
-        <item name="android:windowBackground">@android:color/black</item>
-
-        <item name="android:windowIsTranslucent">false</item>
-
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:windowBackground">?android:attr/colorBackground</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <!-- Tema para o Modo Foco — fullscreen sem ActionBar -->
-    <style name="Theme.Krono.Focus" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:windowIsTranslucent">true</item>
+    <style name="Theme.Krono.Focus" parent="Theme.Krono">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
     </style>
 
+    <!-- Tema para a MainActivity quando usada para diálogo de doação transparente -->
+    <style name="Theme.Krono.Translucent" parent="Theme.Krono">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
 </resources>

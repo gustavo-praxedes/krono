@@ -29,7 +29,6 @@ import java.util.Locale
 fun SettingsScreen(
     dataStore         : OverlayDataStore,
     pendingUpdateInfo : UpdateInfo?,
-    showDonationDialog: Boolean = false,
     isServiceRunning  : () -> Boolean,
     onStartFocusMode  : () -> Unit,
     onShowOverlay     : () -> Unit,
@@ -42,8 +41,7 @@ fun SettingsScreen(
     var showBgPicker          by remember { mutableStateOf(false) }
     var showTextPicker        by remember { mutableStateOf(false) }
     var showAboutDialog       by remember { mutableStateOf(false) }
-    var showDonation          by remember { mutableStateOf(showDonationDialog) }
-    var showDonationFromAbout by remember { mutableStateOf(false) }
+    val context               = androidx.compose.ui.platform.LocalContext.current
 
     var changelogInfo by remember { mutableStateOf<UpdateInfo?>(null) }
     var updateInfo    by remember { mutableStateOf<UpdateInfo?>(pendingUpdateInfo) }
@@ -251,32 +249,16 @@ fun SettingsScreen(
         )
     }
 
-    if (showDonation) {
-        DonationDialog(
-            onDismiss = {
-                showDonation = false
-                if (isServiceRunning()) onShowOverlay()
-            },
-            onDonate = {
-                showDonation = false
-                onShowOverlay()
-            }
-        )
-    }
 
-    if (showDonationFromAbout) {
-        DonationDialog(
-            onDismiss = { showDonationFromAbout = false },
-            onDonate  = { showDonationFromAbout = false }
-        )
-    }
 
     if (showAboutDialog) {
         AboutDialog(
             onDismiss       = { showAboutDialog = false },
             onSupportClick  = {
-                showAboutDialog       = false
-                showDonationFromAbout = true
+                showAboutDialog = false
+                context.startActivity(android.content.Intent(context, com.krono.app.ui.DonationActivity::class.java).apply {
+                    putExtra("manual_trigger", true)
+                })
             },
             onShowChangelog = { info ->
                 showAboutDialog = false

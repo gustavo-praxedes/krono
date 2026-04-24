@@ -24,57 +24,35 @@ import com.krono.app.data.TimerPreferences
 import com.krono.app.ui.FocusActivity
 import com.krono.app.ui.MainActivity
 import com.krono.app.viewmodel.TimerViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.savedstate.SavedStateRegistry
-import androidx.savedstate.SavedStateRegistryController
-import androidx.savedstate.SavedStateRegistryOwner
+import androidx.lifecycle.*
+import androidx.savedstate.*
 
 const val ACTION_FOCUS_DISMISSED = "com.krono.app.ACTION_FOCUS_DISMISSED"
 
-class MainService : Service(),
-    LifecycleOwner,
-    ViewModelStoreOwner,
-    SavedStateRegistryOwner {
+class MainService : Service(), LifecycleOwner, ViewModelStoreOwner, SavedStateRegistryOwner {
 
     private val lifecycleRegistry = LifecycleRegistry(this)
     override val lifecycle: Lifecycle get() = lifecycleRegistry
     override val viewModelStore = ViewModelStore()
     private val savedStateRegistryController = SavedStateRegistryController.create(this)
-    override val savedStateRegistry: SavedStateRegistry
-        get() = savedStateRegistryController.savedStateRegistry
+    override val savedStateRegistry: SavedStateRegistry get() = savedStateRegistryController.savedStateRegistry
     
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     private lateinit var dataStore: OverlayDataStore
     private lateinit var timerPrefs: TimerPreferences
-    
-    // Módulos Delegados
     private lateinit var notificationHelper: NotificationHelper
     private lateinit var overlayManager: OverlayManager
     private lateinit var feedbackManager: FeedbackManager
 
-    private val viewModel: TimerViewModel
-        get() = (application as KronoApp).timerViewModel
-        
+    private val viewModel: TimerViewModel get() = (application as KronoApp).timerViewModel
     private var wakeLock: PowerManager.WakeLock? = null
     private var notificationJob: Job? = null
     private var currentConfig: OverlayConfig = OverlayConfig()
-
-    // ========================================================
-    // CICLO DE VIDA
-    // ========================================================
+    private var observersStarted = false
 
     override fun onCreate() {
         super.onCreate()
@@ -85,19 +63,9 @@ class MainService : Service(),
         dataStore = OverlayDataStore(this)
         timerPrefs = TimerPreferences(this)
         
-        // Inicializa Módulos
         notificationHelper = NotificationHelper(this)
         feedbackManager = FeedbackManager(this)
-        overlayManager = OverlayManager(
-            context = this,
-            windowManager = windowManager,
-            dataStore = dataStore,
-            viewModel = viewModel,
-            serviceScope = serviceScope,
-            lifecycleOwner = this,
-            viewModelStoreOwner = this,
-            savedStateRegistryOwner = this
-        )
+        overlayManager = OverlayManager(this, windowManager, dataStore, viewModel, serviceScope, this, this, this)
 
         startForegroundWithNotification()
         timerPrefs.setServiceActive(true)
@@ -105,6 +73,7 @@ class MainService : Service(),
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        ensureObserversStarted()
 
         when (intent?.action) {
             ACTION_PLAY -> {
@@ -116,85 +85,85 @@ class MainService : Service(),
                 feedbackManager.triggerFeedback(currentConfig)
             }
             ACTION_RESET -> handleReset()
-            ACTION_STOP_SERVICE -> {
-                closeAndStop()
-            }
+            ACTION_STOP_SERVICE -> closeAndStop()
             ACTION_SHOW_OVERLAY -> overlayManager.showOverlayIfHidden()
             ACTION_HIDE_OVERLAY -> hideOverlay()
             ACTION_START_FOCUS -> {
-                serviceScope.launch {
-                    if (!overlayManager.overlayVisible) {
-                        currentConfig = dataStore.configFlow.first()
-                        showOverlay()
-                        observeConfig()
-                        observeScreenState()
-                        observeTimerRunning()
-                        startNotificationUpdater()
-                        observeTimerLimit()
-                    } else {
-                        startFocusMode()
-                    }
-                }
+                if (!overlayManager.overlayVisible) showOverlay()
+                startFocusMode()
             }
-            ACTION_FOCUS_DISMISSED -> {}
-            else -> {
-                serviceScope.launch {
-                    if (!overlayManager.overlayVisible) {
-                        currentConfig = dataStore.configFlow.first()
-                        showOverlay()
-                    }
-                    observeConfig()
-                    observeScreenState()
-                    observeTimerRunning()
-                    startNotificationUpdater()
-                    observeTimerLimit()
-                }
-            }
+            else -> if (!overlayManager.overlayVisible) showOverlay()
         }
         return START_STICKY
     }
 
-    override fun onDestroy() {
-        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-        
-        // Garante que o timer pare se o sistema matar o serviço
-        if (viewModel.timerState.value.isRunning) viewModel.pause()
-        
-        timerPrefs.setServiceActive(false)
-        applyScreenOn(false)
-        overlayManager.removeOverlay()
-        releaseWakeLock()
-        feedbackManager.release()
-        notificationJob?.cancel()
-        serviceScope.cancel()
-        viewModelStore.clear()
-        
-        super.onDestroy()
+    private fun ensureObserversStarted() {
+        if (observersStarted) return
+        observersStarted = true
+        observeConfig()
+        observeScreenState()
+        observeTimerRunning()
+        startNotificationUpdater()
+        observeTimerLimit()
+        observeDonationState()
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    // ========================================================
-    // LÓGICA DE NEGÓCIO (DELEGADA)
-    // ========================================================
-
     private fun showOverlay() {
-        overlayManager.showOverlay(
-            currentConfig = currentConfig,
-            onStart = { viewModel.start(); feedbackManager.triggerFeedback(currentConfig) },
-            onPause = { viewModel.pause(); feedbackManager.triggerFeedback(currentConfig) },
-            onReset = { handleReset() },
-            onClose = {
-                val state = viewModel.timerState.value
-                if (state.isRunning || state.elapsedMs > 0) {
-                    hideOverlay()
-                } else {
+        serviceScope.launch {
+            currentConfig = dataStore.configFlow.first()
+            overlayManager.showOverlay(
+                currentConfig = currentConfig,
+                onStart = { viewModel.start(); feedbackManager.triggerFeedback(currentConfig) },
+                onPause = { viewModel.pause(); feedbackManager.triggerFeedback(currentConfig) },
+                onReset = { handleReset() },
+                onClose = {
+                    // O X fecha o overlay e para o serviço, mas NÃO deve fechar a activity.
+                    // Para isso, apenas chamamos o encerramento do serviço.
                     closeAndStop()
+                },
+                onSettings = { openMainActivity(openSettings = true) },
+                onFocusModeStarted = { startFocusMode() }
+            )
+        }
+    }
+
+    private fun handleReset() {
+        val sessionMs = viewModel.currentSessionMs
+        serviceScope.launch {
+            dataStore.accumulateTime(sessionMs)
+            viewModel.reset()
+        }
+    }
+
+    private fun observeDonationState() {
+        serviceScope.launch {
+            dataStore.configFlow.collect { config ->
+                if (config.donationPending) {
+                    val wasVisible = overlayManager.overlayVisible
+                    if (wasVisible) {
+                        hideOverlay()
+                    }
+                    openMainActivity(showDonation = true, wasOverlayVisible = wasVisible)
                 }
-            },
-            onSettings = { openMainActivity() },
-            onFocusModeStarted = { startFocusMode() }
-        )
+            }
+        }
+    }
+
+    private fun openMainActivity(openSettings: Boolean = false, showDonation: Boolean = false, wasOverlayVisible: Boolean = false) {
+        if (showDonation) {
+            val intent = Intent(this, com.krono.app.ui.DonationActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                putExtra("restore_overlay", wasOverlayVisible)
+            }
+            startActivity(intent)
+            return
+        }
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            if (openSettings) putExtra("open_settings", true)
+        }
+        startActivity(intent)
     }
 
     private fun hideOverlay() {
@@ -204,48 +173,18 @@ class MainService : Service(),
     }
 
     private fun closeAndStop() {
-        // Para o cronômetro e limpa preferências antes de parar o serviço
         viewModel.reset()
         timerPrefs.clearState()
         timerPrefs.setServiceActive(false)
         applyScreenOn(false)
-        
-        // Remove o overlay imediatamente
         overlayManager.removeOverlay()
-        
-        // Para o foreground e o serviço de forma explícita
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
 
-    private fun handleReset() {
-        val sessionMs = viewModel.currentSessionMs
-        serviceScope.launch {
-            dataStore.accumulateTime(sessionMs)
-            val updatedCycleMs = dataStore.configFlow
-                .first { it.currentCycleMs > 0L || sessionMs == 0L }
-                .currentCycleMs
-
-            if (updatedCycleMs >= 12 * 3600 * 1000L) {
-                dataStore.resetCycle()
-                hideOverlay()
-                val intent = Intent(this@MainService, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    putExtra(EXTRA_SHOW_DONATION, true)
-                }
-                startActivity(intent)
-            }
-            viewModel.reset()
-        }
-    }
-
     @SuppressLint("InlinedApi")
     private fun startForegroundWithNotification() {
-        val notification = notificationHelper.buildNotification(
-            viewModel.timerState.value,
-            currentConfig.showHours,
-            currentConfig.showSeconds
-        )
+        val notification = notificationHelper.buildNotification(viewModel.timerState.value, currentConfig.showHours, currentConfig.showSeconds)
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(NOTIFICATION_ID, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
         } else {
@@ -259,38 +198,26 @@ class MainService : Service(),
             var lastIsRunning = viewModel.timerState.value.isRunning
             var lastIsAtLimit = viewModel.timerState.value.isAtLimit
             var lastWasReset  = false
-
             viewModel.timerState.collectLatest { state ->
-                val isReset      = !state.isRunning && state.elapsedMs == 0L && !lastWasReset
-                val stateChanged = state.isRunning != lastIsRunning || state.isAtLimit != lastIsAtLimit || isReset
-
-                if (stateChanged) {
+                val isReset = !state.isRunning && state.elapsedMs == 0L && !lastWasReset
+                if (state.isRunning != lastIsRunning || state.isAtLimit != lastIsAtLimit || isReset) {
                     lastIsRunning = state.isRunning
                     lastIsAtLimit = state.isAtLimit
-                    lastWasReset  = isReset
-                    val notification = notificationHelper.buildNotification(state, currentConfig.showHours, currentConfig.showSeconds)
-                    (getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager).notify(NOTIFICATION_ID, notification)
-                } else {
-                    lastWasReset = false
-                }
+                    lastWasReset = isReset
+                    val n = notificationHelper.buildNotification(state, currentConfig.showHours, currentConfig.showSeconds)
+                    (getSystemService(NOTIFICATION_SERVICE) as android.app.NotificationManager).notify(NOTIFICATION_ID, n)
+                } else lastWasReset = false
             }
         }
     }
 
-    // ========================================================
-    // OBSERVADORES E RECURSOS
-    // ========================================================
-
     private fun observeConfig() {
         serviceScope.launch {
             dataStore.configFlow.collectLatest { config ->
-                val focusDisabled = currentConfig.focusModeEnabled && !config.focusModeEnabled
                 val focusEnabled = !currentConfig.focusModeEnabled && config.focusModeEnabled
-
                 currentConfig = config
                 viewModel.setTimeLimit(config.timeLimitSeconds)
-
-                if (focusDisabled) {
+                if (!config.focusModeEnabled) {
                     sendBroadcast(Intent(ACTION_FOCUS_DISMISSED).apply { `package` = packageName })
                 } else if (focusEnabled && viewModel.timerState.value.isRunning && overlayManager.overlayVisible) {
                     startFocusMode()
@@ -300,32 +227,22 @@ class MainService : Service(),
     }
 
     private fun observeScreenState() {
-        serviceScope.launch {
-            dataStore.configFlow.collect { config -> applyScreenOn(config.keepScreenOn) }
-        }
+        serviceScope.launch { dataStore.configFlow.collect { applyScreenOn(it.keepScreenOn) } }
     }
 
     private fun observeTimerRunning() {
         serviceScope.launch {
             var wasRunning = viewModel.timerState.value.isRunning
             viewModel.timerState.collect { state ->
-                val justStarted = !wasRunning && state.isRunning
+                val started = !wasRunning && state.isRunning
                 wasRunning = state.isRunning
-                if (justStarted && currentConfig.focusModeEnabled && overlayManager.overlayVisible) {
-                    startFocusMode()
-                }
+                if (started && currentConfig.focusModeEnabled && overlayManager.overlayVisible) startFocusMode()
             }
         }
     }
 
     private fun observeTimerLimit() {
-        serviceScope.launch {
-            viewModel.timerState.collect { state ->
-                if (state.isAtLimit) {
-                    hideOverlay()
-                }
-            }
-        }
+        serviceScope.launch { viewModel.timerState.collect { if (it.isAtLimit) hideOverlay() } }
     }
 
     private fun applyScreenOn(enable: Boolean) {
@@ -333,12 +250,9 @@ class MainService : Service(),
         if (enable) {
             if (wakeLock?.isHeld != true) {
                 val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Cronometro::WakeLock")
-                    .apply { acquire(99 * 60 * 60 * 1000L) }
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Cronometro::WakeLock").apply { acquire(99 * 3600_000L) }
             }
-        } else {
-            releaseWakeLock()
-        }
+        } else releaseWakeLock()
     }
 
     private fun releaseWakeLock() {
@@ -346,19 +260,24 @@ class MainService : Service(),
         wakeLock = null
     }
 
-    private fun openMainActivity() {
-        val i = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-            putExtra("open_settings", true)
-        }
-        startActivity(i)
-    }
-
     private fun startFocusMode() {
         if (!overlayManager.overlayVisible) return
-        val intent = Intent(this, FocusActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-        }
-        startActivity(intent)
+        startActivity(Intent(this, FocusActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT })
     }
+
+    override fun onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        if (viewModel.timerState.value.isRunning) viewModel.pause()
+        timerPrefs.setServiceActive(false)
+        applyScreenOn(false)
+        overlayManager.removeOverlay()
+        releaseWakeLock()
+        feedbackManager.release()
+        notificationJob?.cancel()
+        serviceScope.cancel()
+        viewModelStore.clear()
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
 }

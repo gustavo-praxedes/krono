@@ -1,5 +1,6 @@
 package com.krono.app.ui
 
+import android.app.Activity
 import android.os.Build
 import android.provider.Settings
 import androidx.compose.runtime.*
@@ -8,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.krono.app.data.OverlayDataStore
+import com.krono.app.data.OverlayConfig
 import com.krono.app.util.UpdateInfo
 import com.krono.app.viewmodel.TimerViewModel
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,7 +30,6 @@ fun AppNavigation(
     permissionsDialogEvents   : SharedFlow<Unit>,
     permissionsRefreshTrigger : Int,
     isTaskRoot                : Boolean,
-    showDonationDialog        : Boolean,
     startInSettings           : Boolean,
     onTryStartService         : () -> Unit,
     onRequestNotification     : () -> Unit,
@@ -42,71 +43,62 @@ fun AppNavigation(
     val navController = rememberNavController()
     val timerState    by timerViewModel.timerState.collectAsState()
     val context       = LocalContext.current
+    val activity      = context as? Activity
+    val scope         = rememberCoroutineScope()
+    
+    val config by dataStore.configFlow.collectAsState(initial = OverlayConfig())
 
     var showPermissionsDialog by remember { mutableStateOf(false) }
 
-    // Relê ao voltar do Settings — invalidado pelo permissionsRefreshTrigger
-    val hasOverlayPermission = remember(permissionsRefreshTrigger) {
-        Settings.canDrawOverlays(context)
-    }
+    // Relê permissões
+    val hasOverlayPermission = remember(permissionsRefreshTrigger) { Settings.canDrawOverlays(context) }
     val hasNotificationPermission = remember(permissionsRefreshTrigger) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
                     android.content.pm.PackageManager.PERMISSION_GRANTED
         } else true
     }
-    val hasInstallPermission = remember(permissionsRefreshTrigger) {
-        context.packageManager.canRequestPackageInstalls()
-    }
+    val hasInstallPermission = remember(permissionsRefreshTrigger) { context.packageManager.canRequestPackageInstalls() }
 
     LaunchedEffect(Unit) {
-        launch {
-            navigationEvents.collect { route ->
-                navController.navigate(route) { launchSingleTop = true }
-            }
-        }
-        launch {
-            permissionsDialogEvents.collect {
-                showPermissionsDialog = true
-            }
-        }
+        launch { navigationEvents.collect { route -> navController.navigate(route) { launchSingleTop = true } } }
+        launch { permissionsDialogEvents.collect { showPermissionsDialog = true } }
+        
         val cfg = dataStore.configFlow.first()
         if (cfg.autoLaunch && !isTaskRoot) {
             onTryStartService()
         }
     }
 
+    // Exibe a navegação normal
     NavHost(
-        navController    = navController,
-        startDestination = if (startInSettings) AppRoutes.SETTINGS else AppRoutes.TIMER
-    ) {
-        composable(AppRoutes.TIMER) {
-            TimerScreen(
-                timerState     = timerState,
-                onStart        = { timerViewModel.start() },
-                onPause        = { timerViewModel.pause() },
-                onReset        = onReset,
-                onOpenOverlay  = onTryStartService,
-                onOpenSettings = { navController.navigate(AppRoutes.SETTINGS) }
-            )
-        }
+            navController    = navController,
+            startDestination = if (startInSettings) AppRoutes.SETTINGS else AppRoutes.TIMER
+        ) {
+            composable(AppRoutes.TIMER) {
+                TimerScreen(
+                    timerState     = timerState,
+                    onStart        = { timerViewModel.start() },
+                    onPause        = { timerViewModel.pause() },
+                    onReset        = onReset,
+                    onOpenOverlay  = onTryStartService,
+                    onOpenSettings = { navController.navigate(AppRoutes.SETTINGS) }
+                )
+            }
 
-        composable(AppRoutes.SETTINGS) {
-            SettingsScreen(
-                dataStore          = dataStore,
-                pendingUpdateInfo  = pendingUpdateInfo,
-                showDonationDialog = showDonationDialog,
-                isServiceRunning   = isServiceRunning,
-                onStartFocusMode   = onStartFocusMode,
-                onShowOverlay      = onShowOverlay,
-                onBack             = { navController.popBackStack() }
-            )
+            composable(AppRoutes.SETTINGS) {
+                SettingsScreen(
+                    dataStore          = dataStore,
+                    pendingUpdateInfo  = pendingUpdateInfo,
+                    isServiceRunning   = isServiceRunning,
+                    onStartFocusMode   = onStartFocusMode,
+                    onShowOverlay      = onShowOverlay,
+                    onBack             = { navController.popBackStack() }
+                )
+            }
         }
-    }
 
     if (showPermissionsDialog) {
-        // Removido o fechamento automático. 
-        // Agora o PermissionsDialog exibe um botão "Concluir" quando as permissões são detectadas.
         PermissionsDialog(
             hasNotificationPermission = hasNotificationPermission,
             hasOverlayPermission      = hasOverlayPermission,

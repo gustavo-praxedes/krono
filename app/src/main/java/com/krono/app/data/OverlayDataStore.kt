@@ -34,7 +34,8 @@ class OverlayDataStore(private val context: Context) {
         val CURRENT_CYCLE_MS   = longPreferencesKey("current_cycle_ms")
         val LAST_UPDATE_CHECK  = longPreferencesKey("last_update_check")
         val FOCUS_MODE_ENABLED = booleanPreferencesKey("focus_mode_enabled")
-        val SELECTED_THEME     = stringPreferencesKey("selected_theme")  // GIT 7
+        val SELECTED_THEME     = stringPreferencesKey("selected_theme")
+        val DONATION_PENDING   = booleanPreferencesKey("donation_pending")
     }
 
     val configFlow: Flow<OverlayConfig> = context.dataStore.data
@@ -68,43 +69,33 @@ class OverlayDataStore(private val context: Context) {
                 lastUpdateCheck    = prefs[LAST_UPDATE_CHECK]  ?: 0L,
                 focusModeEnabled   = prefs[FOCUS_MODE_ENABLED] ?: false,
                 selectedTheme      = prefs[SELECTED_THEME]     ?: "AUTO",
+                donationPending    = prefs[DONATION_PENDING]   ?: false,
             )
         }
 
     suspend fun updateConfig(config: OverlayConfig) {
-        val safeShowHours = if (!config.showHours && !config.showSeconds) true
-        else config.showHours
-
-        val safeConfig = config.copy(
-            showHours        = safeShowHours,
-            timeLimitSeconds = config.timeLimitSeconds.coerceIn(0L, 35_999_999L),
-            scale            = config.scale.coerceIn(0.5f, 1.5f),
-            cornerRadius     = config.cornerRadius.coerceIn(0f, 50f),
-            bgOpacity        = config.bgOpacity.coerceIn(0f, 1f),
-            textOpacity      = config.textOpacity.coerceIn(0f, 1f)
-        )
-
         context.dataStore.edit { prefs ->
-            prefs[BACKGROUND_COLOR]   = safeConfig.backgroundColor
-            prefs[TEXT_COLOR]         = safeConfig.textColor
-            prefs[BG_OPACITY]         = safeConfig.bgOpacity
-            prefs[TEXT_OPACITY]       = safeConfig.textOpacity
-            prefs[SCALE]              = safeConfig.scale
-            prefs[CORNER_RADIUS]      = safeConfig.cornerRadius
-            prefs[SHOW_HOURS]         = safeConfig.showHours
-            prefs[SHOW_SECONDS]       = safeConfig.showSeconds
-            prefs[SHOW_BUTTONS]       = safeConfig.showButtons
-            prefs[KEEP_SCREEN_ON]     = safeConfig.keepScreenOn
-            prefs[AUTO_LAUNCH]        = safeConfig.autoLaunch
-            prefs[TIME_LIMIT_SECONDS] = safeConfig.timeLimitSeconds
-            prefs[BEEP_ENABLED]       = safeConfig.isBeepEnabled
-            prefs[VIBRATION_ENABLED]  = safeConfig.isVibrationEnabled
-            prefs[LAST_X]             = safeConfig.lastX
-            prefs[LAST_Y]             = safeConfig.lastY
-            prefs[TOTAL_LIFETIME_MS]  = safeConfig.totalLifetimeMs
-            prefs[CURRENT_CYCLE_MS]   = safeConfig.currentCycleMs
-            prefs[FOCUS_MODE_ENABLED] = safeConfig.focusModeEnabled
-            prefs[SELECTED_THEME]     = safeConfig.selectedTheme
+            prefs[BACKGROUND_COLOR]   = config.backgroundColor
+            prefs[TEXT_COLOR]         = config.textColor
+            prefs[BG_OPACITY]         = config.bgOpacity
+            prefs[TEXT_OPACITY]       = config.textOpacity
+            prefs[SCALE]              = config.scale
+            prefs[CORNER_RADIUS]      = config.cornerRadius
+            prefs[SHOW_HOURS]         = config.showHours
+            prefs[SHOW_SECONDS]       = config.showSeconds
+            prefs[SHOW_BUTTONS]       = config.showButtons
+            prefs[KEEP_SCREEN_ON]     = config.keepScreenOn
+            prefs[AUTO_LAUNCH]        = config.autoLaunch
+            prefs[TIME_LIMIT_SECONDS] = config.timeLimitSeconds
+            prefs[BEEP_ENABLED]       = config.isBeepEnabled
+            prefs[VIBRATION_ENABLED]  = config.isVibrationEnabled
+            prefs[LAST_X]             = config.lastX
+            prefs[LAST_Y]             = config.lastY
+            prefs[TOTAL_LIFETIME_MS]  = config.totalLifetimeMs
+            prefs[CURRENT_CYCLE_MS]   = config.currentCycleMs
+            prefs[FOCUS_MODE_ENABLED] = config.focusModeEnabled
+            prefs[SELECTED_THEME]     = config.selectedTheme
+            prefs[DONATION_PENDING]   = config.donationPending
         }
     }
 
@@ -119,14 +110,23 @@ class OverlayDataStore(private val context: Context) {
         context.dataStore.edit { prefs ->
             val prevLifetime = prefs[TOTAL_LIFETIME_MS] ?: 0L
             val prevCycle    = prefs[CURRENT_CYCLE_MS]  ?: 0L
+            val newCycle     = prevCycle + sessionMs
+            
             prefs[TOTAL_LIFETIME_MS] = prevLifetime + sessionMs
-            prefs[CURRENT_CYCLE_MS]  = prevCycle    + sessionMs
+            prefs[CURRENT_CYCLE_MS]  = newCycle
+            
+            // Ativando a flag ao atingir 24h acumuladas (86.400.000 ms)
+            if (newCycle >= 50 * 3600 * 1000L) { // ORIGINAL 50 HORAS
+            //if (newCycle >= 5 * 1000L) { // TESTE 5 SEGUNDOS - MANTER ESTA LINHA NO CÓDIGO
+                prefs[DONATION_PENDING] = true
+            }
         }
     }
 
-    suspend fun resetCycle() {
+    suspend fun resetDonationCycle() {
         context.dataStore.edit { prefs ->
             prefs[CURRENT_CYCLE_MS] = 0L
+            prefs[DONATION_PENDING] = false
         }
     }
 

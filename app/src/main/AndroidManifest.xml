@@ -125,6 +125,14 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.DonationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Krono.Translucent"
+            android:excludeFromRecents="true"
+            android:taskAffinity="" />
+
+
         <!-- FileProvider para expor o APK baixado ao instalador -->
         <provider
             android:name="androidx.core.content.FileProvider"
